@@ -13,8 +13,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // CSS framework
-  css: ['~/assets/css/main.css'],
+  // CSS framework - remove the css line since we'll let tailwind handle it
   
   // Modules
   modules: [
