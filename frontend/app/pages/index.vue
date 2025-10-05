@@ -1,55 +1,48 @@
 <template>
-  <div class="min-h-screen bg-telkom-white">
-    <nav class="bg-telkom-maroon shadow">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-xl font-bold text-telkom-white">
-              Sistem Approval Dokumen
-            </h1>
-          </div>
-          <div class="flex items-center space-x-4">
-            <span class="text-telkom-white">
-              Selamat datang, {{ authStore.user?.name }}
-            </span>
-            <button
-              @click="handleLogout"
-              class="bg-telkom-red hover:bg-red-700 text-telkom-white px-4 py-2 rounded-md text-sm font-medium"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+  <div class="min-h-screen bg-telkom-white flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <div>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-telkom-grey-dark">
+          Selamat Datang
+        </h2>
+        <p class="mt-2 text-center text-sm text-telkom-grey">
+          Sistem Approval Dokumen Telkom University
+        </p>
       </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div class="px-4 py-6 sm:px-0">
-        <div class="border-4 border-dashed border-telkom-grey rounded-lg p-8">
-          <h2 class="text-2xl font-bold text-telkom-grey-dark mb-4">
-            Dashboard
-          </h2>
-          <p class="text-telkom-grey">
-            Selamat datang di Sistem Approval Dokumen Telkom University.
-          </p>
-          <div class="mt-6">
-            <div class="bg-telkom-white p-4 rounded-lg shadow">
-              <h3 class="text-lg font-semibold text-telkom-grey-dark mb-2">
-                Informasi Akun
-              </h3>
-              <p><strong>Nama:</strong> {{ authStore.user?.name }}</p>
-              <p><strong>Email:</strong> {{ authStore.user?.email }}</p>
-              <p><strong>Role:</strong> {{ authStore.user?.role }}</p>
-            </div>
-          </div>
+      <div class="text-center">
+        <p class="text-telkom-grey-dark mb-4">
+          Anda login sebagai: <strong>{{ authStore.user?.name }}</strong>
+        </p>
+        <p class="text-telkom-grey mb-6">
+          Role: <span class="font-semibold" :class="authStore.userRole === 'admin' ? 'text-telkom-red' : 'text-telkom-maroon'">
+            {{ authStore.userRole }}
+          </span>
+        </p>
+        <div v-if="authStore.userRole === 'admin'" class="space-y-4">
+          <NuxtLink
+            to="/admin"
+            class="block w-full bg-telkom-maroon hover:bg-telkom-red text-telkom-white font-bold py-2 px-4 rounded"
+          >
+            Admin Dashboard
+          </NuxtLink>
         </div>
+        <button
+          @click="handleLogout"
+          class="mt-4 bg-telkom-grey hover:bg-gray-300 text-telkom-grey-dark font-bold py-2 px-4 rounded"
+        >
+          Logout
+        </button>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { useAuthStore } from '~/stores/auth'
+
+definePageMeta({
+  middleware: 'auth'
+})
 
 const authStore = useAuthStore()
 

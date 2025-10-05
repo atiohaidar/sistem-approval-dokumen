@@ -25,9 +25,10 @@ export const useAuthStore = defineStore('auth', {
         this.user = response.user
         this.isAuthenticated = true
 
-        // Store token in localStorage for persistence
+        // Store token and user data in localStorage for persistence
         if (process.client) {
           localStorage.setItem('auth_token', this.token)
+          localStorage.setItem('auth_user', JSON.stringify(this.user))
         }
 
         return response
@@ -50,6 +51,7 @@ export const useAuthStore = defineStore('auth', {
 
         if (process.client) {
           localStorage.setItem('auth_token', this.token)
+          localStorage.setItem('auth_user', JSON.stringify(this.user))
         }
 
         return response
@@ -87,6 +89,11 @@ export const useAuthStore = defineStore('auth', {
 
         this.user = user
         this.isAuthenticated = true
+
+        // Update user data in localStorage
+        if (process.client) {
+          localStorage.setItem('auth_user', JSON.stringify(this.user))
+        }
       } catch (error) {
         this.clearAuth()
         throw error
@@ -100,15 +107,19 @@ export const useAuthStore = defineStore('auth', {
 
       if (process.client) {
         localStorage.removeItem('auth_token')
+        localStorage.removeItem('auth_user')
       }
     },
 
     initializeAuth() {
       if (process.client) {
         const token = localStorage.getItem('auth_token')
-        if (token) {
+        const user = localStorage.getItem('auth_user')
+
+        if (token && user) {
           this.token = token
-          this.fetchUser()
+          this.user = JSON.parse(user)
+          this.isAuthenticated = true
         }
       }
     }
