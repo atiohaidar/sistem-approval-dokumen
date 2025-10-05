@@ -1,4 +1,3 @@
-
 # Prompt Tracking
 
 
@@ -9,3 +8,30 @@
 **Tanggal:** 1 Oktober 2025
 **Prompt:** dari backend yang sudah dibuat, buatkan test nya agar semua kondisi bisa dipastikan sudah aman
 **Evaluasi:** Prompt jelas, berhasil buat comprehensive tests untuk auth, user management, dan middleware. Semua 28 tests pass.
+
+**Tanggal:** 5 Oktober 2025
+**Prompt:** how to update php in linux?
+
+**Evaluasi:** Prompt jelas dan langsung menanyakan cara update PHP di Linux. Tidak ada kesalahan. Saran: Jika perlu, sebutkan distro Linux untuk instruksi lebih spesifik, tapi umum sudah cukup.
+
+**Tanggal:** 5 Oktober 2025
+**Prompt:** PHP 8.0.30 (cli) (built: Aug 25 2023 18:56:16) ( NTS )
+Copyright (c) The PHP Group
+Zend Engine v4.0.30, Copyright (c) Zend Technologies
+
+**Evaluasi:** Prompt ini adalah output dari perintah php --version, bukan pertanyaan baru. User mungkin ingin menunjukkan versi saat ini untuk konteks update. Saran: Jika ini output, lebih baik jelaskan konteks atau tanyakan langsung.
+
+**Tanggal:** 5 Oktober 2025
+**Prompt:** php --version
+PHP 8.0.30 (cli) (built: Aug 25 2023 18:56:16) ( NTS )
+Copyright (c) The PHP Group
+Zend Engine v4.0.30, Copyright (c) Zend Technologies
+
+but i have install php 8.3 how to change it
+
+**Evaluasi:** Prompt jelas menanyakan cara mengganti versi PHP default ke 8.3 setelah instalasi. Tidak ada kesalahan. Saran: Baik, tapi bisa lebih ringkas dengan "How to switch PHP version to 8.3?".
+
+**Tanggal:** 5 Oktober 2025
+**Prompt:** why the composer still in php version 8.0.30?
+
+**Evaluasi:** Prompt jelas menanyakan mengapa Composer masih menggunakan PHP 8.0 meskipun default sudah diubah. Tidak ada kesalahan. Saran: Tambahkan konteks seperti output error jika ada.

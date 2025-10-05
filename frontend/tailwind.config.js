@@ -1,17 +1,22 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./components/**/*.{js,vue,ts}",
     "./layouts/**/*.vue",
-    "./pages/**/*.vue", 
+    "./pages/**/*.vue",
     "./plugins/**/*.{js,ts}",
     "./app.vue",
     "./error.vue"
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+      colors: {
+        'telkom-maroon': '#B6252A',
+        'telkom-red': '#ED1E28',
+        'telkom-grey-dark': '#55565B',
+        'telkom-grey': '#959597',
+        'telkom-white': '#FFFFFF',
+        'telkom-black': '#000000',
       }
     },
   },
