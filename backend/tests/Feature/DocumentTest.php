@@ -70,6 +70,7 @@ class DocumentTest extends TestCase
             'title' => 'Test Document',
             'description' => 'This is a test document',
             'file' => $file,
+            'qr_position' => 'top-right',
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -77,30 +78,35 @@ class DocumentTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'title',
-                'description',
-                'file_path',
-                'file_name',
-                'file_size',
-                'mime_type',
-                'status',
-                'created_by',
-                'creator' => [
+                'document' => [
                     'id',
-                    'name',
-                    'email'
-                ]
+                    'title',
+                    'description',
+                    'file_path',
+                    'file_name',
+                    'file_size',
+                    'mime_type',
+                    'status',
+                    'qr_position',
+                    'created_by',
+                    'creator' => [
+                        'id',
+                        'name',
+                        'email'
+                    ]
+                ],
+                'qr_code'
             ]);
 
         $this->assertDatabaseHas('documents', [
             'title' => 'Test Document',
             'description' => 'This is a test document',
             'created_by' => $this->user->id,
-            'status' => 'draft'
+            'status' => 'draft',
+            'qr_position' => 'top-right'
         ]);
 
-        Storage::disk('public')->assertExists('documents/' . basename($response->json('file_path')));
+        Storage::disk('public')->assertExists('documents/' . basename($response->json('document.file_path')));
     }
 
     #[Test]

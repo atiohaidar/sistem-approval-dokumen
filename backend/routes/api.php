@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DocumentController;
+use App\Http\Controllers\Api\ApprovalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Document management
     Route::apiResource('documents', DocumentController::class);
+
+    // Document approval system
+    Route::prefix('documents/{document}/approval')->group(function () {
+        Route::post('/submit', [ApprovalController::class, 'submit']);
+        Route::get('/history', [ApprovalController::class, 'history']);
+    });
+
+    // Approval actions
+    Route::prefix('approvals/{approval}')->group(function () {
+        Route::post('/approve', [ApprovalController::class, 'approve']);
+        Route::post('/reject', [ApprovalController::class, 'reject']);
+        Route::post('/skip', [ApprovalController::class, 'skip']);
+        Route::post('/delegate', [ApprovalController::class, 'delegate']);
+        Route::post('/comment', [ApprovalController::class, 'comment']);
+    });
+
+    // Pending approvals for current user
+    Route::get('/approvals/pending', [ApprovalController::class, 'pending']);
 
     // User management (admin only)
     Route::middleware('admin')->group(function () {

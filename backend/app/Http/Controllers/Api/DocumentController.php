@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Services\QRCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +49,7 @@ class DocumentController extends Controller
             'description' => 'nullable|string',
             'file' => 'required|file|mimes:pdf|max:10240', // 10MB max
             'template_id' => 'nullable|exists:document_templates,id',
+            'qr_position' => 'required|in:top-left,top-right,bottom-left,bottom-right,center',
         ]);
 
         // Handle file upload
@@ -63,11 +65,19 @@ class DocumentController extends Controller
             'file_size' => $file->getSize(),
             'mime_type' => $file->getMimeType(),
             'template_id' => $request->template_id,
-            'status' => 'draft', // Explicitly set status to draft
+            'status' => 'draft',
             'created_by' => Auth::id(),
+            'qr_position' => $request->qr_position,
         ]);
 
-        return response()->json($document->load(['creator', 'template']), 201);
+        // Generate QR code for the document
+        $qrCodeService = new QRCodeService();
+        $qrResult = $qrCodeService->generateForDocument($document);
+
+        return response()->json([
+            'document' => $document->load(['creator', 'template']),
+            'qr_code' => $qrResult,
+        ], 201);
     }
 
     /**
