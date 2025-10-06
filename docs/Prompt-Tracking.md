@@ -1,11 +1,5 @@
 # Prompt Tracking
 
-**Tanggal:** 5 Oktober 2025
-**Prompt:** buatkan project frotnend nya dengan nama folder "frontend" menggunakan nuxtjs. untuk pertama implementtasikan fitur autentikasi yang ada pada #file:AuthTest.php
-
-**Evaluasi:** Prompt jelas dan fokus pada implementasi frontend Nuxt.js dengan fitur autentikasi berdasarkan AuthTest.php. Berhasil membuat project Nuxt.js dengan authentication store, login/register pages, middleware, dan UI dengan warna Telkom. Tidak ada kesalahan signifikan. Saran: Pastikan testing dengan backend API yang running.
-
-**Rekap Hasil:** Berhasil membuat frontend Nuxt.js dengan fitur autentikasi lengkap termasuk login, register, logout, dan protected routes. Menggunakan Pinia untuk state management, Tailwind CSS dengan custom colors Telkom University, dan middleware untuk route protection. Aplikasi siap untuk testing dengan backend Laravel.
 
 **Tanggal:** 5 Oktober 2025
 **Prompt:** buatkan fitur untuk manajemen user bedasararkan #file:UserManagementTest.php
@@ -49,3 +43,31 @@ but i have install php 8.3 how to change it
 **Prompt:** why the composer still in php version 8.0.30?
 
 **Evaluasi:** Prompt jelas menanyakan mengapa Composer masih menggunakan PHP 8.0 meskipun default sudah diubah. Tidak ada kesalahan. Saran: Tambahkan konteks seperti output error jika ada.
+
+**Tanggal:** 5 Oktober 2025
+**Prompt:** buatkan project frotnend nya dengan nama folder "frontend" menggunakan nuxtjs. untuk pertama implementtasikan fitur autentikasi yang ada pada #file:AuthTest.php
+
+**Evaluasi:** Prompt jelas dan fokus pada implementasi frontend Nuxt.js dengan fitur autentikasi berdasarkan AuthTest.php. Berhasil membuat project Nuxt.js dengan authentication store, login/register pages, middleware, dan UI dengan warna Telkom. Tidak ada kesalahan signifikan. Saran: Pastikan testing dengan backend API yang running.
+
+**Rekap Hasil:** Berhasil membuat frontend Nuxt.js dengan fitur autentikasi lengkap termasuk login, register, logout, dan protected routes. Menggunakan Pinia untuk state management, Tailwind CSS dengan custom colors Telkom University, dan middleware untuk route protection. Aplikasi siap untuk testing dengan backend Laravel.
+
+**Tanggal:** 6 Oktober 2025
+**Prompt:** ok mungkin sekarang buat CRUD dokumen dului, untuk CRUD duul saja jangan yang lain. dan buat test nya
+
+**Evaluasi:** Prompt jelas dan fokus pada implementasi CRUD untuk dokumen saja, tanpa fitur tambahan seperti approval flow. Berhasil membuat migration, model, controller, routes, dan comprehensive tests. Tidak ada kesalahan signifikan. Saran: Baik untuk pendekatan step-by-step, tapi sebutkan jika perlu validasi tambahan untuk file upload.
+
+**Rekap Hasil:** Berhasil mengimplementasikan CRUD lengkap untuk dokumen dengan file upload PDF, validation, authorization (hanya creator yang bisa edit/delete draft), dan 11 comprehensive tests yang semuanya pass. API endpoints siap untuk integrasi dengan frontend dan fitur approval selanjutnya.
+
+**Tanggal:** 6 Oktober 2025
+**Prompt:** perbaiki peringatan  ini "WARN Metadata found in doc-comment for method Tests\Feature\DocumentTest::user_can_list_documents(). Metadata in doc-comments is deprecated and will no longer be supported in PHPUnit 12. Update your test code to use attributes instead." [dan peringatan lainnya]
+
+**Evaluasi:** Prompt jelas menunjukkan peringatan PHPUnit tentang penggunaan doc-comment @test yang deprecated. Berhasil mengganti semua @test dengan attribute #[Test] dan menambahkan import PHPUnit\Framework\Attributes\Test. Tidak ada kesalahan. Saran: Baik untuk memperbaiki deprecation warnings agar kompatibel dengan PHPUnit 12.
+
+**Rekap Hasil:** Berhasil memperbaiki semua peringatan PHPUnit dengan mengganti doc-comment @test menjadi attribute #[Test] di 11 method test. Semua test masih pass dan tidak ada lagi deprecation warnings.
+
+**Tanggal:** 6 Oktober 2025
+**Prompt:** "FAILED Tests\Feature\UserManagementTest > admin can delete user Expected response status code [200] but received 500. PDOException: SQLSTATE[HY000]: General error: 1 no such table: main.approval_flows" perbaiki error tersebut
+
+**Evaluasi:** Prompt jelas menunjukkan error database migration - tabel approval_flows tidak ada padahal dibutuhkan sebagai foreign key oleh document_templates. Berhasil membuat migration approval_flows dan menjalankannya. Tidak ada kesalahan. Saran: Pastikan semua foreign key dependencies sudah dibuat sebelum menjalankan test.
+
+**Rekap Hasil:** Berhasil memperbaiki error database dengan membuat migration untuk tabel approval_flows. Semua test sekarang pass (39 tests, 160 assertions). Sistem database siap untuk pengembangan fitur selanjutnya.

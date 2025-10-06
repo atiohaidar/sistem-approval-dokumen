@@ -425,40 +425,9 @@ Admin:
 - GET /api/admin/audit-logs
 ```
 
-## 📋 Development Roadmap
-
-### Phase 1: Core System (MVP)
-- [ ] Basic authentication dan role management
-- [ ] Document upload dan storage
-- [ ] Simple approval flow (sequential)
-- [ ] Basic digital signatures
-- [ ] Dashboard utama
-
-### Phase 2: Advanced Features
-- [ ] Parallel approval processing
-- [ ] Template system
-- [ ] Advanced notifications
-- [ ] Analytics dashboard
-- [ ] Emergency skip features
-
-### Phase 3: Enterprise Features
-- [ ] Advanced reporting
-- [ ] API integrations
-- [ ] Mobile responsiveness
-- [ ] Performance optimization
-- [ ] Security enhancements
-
-### Phase 4: Future Enhancements
-- [ ] Mobile app
-- [ ] Advanced analytics dengan AI
-- [ ] Integration dengan sistem eksternal
-- [ ] Blockchain verification option
-
-## 🚦 Getting Started (Future)
-
 ```bash
 # Clone repository
-git clone https://github.com/[username]/sistem-approval-dokumen.git
+git clone https://github.com/atiohaidar/sistem-approval-dokumen.git
 
 # Install dependencies
 cd sistem-approval-dokumen

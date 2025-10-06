@@ -1,0 +1,1 @@
+ok jadi kareana masih ada ketidakjelasan di frontend, terutama di bagian tampilannya, maka proses pertama yang di buat itu benerin backend nya dulu aja, karena masih belum kebayang untuk frontend nya seperti apa. jadi nanti bermainnya di test test nya saja
