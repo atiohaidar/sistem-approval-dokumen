@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('approvals')->group(function () {
         Route::get('pending', [ApprovalController::class, 'getPendingApprovals']);
         Route::post('documents/{document}/process', [ApprovalController::class, 'processApproval']);
+        Route::post('documents/{document}/delegate', [ApprovalController::class, 'delegateApproval']);
     });
 
     // User management (admin only)

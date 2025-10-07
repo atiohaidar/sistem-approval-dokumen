@@ -18,10 +18,9 @@ class ApprovalController extends Controller
     {
         $userId = Auth::id();
 
-        $documents = Document::whereJsonContains('approvers', $userId)
-            ->where('status', 'pending_approval')
-            ->whereRaw('current_step < total_steps')
-            ->whereRaw('JSON_EXTRACT(approvers, CONCAT("$[", current_step, "]")) = ?', [$userId])
+        $documents = Document::where('status', 'pending_approval')
+            ->whereRaw('JSON_EXTRACT(approvers, CONCAT("$[", current_level - 1, "]")) LIKE ?', ["%{$userId}%"])
+            ->whereRaw('JSON_EXTRACT(level_progress, "$.pending") LIKE ?', ["%{$userId}%"])
             ->with(['creator'])
             ->get();
 
@@ -57,17 +56,60 @@ class ApprovalController extends Controller
     }
 
     /**
-     * Approve document and move to next step
+     * Delegate approval to another user
+     */
+    public function delegateApproval(Request $request, Document $document): JsonResponse
+    {
+        $request->validate([
+            'delegate_to' => 'required|exists:users,id',
+        ]);
+
+        $user = Auth::user();
+        $delegateTo = $request->delegate_to;
+
+        // Cannot delegate to yourself
+        if ($delegateTo == $user->id) {
+            return response()->json([
+                'message' => 'You cannot delegate approval to yourself.'
+            ], 422);
+        }
+
+        // Check if user can approve this document
+        if (!$document->canBeApprovedBy($user->id)) {
+            return response()->json([
+                'message' => 'You are not authorized to delegate approval for this document.'
+            ], 403);
+        }
+
+        // Check if delegate_to user is also in the current level
+        $currentApprovers = $document->getCurrentApproverIds();
+        if (!in_array($delegateTo, $currentApprovers)) {
+            return response()->json([
+                'message' => 'Delegate user must be in the same approval level.'
+            ], 400);
+        }
+
+        // Update level progress: remove current user from pending, add delegate_to if not already approved
+        $progress = $document->getLevelProgress();
+        $progress['pending'] = array_diff($progress['pending'], [$user->id]);
+
+        // Add delegate_to to pending if not already approved
+        if (!in_array($delegateTo, $progress['approved'])) {
+            $progress['pending'][] = $delegateTo;
+        }
+
+        $document->level_progress = $progress;
+        $document->save();
+
+        return response()->json(['message' => 'Approval delegated successfully']);
+    }
+
+    /**
+     * Approve document and move to next level if needed
      */
     private function approveDocument(Document $document, $user, ?string $comments): void
     {
-        // Move to next step
-        $document->moveToNextStep();
-
-        // Check if all approvals are complete
-        if ($document->current_step >= $document->total_steps) {
-            $document->completeApproval();
-        }
+        $document->approveByUser($user->id);
 
         // Update QR code with new status
         app(QRCodeService::class)->updateQRCode($document);
@@ -78,7 +120,7 @@ class ApprovalController extends Controller
      */
     private function rejectDocument(Document $document, $user, ?string $comments): void
     {
-        $document->rejectApproval();
+        $document->rejectByUser($user->id);
 
         // Update QR code with rejected status
         app(QRCodeService::class)->updateQRCode($document);

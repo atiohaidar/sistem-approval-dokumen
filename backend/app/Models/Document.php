@@ -25,6 +25,8 @@ class Document extends Model
         'current_step',
         'total_steps',
         'approvers',
+        'current_level',
+        'level_progress',
         'qr_x',
         'qr_y',
         'qr_page',
@@ -38,6 +40,8 @@ class Document extends Model
         'current_step' => 'integer',
         'total_steps' => 'integer',
         'approvers' => 'array',
+        'current_level' => 'integer',
+        'level_progress' => 'array',
         'qr_x' => 'float',
         'qr_y' => 'float',
         'qr_page' => 'integer',
@@ -71,30 +75,6 @@ class Document extends Model
         return $this->status === 'completed' && $this->current_step >= $this->total_steps;
     }
 
-    public function getCurrentApproverId(): ?int
-    {
-        if (!$this->approvers || !is_array($this->approvers) || $this->current_step >= count($this->approvers)) {
-            return null;
-        }
-
-        return $this->approvers[$this->current_step] ?? null;
-    }
-
-    public function canBeApprovedBy(int $userId): bool
-    {
-        return $this->getCurrentApproverId() === $userId && $this->isPendingApproval();
-    }
-
-    public function moveToNextStep(): bool
-    {
-        if ($this->current_step < $this->total_steps) {
-            $this->current_step++;
-            $this->save();
-            return true;
-        }
-        return false;
-    }
-
     public function completeApproval(): void
     {
         $this->status = 'completed';
@@ -107,5 +87,126 @@ class Document extends Model
         $this->status = 'rejected';
         $this->completed_at = now();
         $this->save();
+    }
+
+    // Multi-level approval methods
+    public function getCurrentApproverIds(): array
+    {
+        if (!$this->approvers || !is_array($this->approvers) || $this->current_level > count($this->approvers)) {
+            return [];
+        }
+
+        return $this->approvers[$this->current_level - 1] ?? [];
+    }
+
+    public function canBeApprovedBy(int $userId): bool
+    {
+        return in_array($userId, $this->getCurrentApproverIds()) && $this->isPendingApproval();
+    }
+
+    public function isLevelComplete(): bool
+    {
+        $currentApproverIds = $this->getCurrentApproverIds();
+        if (empty($currentApproverIds)) {
+            return false;
+        }
+
+        $progress = $this->getLevelProgress();
+        $approvedCount = count($progress['approved'] ?? []);
+
+        return $approvedCount === count($currentApproverIds);
+    }
+
+    public function moveToNextLevel(): bool
+    {
+        if ($this->current_level < count($this->approvers)) {
+            $this->current_level++;
+            $this->level_progress = $this->initializeLevelProgress();
+            $this->save();
+            return true;
+        }
+        return false;
+    }
+
+    public function approveByUser(int $userId): bool
+    {
+        if (!$this->canBeApprovedBy($userId)) {
+            return false;
+        }
+
+        $progress = $this->getLevelProgress();
+        if (!in_array($userId, $progress['approved'])) {
+            $progress['approved'][] = $userId;
+            $progress['pending'] = array_diff($progress['pending'], [$userId]);
+            $this->level_progress = $progress;
+            $this->save();
+
+            // Check if level is complete
+            if ($this->isLevelComplete()) {
+                if (!$this->moveToNextLevel()) {
+                    // All levels completed
+                    $this->completeApproval();
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public function rejectByUser(int $userId): bool
+    {
+        if (!$this->canBeApprovedBy($userId)) {
+            return false;
+        }
+
+        $this->rejectApproval();
+        return true;
+    }
+
+    public function getLevelProgress(): array
+    {
+        if (!$this->level_progress) {
+            $this->level_progress = $this->initializeLevelProgress();
+            $this->save();
+        }
+
+        return $this->level_progress;
+    }
+
+    private function initializeLevelProgress(): array
+    {
+        $currentApproverIds = $this->getCurrentApproverIds();
+        return [
+            'approved' => [],
+            'pending' => $currentApproverIds
+        ];
+    }
+
+    public function getTotalLevels(): int
+    {
+        return count($this->approvers ?? []);
+    }
+
+    public function getApprovalProgress(): array
+    {
+        $totalLevels = $this->getTotalLevels();
+        $progress = [];
+
+        for ($level = 1; $level <= $totalLevels; $level++) {
+            if ($level < $this->current_level) {
+                $progress[$level] = ['status' => 'completed', 'approved' => [], 'pending' => []];
+            } elseif ($level === $this->current_level) {
+                $levelProgress = $this->getLevelProgress();
+                $progress[$level] = [
+                    'status' => 'in_progress',
+                    'approved' => $levelProgress['approved'],
+                    'pending' => $levelProgress['pending']
+                ];
+            } else {
+                $progress[$level] = ['status' => 'pending', 'approved' => [], 'pending' => $this->approvers[$level - 1]];
+            }
+        }
+
+        return $progress;
     }
 }

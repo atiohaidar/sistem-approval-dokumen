@@ -56,8 +56,9 @@ class DocumentController extends Controller
             'description' => 'nullable|string',
             'file' => 'required|file|mimes:pdf|max:10240', // 10MB max
             'template_id' => 'nullable|exists:document_templates,id',
-            'approvers' => 'required|array|min:1|max:10',
-            'approvers.*' => 'exists:users,id|different:created_by',
+            'approvers' => 'required|array|min:1|max:10', // Max 10 levels
+            'approvers.*' => 'required|array|min:1', // Each level must have at least 1 approver
+            'approvers.*.*' => 'exists:users,id|different:created_by', // Each approver must be valid user
             'qr_x' => 'required|numeric|min:0|max:1',
             'qr_y' => 'required|numeric|min:0|max:1',
             'qr_page' => 'nullable|integer|min:1',
@@ -82,10 +83,10 @@ class DocumentController extends Controller
             'status' => 'pending_approval',
             'created_by' => Auth::id(),
             'approvers' => $request->approvers,
+            'current_level' => 1, // Start from level 1
             'qr_x' => $request->qr_x,
             'qr_y' => $request->qr_y,
             'qr_page' => $request->qr_page ?? 1,
-            'total_steps' => count($request->approvers),
             'submitted_at' => now(),
         ]);
 
@@ -250,20 +251,33 @@ class DocumentController extends Controller
         // Load related data
         $document->load(['creator']);
 
-        // Get approval progress - since we don't have approval records, we'll simulate based on current_step
-        $approvedCount = $document->current_step;
-        $pendingCount = max(0, $document->total_steps - $document->current_step);
+        // Get approval progress for multi-level system
+        $approvalProgress = $document->getApprovalProgress();
+        $totalApprovers = collect($document->approvers)->flatten()->count();
+        $approvedCount = collect($approvalProgress)->sum(function ($level) {
+            return count($level['approved']);
+        });
+        $pendingCount = collect($approvalProgress)->sum(function ($level) {
+            return count($level['pending']);
+        });
         $rejectedCount = 0; // We don't track rejections in this simplified system
 
-        // Build approvers info
-        $approversInfo = collect($document->approvers)->map(function ($approverId, $index) use ($document) {
-            $user = User::find($approverId); // We need to load user data
+        // Build approvers info for all levels
+        $approversInfo = collect($document->approvers)->flatten()->map(function ($approverId) use ($document) {
+            $user = User::find($approverId);
 
+            // Determine status based on level progress
             $status = 'pending';
-            if ($index < $document->current_step) {
-                $status = 'approved';
-            } elseif ($index === $document->current_step && $document->isPendingApproval()) {
-                $status = 'pending';
+            $approvalProgress = $document->getApprovalProgress();
+
+            foreach ($approvalProgress as $level => $levelData) {
+                if (in_array($approverId, $levelData['approved'])) {
+                    $status = 'approved';
+                    break;
+                } elseif (in_array($approverId, $levelData['pending'])) {
+                    $status = 'pending';
+                    break;
+                }
             }
 
             return [
@@ -271,16 +285,13 @@ class DocumentController extends Controller
                 'name' => $user ? $user->name : 'Unknown User',
                 'email' => $user ? $user->email : null,
                 'status' => $status,
-                'approved_at' => null, // We don't track individual approval times
+                'approved_at' => $status === 'approved' ? ($document->completed_at ?? now()) : null,
                 'notes' => null, // We don't have approval notes
             ];
         });
 
-        // Calculate current step
-        $currentStep = null;
-        if ($document->isPendingApproval() && $document->current_step < $document->total_steps) {
-            $currentStep = $document->current_step + 1;
-        }
+        // Calculate current step (for backward compatibility)
+        $currentStep = $document->current_level - 1;
 
         $response = [
             'document' => [
@@ -301,18 +312,20 @@ class DocumentController extends Controller
             ],
             'approvers' => $approversInfo,
             'progress' => [
-                'total_approvers' => $document->total_steps,
+                'total_approvers' => $totalApprovers,
                 'approved_count' => $approvedCount,
                 'pending_count' => $pendingCount,
                 'rejected_count' => $rejectedCount,
-                'current_step' => $currentStep,
-                'completion_percentage' => $document->total_steps > 0 ?
-                    round(($approvedCount / $document->total_steps) * 100, 1) : 0,
+                'current_level' => $document->current_level,
+                'total_levels' => $document->getTotalLevels(),
+                'completion_percentage' => $totalApprovers > 0 ?
+                    round(($approvedCount / $totalApprovers) * 100, 1) : 0,
             ],
             'workflow' => [
                 'is_sequential' => true,
                 'can_download' => $document->isApproved(),
                 'next_approver' => $approversInfo->firstWhere('status', 'pending'),
+                'approval_levels' => $approvalProgress,
             ],
         ];
 
