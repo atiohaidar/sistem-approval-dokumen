@@ -30,6 +30,9 @@ class DocumentFactory extends Factory
             'completed_at' => $this->faker->optional(0.2)->dateTime(), // 20% chance of being completed
             'current_step' => $this->faker->numberBetween(0, 5),
             'total_steps' => $this->faker->numberBetween(0, 5),
+            'qr_x' => $this->faker->randomFloat(2, 0.1, 0.9), // Random coordinate between 0.1 and 0.9
+            'qr_y' => $this->faker->randomFloat(2, 0.1, 0.9), // Random coordinate between 0.1 and 0.9
+            'qr_page' => $this->faker->numberBetween(1, 5), // Random page between 1 and 5
         ];
     }
 

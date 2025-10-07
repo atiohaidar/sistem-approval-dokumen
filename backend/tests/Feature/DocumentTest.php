@@ -76,7 +76,9 @@ class DocumentTest extends TestCase
             'description' => 'This is a test document',
             'file' => $file,
             'approvers' => [$approver1->id, $approver2->id],
-            'qr_position' => ['x' => 0.8, 'y' => 0.1, 'page' => 1], // top-right equivalent
+            'qr_x' => 0.8,
+            'qr_y' => 0.1,
+            'qr_page' => 1,
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -94,7 +96,9 @@ class DocumentTest extends TestCase
                 'status',
                 'created_by',
                 'approvers',
-                'qr_position',
+                'qr_x',
+                'qr_y',
+                'qr_page',
                 'total_steps',
                 'creator' => [
                     'id',
@@ -380,7 +384,6 @@ startxref
             'created_by' => $this->user->id,
             'status' => 'pending_approval',
             'approvers' => json_encode([$this->user->id + 1, $this->user->id + 2]),
-            'qr_position' => ['x' => 0.8, 'y' => 0.1, 'page' => 1],
             'qr_x' => 0.8,
             'qr_y' => 0.1,
             'qr_page' => 1,
@@ -474,7 +477,6 @@ startxref
             'created_by' => $this->user->id,
             'status' => 'completed',
             'approvers' => json_encode([$this->user->id + 1]),
-            'qr_position' => ['x' => 0.8, 'y' => 0.1, 'page' => 1],
             'qr_x' => 0.8,
             'qr_y' => 0.1,
             'qr_page' => 1,
@@ -503,7 +505,9 @@ startxref
             'description' => 'This is a test document with string approvers',
             'file' => UploadedFile::fake()->create('document.pdf', 1000, 'application/pdf'),
             'approvers' => '[' . $approver1->id . ',' . $approver2->id . ']', // String format
-            'qr_position' => 'top-left',
+            'qr_x' => 0.8,
+            'qr_y' => 0.1,
+            'qr_page' => 1,
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -515,7 +519,9 @@ startxref
                 'title',
                 'description',
                 'approvers',
-                'qr_position',
+                'qr_x',
+                'qr_y',
+                'qr_page',
                 'status',
                 'created_by',
                 'created_at',
@@ -586,7 +592,6 @@ startxref
         $document = Document::factory()->create([
             'created_by' => $this->user->id,
             'approvers' => [$this->user->id],
-            'qr_position' => ['x' => 0.8, 'y' => 0.1, 'page' => 1],
             'qr_x' => 0.8,
             'qr_y' => 0.1,
             'qr_page' => 1,
@@ -600,38 +605,30 @@ startxref
     }
 
     #[Test]
-    public function qr_position_coordinates_are_correctly_parsed_and_stored()
+    public function qr_coordinates_are_correctly_stored()
     {
         // Test coordinate format
         $document = Document::factory()->create([
             'created_by' => $this->user->id,
-            'qr_position' => ['x' => 0.5, 'y' => 0.5, 'page' => 1],
+            'qr_x' => 0.5,
+            'qr_y' => 0.5,
+            'qr_page' => 1,
         ]);
 
         $this->assertEquals(0.5, $document->qr_x);
         $this->assertEquals(0.5, $document->qr_y);
         $this->assertEquals(1, $document->qr_page);
-        $this->assertEquals(['x' => 0.5, 'y' => 0.5, 'page' => 1], $document->qr_position);
 
         // Test different coordinates
         $document2 = Document::factory()->create([
             'created_by' => $this->user->id,
-            'qr_position' => ['x' => 0.1, 'y' => 0.9, 'page' => 2],
+            'qr_x' => 0.1,
+            'qr_y' => 0.9,
+            'qr_page' => 2,
         ]);
 
         $this->assertEquals(0.1, $document2->qr_x);
         $this->assertEquals(0.9, $document2->qr_y);
         $this->assertEquals(2, $document2->qr_page);
-
-        // Test backward compatibility with string positions
-        $document3 = Document::factory()->create([
-            'created_by' => $this->user->id,
-            'qr_position' => 'top-left',
-        ]);
-
-        $this->assertEquals('top-left', $document3->qr_position);
-        $this->assertNull($document3->qr_x);
-        $this->assertNull($document3->qr_y);
-        $this->assertNull($document3->qr_page);
     }
 }
