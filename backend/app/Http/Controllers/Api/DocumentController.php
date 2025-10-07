@@ -58,8 +58,12 @@ class DocumentController extends Controller
             'template_id' => 'nullable|exists:document_templates,id',
             'approvers' => 'required|array|min:1|max:10',
             'approvers.*' => 'exists:users,id|different:created_by',
-            'qr_position' => 'required|in:top-left,top-right,bottom-left,bottom-right',
+            'qr_position' => 'required',
         ]);
+
+        // Validate and parse QR position (support both old and new format)
+        $qrPosition = $this->parseQRPosition($request->qr_position);
+        $request->merge(['qr_position_parsed' => $qrPosition]);
 
         // Handle file upload
         $file = $request->file('file');
@@ -77,13 +81,16 @@ class DocumentController extends Controller
             'status' => 'pending_approval',
             'created_by' => Auth::id(),
             'approvers' => $request->approvers,
-            'qr_position' => $request->qr_position,
+            'qr_position' => $qrPosition, // Keep for backward compatibility
+            'qr_x' => $qrPosition['x'] ?? null,
+            'qr_y' => $qrPosition['y'] ?? null,
+            'qr_page' => $qrPosition['page'] ?? 1,
             'total_steps' => count($request->approvers),
             'submitted_at' => now(),
         ]);
 
         // Generate QR Code
-        $qrCodePath = app(QRCodeService::class)->generateForDocument($document, $request->qr_position);
+        $qrCodePath = app(QRCodeService::class)->generateForDocument($document, $qrPosition);
 
         // Update document with QR code path
         $document->update(['qr_code_path' => $qrCodePath]);
@@ -340,5 +347,77 @@ class DocumentController extends Controller
         }
 
         return (array) $approvers;
+    }
+
+    /**
+     * Parse QR position - support both old string format and new coordinate format
+     */
+    private function parseQRPosition($qrPosition): array
+    {
+        // If it's an array/object (new format)
+        if (is_array($qrPosition)) {
+            $this->validateCoordinateFormat($qrPosition);
+            return [
+                'x' => $qrPosition['x'] ?? null,
+                'y' => $qrPosition['y'] ?? null,
+                'page' => $qrPosition['page'] ?? 1,
+            ];
+        }
+
+        // If it's a string, check if it's old format or JSON
+        if (is_string($qrPosition)) {
+            // Try to decode as JSON first (new format sent as string)
+            $decoded = json_decode($qrPosition, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $this->validateCoordinateFormat($decoded);
+                return [
+                    'x' => $decoded['x'] ?? null,
+                    'y' => $decoded['y'] ?? null,
+                    'page' => $decoded['page'] ?? 1,
+                ];
+            }
+
+            // Old string format - convert to coordinates
+            return $this->convertOldPositionToCoordinates($qrPosition);
+        }
+
+        throw new \InvalidArgumentException('Invalid QR position format');
+    }
+
+    /**
+     * Validate coordinate format
+     */
+    private function validateCoordinateFormat(array $coords): void
+    {
+        if (isset($coords['x']) && (!is_numeric($coords['x']) || $coords['x'] < 0 || $coords['x'] > 1)) {
+            throw new \InvalidArgumentException('QR x coordinate must be between 0.0 and 1.0');
+        }
+
+        if (isset($coords['y']) && (!is_numeric($coords['y']) || $coords['y'] < 0 || $coords['y'] > 1)) {
+            throw new \InvalidArgumentException('QR y coordinate must be between 0.0 and 1.0');
+        }
+
+        if (isset($coords['page']) && (!is_int($coords['page']) || $coords['page'] < 1)) {
+            throw new \InvalidArgumentException('QR page must be a positive integer');
+        }
+    }
+
+    /**
+     * Convert old position format to coordinates
+     */
+    private function convertOldPositionToCoordinates(string $position): array
+    {
+        $coordinates = [
+            'top-left' => ['x' => 0.1, 'y' => 0.1],
+            'top-right' => ['x' => 0.8, 'y' => 0.1],
+            'bottom-left' => ['x' => 0.1, 'y' => 0.8],
+            'bottom-right' => ['x' => 0.8, 'y' => 0.8],
+        ];
+
+        if (!isset($coordinates[$position])) {
+            throw new \InvalidArgumentException('Invalid QR position: ' . $position);
+        }
+
+        return array_merge($coordinates[$position], ['page' => 1]);
     }
 }

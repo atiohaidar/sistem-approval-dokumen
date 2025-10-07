@@ -1,629 +1,629 @@
 {
-  "info": {
-    "name": "Sistem Approval Dokumen API",
-    "description": "API Collection untuk Sistem Approval Dokumen dengan QR Code dan Watermarking",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "sistem-approval-dokumen"
-  },
-  "item": [
-    {
-      "name": "Auth",
-      "item": [
-        {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "description": "Login user dengan email dan password"
-          },
-          "response": []
-        },
-        {
-          "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            },
-            "description": "Register user baru"
-          },
-          "response": []
-        },
-        {
-          "name": "Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "logout"
-              ]
-            },
-            "description": "Logout user dan hapus token"
-          },
-          "response": []
-        },
-        {
-          "name": "Get User",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/user",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "user"
-              ]
-            },
-            "description": "Get data user yang sedang login"
-          },
-          "response": []
-        }
-      ]
+    "info": {
+        "name": "Sistem Approval Dokumen API",
+        "description": "API Collection untuk Sistem Approval Dokumen dengan QR Code dan Watermarking",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "sistem-approval-dokumen"
     },
-    {
-      "name": "Documents",
-      "item": [
+    "item": [
         {
-          "name": "List Documents",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/documents?page=1&status=pending_approval&search=kontrak",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "documents"
-              ],
-              "query": [
+            "name": "Auth",
+            "item": [
                 {
-                  "key": "page",
-                  "value": "1"
+                    "name": "Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Login user dengan email dan password"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "status",
-                  "value": "pending_approval"
+                    "name": "Register",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/auth/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Register user baru"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "search",
-                  "value": "kontrak"
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/auth/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "logout"
+                            ]
+                        },
+                        "description": "Logout user dan hapus token"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/auth/user",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "user"
+                            ]
+                        },
+                        "description": "Get data user yang sedang login"
+                    },
+                    "response": []
                 }
-              ]
-            },
-            "description": "List semua dokumen dengan pagination dan filter"
-          },
-          "response": []
+            ]
         },
         {
-          "name": "Create Document",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
+            "name": "Documents",
+            "item": [
                 {
-                  "key": "title",
-                  "value": "Kontrak Kerja Sama PT ABC",
-                  "type": "text"
+                    "name": "List Documents",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/documents?page=1&status=pending_approval&search=kontrak",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "documents"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "pending_approval"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "kontrak"
+                                }
+                            ]
+                        },
+                        "description": "List semua dokumen dengan pagination dan filter"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "description",
-                  "value": "Dokumen kontrak kerja sama antara PT ABC dengan PT XYZ",
-                  "type": "text"
+                    "name": "Create Document",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Kontrak Kerja Sama PT ABC",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Dokumen kontrak kerja sama antara PT ABC dengan PT XYZ",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "approvers",
+                                    "value": "[2,3,4]",
+                                    "type": "text",
+                                    "description": "Array ID user yang akan approve (JSON format atau string array seperti '[2,3,4]')"
+                                },
+                                {
+                                    "key": "qr_position",
+                                    "value": "top-right",
+                                    "type": "text",
+                                    "description": "Posisi QR code: top-left, top-right, bottom-left, bottom-right"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/documents",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "documents"
+                            ]
+                        },
+                        "description": "Upload dokumen PDF baru dengan approver dan posisi QR"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
+                    "name": "Create Document (String Approvers)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Kontrak Kerja Sama PT ABC (String Approvers)",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Dokumen kontrak dengan approvers sebagai string",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "approvers",
+                                    "value": "[2,3,4]",
+                                    "type": "text",
+                                    "description": "String array format: '[2,3,4]' atau comma-separated: '2,3,4'"
+                                },
+                                {
+                                    "key": "qr_position",
+                                    "value": "bottom-right",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/documents",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "documents"
+                            ]
+                        },
+                        "description": "Upload dokumen dengan approvers sebagai string array"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "approvers",
-                  "value": "[2,3,4]",
-                  "type": "text",
-                  "description": "Array ID user yang akan approve (JSON format atau string array seperti '[2,3,4]')"
+                    "name": "Get Document",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/documents/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "documents",
+                                "1"
+                            ]
+                        },
+                        "description": "Get detail dokumen berdasarkan ID"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "qr_position",
-                  "value": "top-right",
-                  "type": "text",
-                  "description": "Posisi QR code: top-left, top-right, bottom-left, bottom-right"
+                    "name": "Update Document",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "title",
+                                    "value": "Kontrak Kerja Sama PT ABC - Revised",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Dokumen kontrak kerja sama yang telah direvisi",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/documents/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "documents",
+                                "1"
+                            ]
+                        },
+                        "description": "Update dokumen (hanya untuk status draft)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Document",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/documents/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "documents",
+                                "1"
+                            ]
+                        },
+                        "description": "Delete dokumen (hanya untuk status draft)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download Document",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/documents/1/download",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "documents",
+                                "1",
+                                "download"
+                            ]
+                        },
+                        "description": "Download dokumen dengan watermark otomatis jika belum approved"
+                    },
+                    "response": []
                 }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/documents",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "documents"
-              ]
-            },
-            "description": "Upload dokumen PDF baru dengan approver dan posisi QR"
-          },
-          "response": []
+            ]
         },
         {
-          "name": "Create Document (String Approvers)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
+            "name": "Approvals",
+            "item": [
                 {
-                  "key": "title",
-                  "value": "Kontrak Kerja Sama PT ABC (String Approvers)",
-                  "type": "text"
+                    "name": "Get Pending Approvals",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/approvals/pending",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "approvals",
+                                "pending"
+                            ]
+                        },
+                        "description": "Get list dokumen yang menunggu approval dari user yang sedang login"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "description",
-                  "value": "Dokumen kontrak dengan approvers sebagai string",
-                  "type": "text"
-                },
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
-                },
-                {
-                  "key": "approvers",
-                  "value": "[2,3,4]",
-                  "type": "text",
-                  "description": "String array format: '[2,3,4]' atau comma-separated: '2,3,4'"
-                },
-                {
-                  "key": "qr_position",
-                  "value": "bottom-right",
-                  "type": "text"
+                    "name": "Process Approval",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"action\": \"approve\",\n  \"comments\": \"Dokumen telah direview dan disetujui\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/approvals/documents/1/process",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "approvals",
+                                "documents",
+                                "1",
+                                "process"
+                            ]
+                        },
+                        "description": "Process approval dokumen (approve/reject) dengan komentar opsional"
+                    },
+                    "response": []
                 }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/documents",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "documents"
-              ]
-            },
-            "description": "Upload dokumen dengan approvers sebagai string array"
-          },
-          "response": []
+            ]
         },
         {
-          "name": "Get Document",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/documents/1",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "documents",
-                "1"
-              ]
-            },
-            "description": "Get detail dokumen berdasarkan ID"
-          },
-          "response": []
-        },
-        {
-          "name": "Update Document",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
+            "name": "Users (Admin Only)",
+            "item": [
                 {
-                  "key": "title",
-                  "value": "Kontrak Kerja Sama PT ABC - Revised",
-                  "type": "text"
+                    "name": "List Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users"
+                            ]
+                        },
+                        "description": "List semua users (hanya admin)"
+                    },
+                    "response": []
                 },
                 {
-                  "key": "description",
-                  "value": "Dokumen kontrak kerja sama yang telah direvisi",
-                  "type": "text"
+                    "name": "Create User",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"user\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/users",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users"
+                            ]
+                        },
+                        "description": "Create user baru (hanya admin)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users/2",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "2"
+                            ]
+                        },
+                        "description": "Get detail user berdasarkan ID (hanya admin)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update User",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Jane Smith Updated\",\n  \"email\": \"jane.updated@example.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/users/2",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "2"
+                            ]
+                        },
+                        "description": "Update user (hanya admin)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete User",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/users/2",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "2"
+                            ]
+                        },
+                        "description": "Delete user (hanya admin)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Change User Role",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{auth_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"role\": \"admin\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/users/2/change-role",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "users",
+                                "2",
+                                "change-role"
+                            ]
+                        },
+                        "description": "Change role user (hanya admin)"
+                    },
+                    "response": []
                 }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/documents/1",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "documents",
-                "1"
-              ]
-            },
-            "description": "Update dokumen (hanya untuk status draft)"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete Document",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/documents/1",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "documents",
-                "1"
-              ]
-            },
-            "description": "Delete dokumen (hanya untuk status draft)"
-          },
-          "response": []
-        },
-        {
-          "name": "Download Document",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/documents/1/download",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "documents",
-                "1",
-                "download"
-              ]
-            },
-            "description": "Download dokumen dengan watermark otomatis jika belum approved"
-          },
-          "response": []
+            ]
         }
-      ]
-    },
-    {
-      "name": "Approvals",
-      "item": [
+    ],
+    "variable": [
         {
-          "name": "Get Pending Approvals",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/approvals/pending",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "approvals",
-                "pending"
-              ]
-            },
-            "description": "Get list dokumen yang menunggu approval dari user yang sedang login"
-          },
-          "response": []
+            "key": "base_url",
+            "value": "http://localhost:8000/api",
+            "type": "string"
         },
         {
-          "name": "Process Approval",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"action\": \"approve\",\n  \"comments\": \"Dokumen telah direview dan disetujui\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/approvals/documents/1/process",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "approvals",
-                "documents",
-                "1",
-                "process"
-              ]
-            },
-            "description": "Process approval dokumen (approve/reject) dengan komentar opsional"
-          },
-          "response": []
+            "key": "auth_token",
+            "value": "",
+            "type": "string"
         }
-      ]
-    },
-    {
-      "name": "Users (Admin Only)",
-      "item": [
-        {
-          "name": "List Users",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users"
-              ]
-            },
-            "description": "List semua users (hanya admin)"
-          },
-          "response": []
-        },
-        {
-          "name": "Create User",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"role\": \"user\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/users",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users"
-              ]
-            },
-            "description": "Create user baru (hanya admin)"
-          },
-          "response": []
-        },
-        {
-          "name": "Get User",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/2",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "2"
-              ]
-            },
-            "description": "Get detail user berdasarkan ID (hanya admin)"
-          },
-          "response": []
-        },
-        {
-          "name": "Update User",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Smith Updated\",\n  \"email\": \"jane.updated@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/users/2",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "2"
-              ]
-            },
-            "description": "Update user (hanya admin)"
-          },
-          "response": []
-        },
-        {
-          "name": "Delete User",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/2",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "2"
-              ]
-            },
-            "description": "Delete user (hanya admin)"
-          },
-          "response": []
-        },
-        {
-          "name": "Change User Role",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{auth_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"role\": \"admin\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/users/2/change-role",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "users",
-                "2",
-                "change-role"
-              ]
-            },
-            "description": "Change role user (hanya admin)"
-          },
-          "response": []
-        }
-      ]
-    }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8000/api",
-      "type": "string"
-    },
-    {
-      "key": "auth_token",
-      "value": "",
-      "type": "string"
-    }
-  ]
+    ]
 }

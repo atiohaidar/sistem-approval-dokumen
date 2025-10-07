@@ -12,7 +12,7 @@ class QRCodeService
     /**
      * Generate QR code for document with approval status
      */
-    public function generateForDocument(Document $document, string $position): string
+    public function generateForDocument(Document $document, $position): string
     {
         // Generate URL to public document info
         $url = url('/api/documents/' . $document->id . '/public-info');
@@ -54,8 +54,14 @@ class QRCodeService
             Storage::disk('public')->delete($document->qr_code_path);
         }
 
-        // Generate new QR code
-        $newQrCodePath = $this->generateForDocument($document, $document->qr_position ?? 'top-right');
+        // Generate new QR code with current coordinates
+        $position = [
+            'x' => $document->qr_x,
+            'y' => $document->qr_y,
+            'page' => $document->qr_page ?? 1,
+        ];
+
+        $newQrCodePath = $this->generateForDocument($document, $position);
 
         // Update document with new QR code path
         $document->update(['qr_code_path' => $newQrCodePath]);

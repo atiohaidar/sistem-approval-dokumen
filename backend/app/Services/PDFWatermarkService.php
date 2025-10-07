@@ -10,7 +10,7 @@ class PDFWatermarkService
     /**
      * Add watermark and QR code to PDF and return temporary file path
      */
-    public function addWatermark(string $pdfPath, string $text = 'BELUM APPROVE', ?string $qrCodePath = null, string $qrPosition = 'top-right'): string
+    public function addWatermark(string $pdfPath, string $text = 'BELUM APPROVE', ?string $qrCodePath = null, $qrPosition = null): string
     {
         // Check if file exists
         if (!Storage::disk('public')->exists($pdfPath)) {
@@ -37,7 +37,7 @@ class PDFWatermarkService
             $pdf->useTemplate($templateId);
 
             // Add watermark and QR code
-            $this->addWatermarkToPage($pdf, $text, $size['width'], $size['height'], $qrCodePath, $qrPosition);
+            $this->addWatermarkToPage($pdf, $text, $size['width'], $size['height'], $qrCodePath, $qrPosition, $pageNo);
         }
 
         // Generate temporary file
@@ -61,7 +61,7 @@ class PDFWatermarkService
      * Note: Using light gray color instead of alpha transparency for FPDI compatibility
      * No rotation support in FPDI, using centered horizontal text instead
      */
-    private function addWatermarkToPage(Fpdi $pdf, string $text, float $pageWidth, float $pageHeight, ?string $qrCodePath = null, string $qrPosition = 'top-right'): void
+    private function addWatermarkToPage(Fpdi $pdf, string $text, float $pageWidth, float $pageHeight, ?string $qrCodePath = null, $qrPosition = null, int $currentPage = 1): void
     {
         // Add watermark text
         $pdf->SetFont('Arial', 'B', 50);
@@ -78,43 +78,68 @@ class PDFWatermarkService
         // Add text without rotation (horizontal)
         $pdf->Text($x, $y, $text);
 
-        // Add QR code if provided
+        // Add QR code if provided and this is the target page
         if ($qrCodePath && Storage::disk('public')->exists($qrCodePath)) {
-            $this->addQRCodeToPage($pdf, $qrCodePath, $pageWidth, $pageHeight, $qrPosition);
+            $targetPage = 1; // Default page
+
+            // Parse QR position to get target page
+            if (is_array($qrPosition) && isset($qrPosition['page'])) {
+                $targetPage = $qrPosition['page'];
+            }
+
+            // Only add QR code to the target page
+            if ($currentPage === $targetPage) {
+                $this->addQRCodeToPage($pdf, $qrCodePath, $pageWidth, $pageHeight, $qrPosition);
+            }
         }
     }
 
     /**
      * Add QR code image to a page
      */
-    private function addQRCodeToPage(Fpdi $pdf, string $qrCodePath, float $pageWidth, float $pageHeight, string $qrPosition): void
+    private function addQRCodeToPage(Fpdi $pdf, string $qrCodePath, float $pageWidth, float $pageHeight, $qrPosition): void
     {
         $qrFullPath = Storage::disk('public')->path($qrCodePath);
 
-        // Calculate QR code position based on qr_position
+        // Calculate QR code position
         $qrSize = 50; // QR code size in mm
-        $margin = 10; // Margin from edges
 
-        switch ($qrPosition) {
-            case 'top-left':
-                $x = $margin;
-                $y = $margin;
-                break;
-            case 'top-right':
-                $x = $pageWidth - $qrSize - $margin;
-                $y = $margin;
-                break;
-            case 'bottom-left':
-                $x = $margin;
-                $y = $pageHeight - $qrSize - $margin;
-                break;
-            case 'bottom-right':
-                $x = $pageWidth - $qrSize - $margin;
-                $y = $pageHeight - $qrSize - $margin;
-                break;
-            default:
-                $x = $pageWidth - $qrSize - $margin;
-                $y = $margin;
+        // Default position (top-right) for backward compatibility
+        $x = $pageWidth - $qrSize - 10;
+        $y = 90;
+
+        // If new coordinate format is provided
+        if (is_array($qrPosition)) {
+            if (isset($qrPosition['x']) && isset($qrPosition['y'])) {
+                // Convert relative coordinates (0.0-1.0) to absolute coordinates
+                $x = $qrPosition['x'] * $pageWidth;
+                $y = $qrPosition['y'] * $pageHeight;
+
+                // Ensure QR code stays within page bounds
+                $x = max(0, min($x, $pageWidth - $qrSize));
+                $y = max(0, min($y, $pageHeight - $qrSize));
+            }
+        } elseif (is_string($qrPosition)) {
+            // Backward compatibility with old string format
+            $margin = 10;
+            switch ($qrPosition) {
+                case 'top-left':
+                    $x = $margin;
+                    $y = $margin;
+                    break;
+                case 'top-right':
+                    $x = $pageWidth - $qrSize - $margin;
+                    $y = $margin;
+                    break;
+                case 'bottom-left':
+                    $x = $margin;
+                    $y = $pageHeight - $qrSize - $margin;
+                    break;
+                case 'bottom-right':
+                    $x = $pageWidth - $qrSize - $margin;
+                    $y = $pageHeight - $qrSize - $margin;
+                    break;
+            }
         }
 
         // Add QR code image

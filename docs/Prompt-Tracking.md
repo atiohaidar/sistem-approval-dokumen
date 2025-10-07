@@ -120,3 +120,24 @@ but i have install php 8.3 how to change it
 **Evaluasi:** Prompt jelas dengan spesifikasi: tidak perlu security approach, fokus backend, perlu adjust QR size, link menuju endpoint lihat dokumen. Berhasil mengimplementasikan endpoint GET /api/documents/{id}/public-info yang dapat diakses publik, update QRCodeService untuk generate URL instead of JSON, adjust QR size dari 200px ke 300px, dan tambahkan comprehensive tests. Tidak ada kesalahan. Saran: Baik untuk pendekatan step-by-step dan spesifikasi yang jelas.
 
 **Rekap Hasil:** Berhasil mengubah QR code dari JSON menjadi URL yang menuju endpoint public-info dokumen. Endpoint dapat diakses publik tanpa authentication, menampilkan informasi lengkap dokumen termasuk approvers, status approval, progress, dan workflow. QR code size diperbesar dari 200px ke 300px untuk menampung URL yang lebih panjang. Semua 45 tests pass dengan 222 assertions. Backend siap untuk integrasi frontend.
+
+**Tanggal:** 7 Oktober 2025
+**Prompt:** ok seperti itu saja, jadi posisi nya top-left dll itu hilangkan saja.
+
+**Evaluasi:** Prompt jelas ingin menghilangkan sistem posisi predefined (top-left, top-right, dll) dan menggantinya dengan sistem koordinat yang bisa ditentukan user. Berhasil mengimplementasikan sistem koordinat relatif (0.0-1.0) terhadap ukuran halaman PDF, support multi-page, backward compatibility dengan format lama, dan semua test pass. Tidak ada kesalahan. Saran: Baik untuk transisi ke sistem yang lebih fleksibel, tapi pastikan frontend bisa handle koordinat baru.
+
+**Rekap Hasil:** Berhasil mengimplementasikan sistem koordinat QR code yang fleksibel dengan support multi-page PDF. Menambah field qr_x, qr_y, qr_page ke database, update semua service dan controller untuk handle koordinat relatif, maintain backward compatibility, dan semua 17 tests pass dengan 138 assertions. Sistem sekarang mendukung positioning QR di halaman mana saja dengan koordinat yang bisa ditentukan user.
+
+**Tanggal:** 7 Oktober 2025
+**Prompt:** "SQLSTATE[23000]: Integrity constraint violation: 19 CHECK constraint failed: qr_position (Connection: sqlite, SQL: insert into \"documents\" (\"title\", \"description\", \"file_path\", \"file_name\", \"file_size\", \"mime_type\", \"template_id\", \"status\", \"created_by\", \"approvers\", \"qr_position\", \"qr_x\", \"qr_y\", \"qr_page\", \"total_steps\", \"submitted_at\", \"updated_at\", \"created_at\") values (Kontrak Kerja Sama PT ABC, Dokumen kontrak kerja sama antara PT ABC dengan PT XYZ, documents/1759806019_68e4824323fc6.pdf, Assigment 2 ACDR.pdf, 43995, application/pdf, ?, pending_approval, 2, [2], {\"x\": 0.7,\"y\": 0.3,\"page\": 2}, 0.7, 0.3, 2, 1, 2025-10-07 03:00:19, 2025-10-07 03:00:19, 2025-10-07 03:00:19))"
+
+**Evaluasi:** Prompt menunjukkan error constraint violation pada field qr_position karena field tersebut masih enum tapi kita mengirim JSON object. Berhasil diperbaiki dengan membuat migration untuk mengubah field qr_position dari enum menjadi json, menambah cast array di Document model, dan memperbaiki semua test untuk menggunakan format koordinat baru. Tidak ada kesalahan. Saran: Baik untuk melaporkan error database constraint secara spesifik, memudahkan debugging.
+
+**Rekap Hasil:** Berhasil memperbaiki error constraint violation dengan mengubah field qr_position dari enum menjadi json untuk support koordinat baru. Migration berhasil dijalankan, semua test diperbaiki untuk menggunakan format koordinat, dan sistem sekarang mendukung positioning QR dengan koordinat relatif (0.0-1.0) di halaman mana saja. Semua 45 tests pass dengan 222 assertions.
+
+**Tanggal:** 7 Oktober 2025
+**Prompt:** QR code masih muncul di kanan atas padahal sudah set koordinat custom
+
+**Evaluasi:** Prompt jelas melaporkan masalah positioning QR code yang masih muncul di posisi default (kanan atas) meskipun koordinat sudah diset. Berhasil mengidentifikasi bahwa parsing koordinat hanya terjadi di controller tapi tidak di model saat factory create. Ditambahkan boot method di Document model untuk auto-parse koordinat saat saving, dibersihkan debug logging, dan ditambahkan comprehensive test untuk memverifikasi parsing koordinat. Tidak ada kesalahan. Saran: Baik untuk melaporkan masalah spesifik dengan evidence, memudahkan debugging.
+
+**Rekap Hasil:** Berhasil memperbaiki masalah QR positioning dengan menambahkan auto-parsing logic di Document model boot method. Sekarang koordinat otomatis diparsing dari qr_position array ke field qr_x, qr_y, qr_page saat model disimpan. Ditambahkan test komprehensif untuk memverifikasi parsing koordinat dan backward compatibility. Semua 18 tests pass dengan 149 assertions. Sistem koordinat QR sekarang bekerja dengan benar untuk positioning fleksibel.

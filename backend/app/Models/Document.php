@@ -26,6 +26,9 @@ class Document extends Model
         'total_steps',
         'approvers',
         'qr_position',
+        'qr_x',
+        'qr_y',
+        'qr_page',
         'qr_code_path',
     ];
 
@@ -36,7 +39,28 @@ class Document extends Model
         'current_step' => 'integer',
         'total_steps' => 'integer',
         'approvers' => 'array',
+        'qr_position' => 'array',
+        'qr_x' => 'float',
+        'qr_y' => 'float',
+        'qr_page' => 'integer',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($document) {
+            // Auto-parse qr_position if it's an array with coordinates
+            if (is_array($document->qr_position) &&
+                isset($document->qr_position['x']) &&
+                isset($document->qr_position['y'])) {
+
+                $document->qr_x = $document->qr_position['x'];
+                $document->qr_y = $document->qr_position['y'];
+                $document->qr_page = $document->qr_position['page'] ?? 1;
+            }
+        });
+    }
 
     // Relationships
     public function creator(): BelongsTo
