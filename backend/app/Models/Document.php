@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Document extends Model
 {
-    use HasFactory;protected $fillable = [
+    use HasFactory;
+
+    protected $fillable = [
         'title',
         'description',
         'file_path',
@@ -22,6 +24,9 @@ class Document extends Model
         'completed_at',
         'current_step',
         'total_steps',
+        'approvers',
+        'qr_position',
+        'qr_code_path',
     ];
 
     protected $casts = [
@@ -30,6 +35,7 @@ class Document extends Model
         'file_size' => 'integer',
         'current_step' => 'integer',
         'total_steps' => 'integer',
+        'approvers' => 'array',
     ];
 
     // Relationships
@@ -72,5 +78,63 @@ class Document extends Model
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    // Approval workflow methods
+    public function isPendingApproval(): bool
+    {
+        return $this->status === 'pending_approval';
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'completed' && $this->current_step >= $this->total_steps;
+    }
+
+    public function getCurrentApproverId(): ?int
+    {
+        if (!$this->approvers || !is_array($this->approvers) || $this->current_step >= count($this->approvers)) {
+            return null;
+        }
+
+        return $this->approvers[$this->current_step] ?? null;
+    }
+
+    public function getNextApproverId(): ?int
+    {
+        if (!$this->approvers || !is_array($this->approvers) || $this->current_step + 1 >= count($this->approvers)) {
+            return null;
+        }
+
+        return $this->approvers[$this->current_step + 1] ?? null;
+    }
+
+    public function canBeApprovedBy(int $userId): bool
+    {
+        return $this->getCurrentApproverId() === $userId && $this->isPendingApproval();
+    }
+
+    public function moveToNextStep(): bool
+    {
+        if ($this->current_step < $this->total_steps) {
+            $this->current_step++;
+            $this->save();
+            return true;
+        }
+        return false;
+    }
+
+    public function completeApproval(): void
+    {
+        $this->status = 'completed';
+        $this->completed_at = now();
+        $this->save();
+    }
+
+    public function rejectApproval(): void
+    {
+        $this->status = 'rejected';
+        $this->completed_at = now();
+        $this->save();
     }
 }

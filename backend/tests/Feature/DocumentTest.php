@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Document;
 use App\Models\User;
+use App\Services\QRCodeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
@@ -66,10 +67,16 @@ class DocumentTest extends TestCase
 
         $file = UploadedFile::fake()->create('document.pdf', 1000);
 
+        // Create additional users for approvers
+        $approver1 = User::factory()->create();
+        $approver2 = User::factory()->create();
+
         $data = [
             'title' => 'Test Document',
             'description' => 'This is a test document',
             'file' => $file,
+            'approvers' => [$approver1->id, $approver2->id],
+            'qr_position' => 'top-right',
         ];
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -86,6 +93,9 @@ class DocumentTest extends TestCase
                 'mime_type',
                 'status',
                 'created_by',
+                'approvers',
+                'qr_position',
+                'total_steps',
                 'creator' => [
                     'id',
                     'name',
@@ -97,8 +107,14 @@ class DocumentTest extends TestCase
             'title' => 'Test Document',
             'description' => 'This is a test document',
             'created_by' => $this->user->id,
-            'status' => 'draft'
+            'status' => 'pending_approval',
+            'qr_position' => 'top-right',
+            'total_steps' => 2,
         ]);
+
+        // Verify approvers are stored correctly
+        $document = Document::find($response->json('id'));
+        $this->assertEquals([$approver1->id, $approver2->id], $document->approvers);
 
         Storage::disk('public')->assertExists('documents/' . basename($response->json('file_path')));
     }
@@ -159,7 +175,7 @@ class DocumentTest extends TestCase
     {
         $document = Document::factory()->create([
             'created_by' => $this->user->id,
-            'status' => 'pending'
+            'status' => 'pending_approval'
         ]);
 
         $updateData = [
@@ -203,7 +219,7 @@ class DocumentTest extends TestCase
     {
         $document = Document::factory()->create([
             'created_by' => $this->user->id,
-            'status' => 'pending'
+            'status' => 'pending_approval'
         ]);
 
         $response = $this->actingAs($this->user, 'sanctum')
@@ -285,5 +301,290 @@ class DocumentTest extends TestCase
             ->postJson('/api/documents', $data);
 
         $response->assertStatus(422);
+    }
+
+    #[Test]
+    public function user_can_download_document_with_watermark_when_not_approved()
+    {
+        // Create a dummy PDF file in storage
+        $dummyPdfPath = 'documents/test-document.pdf';
+        $dummyPdfContent = '%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+4 0 obj
+<<
+/Length 44
+>>
+stream
+BT
+/F1 12 Tf
+100 700 Td
+(Hello World) Tj
+ET
+endstream
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000274 00000 n
+0000000373 00000 n
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+459
+%%EOF';
+
+        Storage::disk('public')->put($dummyPdfPath, $dummyPdfContent);
+
+        // Create a document that is not approved
+        $document = Document::factory()->create([
+            'created_by' => $this->user->id,
+            'status' => 'pending_approval',
+            'approvers' => json_encode([$this->user->id + 1, $this->user->id + 2]),
+            'qr_position' => 'top-right',
+            'file_path' => $dummyPdfPath,
+            'file_name' => 'test-document.pdf'
+        ]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->get("/api/documents/{$document->id}/download");
+
+        $response->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Content-Disposition', 'attachment; filename=test-document.pdf');
+
+        // Clean up
+        Storage::disk('public')->delete($dummyPdfPath);
+    }
+
+    #[Test]
+    public function user_can_download_document_without_watermark_when_approved()
+    {
+        // Create a dummy PDF file in storage
+        $dummyPdfPath = 'documents/test-approved-document.pdf';
+        $dummyPdfContent = '%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+4 0 obj
+<<
+/Length 44
+>>
+stream
+BT
+/F1 12 Tf
+100 700 Td
+(Hello World) Tj
+ET
+endstream
+endobj
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000274 00000 n
+0000000373 00000 n
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+459
+%%EOF';
+
+        Storage::disk('public')->put($dummyPdfPath, $dummyPdfContent);
+
+        // Create a document that is approved
+        $document = Document::factory()->create([
+            'created_by' => $this->user->id,
+            'status' => 'completed',
+            'approvers' => json_encode([$this->user->id + 1]),
+            'qr_position' => 'top-right',
+            'file_path' => $dummyPdfPath,
+            'file_name' => 'test-approved-document.pdf'
+        ]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->get("/api/documents/{$document->id}/download");
+
+        $response->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        // Clean up
+        Storage::disk('public')->delete($dummyPdfPath);
+    }
+
+    #[Test]
+    public function user_can_create_document_with_approvers_as_string()
+    {
+        $approver1 = User::factory()->create();
+        $approver2 = User::factory()->create();
+
+        $data = [
+            'title' => 'Test Document with String Approvers',
+            'description' => 'This is a test document with string approvers',
+            'file' => UploadedFile::fake()->create('document.pdf', 1000, 'application/pdf'),
+            'approvers' => '[' . $approver1->id . ',' . $approver2->id . ']', // String format
+            'qr_position' => 'top-left',
+        ];
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/documents', $data);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'id',
+                'title',
+                'description',
+                'approvers',
+                'qr_position',
+                'status',
+                'created_by',
+                'created_at',
+            ]);
+
+        $document = Document::find($response->json('id'));
+        $this->assertEquals([$approver1->id, $approver2->id], $document->approvers);
+        $this->assertEquals('pending_approval', $document->status);
+        $this->assertEquals(2, $document->total_steps);
+    }
+
+    #[Test]
+    public function user_cannot_download_other_users_document()
+    {
+        $otherUser = User::factory()->create();
+        $document = Document::factory()->create(['created_by' => $otherUser->id]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->get("/api/documents/{$document->id}/download");
+
+        $response->assertStatus(403);
+    }
+
+    #[Test]
+    public function public_can_access_document_info_via_qr_code()
+    {
+        $document = Document::factory()->create([
+            'created_by' => $this->user->id,
+            'approvers' => [$this->user->id],
+            'status' => 'pending_approval',
+            'current_step' => 0,
+            'total_steps' => 1,
+        ]);
+
+        // Access public info without authentication
+        $response = $this->getJson("/api/documents/{$document->id}/public-info");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'document' => [
+                    'id', 'title', 'description', 'status', 'file_name',
+                    'file_size', 'mime_type', 'created_at', 'submitted_at', 'creator'
+                ],
+                'approvers' => [
+                    '*' => ['id', 'name', 'email', 'status', 'approved_at', 'notes']
+                ],
+                'progress' => [
+                    'total_approvers', 'approved_count', 'pending_count',
+                    'rejected_count', 'current_step', 'completion_percentage'
+                ],
+                'workflow' => [
+                    'is_sequential', 'can_download', 'next_approver'
+                ]
+            ]);
+
+        // Verify data accuracy
+        $responseData = $response->json();
+        $this->assertEquals($document->id, $responseData['document']['id']);
+        $this->assertEquals($document->title, $responseData['document']['title']);
+        $this->assertEquals(1, $responseData['progress']['total_approvers']);
+        $this->assertEquals(0, $responseData['progress']['approved_count']);
+        $this->assertEquals(1, $responseData['progress']['pending_count']);
+    }
+
+    #[Test]
+    public function qr_code_contains_url_to_public_info()
+    {
+        $document = Document::factory()->create([
+            'created_by' => $this->user->id,
+            'approvers' => [$this->user->id],
+            'qr_position' => 'top-right'
+        ]);
+
+        $qrService = app(QRCodeService::class);
+        $qrUrl = $qrService->getQRUrl($document);
+        $expectedUrl = url('/api/documents/' . $document->id . '/public-info');
+
+        $this->assertEquals($expectedUrl, $qrUrl);
     }
 }

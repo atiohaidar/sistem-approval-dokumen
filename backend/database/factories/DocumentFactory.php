@@ -24,7 +24,7 @@ class DocumentFactory extends Factory
             'file_size' => $this->faker->numberBetween(1000, 10000000), // 1KB to 10MB
             'mime_type' => 'application/pdf',
             'template_id' => null, // Default to null, can be overridden
-            'status' => $this->faker->randomElement(['draft', 'pending', 'in_progress', 'completed', 'rejected', 'cancelled']),
+            'status' => $this->faker->randomElement(['draft', 'pending_approval', 'in_progress', 'completed', 'rejected', 'cancelled']),
             'created_by' => \App\Models\User::factory(),
             'submitted_at' => $this->faker->optional(0.3)->dateTime(), // 30% chance of being submitted
             'completed_at' => $this->faker->optional(0.2)->dateTime(), // 20% chance of being completed
@@ -46,12 +46,12 @@ class DocumentFactory extends Factory
     }
 
     /**
-     * Indicate that the document is pending.
+     * Indicate that the document is pending approval.
      */
     public function pending(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'pending',
+            'status' => 'pending_approval',
             'submitted_at' => now(),
             'completed_at' => null,
         ]);
