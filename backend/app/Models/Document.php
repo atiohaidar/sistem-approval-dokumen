@@ -79,31 +79,6 @@ class Document extends Model
         return $this->status === 'draft';
     }
 
-    public function isPending(): bool
-    {
-        return $this->status === 'pending';
-    }
-
-    public function isInProgress(): bool
-    {
-        return $this->status === 'in_progress';
-    }
-
-    public function isCompleted(): bool
-    {
-        return $this->status === 'completed';
-    }
-
-    public function isRejected(): bool
-    {
-        return $this->status === 'rejected';
-    }
-
-    public function isCancelled(): bool
-    {
-        return $this->status === 'cancelled';
-    }
-
     // Approval workflow methods
     public function isPendingApproval(): bool
     {
@@ -122,15 +97,6 @@ class Document extends Model
         }
 
         return $this->approvers[$this->current_step] ?? null;
-    }
-
-    public function getNextApproverId(): ?int
-    {
-        if (!$this->approvers || !is_array($this->approvers) || $this->current_step + 1 >= count($this->approvers)) {
-            return null;
-        }
-
-        return $this->approvers[$this->current_step + 1] ?? null;
     }
 
     public function canBeApprovedBy(int $userId): bool

@@ -14,25 +14,17 @@ class DocumentTemplate extends Model
     protected $fillable = [
         'name',
         'description',
-        'file_path',
-        'is_active',
-        'default_approval_flow_id',
         'created_by',
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        //
     ];
 
     // Relationships
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function defaultApprovalFlow(): BelongsTo
-    {
-        return $this->belongsTo(ApprovalFlow::class, 'default_approval_flow_id');
     }
 
     public function documents(): HasMany

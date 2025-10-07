@@ -19,9 +19,6 @@ class DocumentTemplateFactory extends Factory
         return [
             'name' => $this->faker->sentence(3),
             'description' => $this->faker->paragraph(),
-            'file_path' => 'templates/' . $this->faker->uuid() . '.pdf',
-            'is_active' => $this->faker->boolean(90), // 90% chance of being active
-            'default_approval_flow_id' => null, // Will be set if approval flows exist
             'created_by' => \App\Models\User::factory(),
         ];
     }
