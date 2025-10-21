@@ -11,6 +11,7 @@ use App\Services\QRCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
@@ -20,7 +21,8 @@ class DocumentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Document::with(['creator', 'template']);
+        $query = Document::with(['creator:id,name,email', 'template:id,name'])
+            ->select(['id', 'title', 'description', 'status', 'created_by', 'template_id', 'created_at', 'updated_at', 'file_path', 'file_name']);
 
         // Filter by status if provided
         if ($request->has('status')) {
@@ -65,45 +67,57 @@ class DocumentController extends Controller
             'qr_page' => 'nullable|integer|min:1',
         ]);
 
+        // Additional custom validation for approvers structure
+        $this->validateApproversStructure($request->approvers, Auth::id());
+
         // Validate QR coordinates
         $this->validateQRCoodinates($request->qr_x, $request->qr_y);
 
-        // Handle file upload
-        $file = $request->file('file');
-        $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-        $filePath = $file->storeAs('documents', $fileName, 'public');
+        $document = DB::transaction(function () use ($request) {
+            // Handle file upload
+            $file = $request->file('file');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $filePath = $file->storeAs('documents', $fileName, 'public');
 
-        $document = Document::create([
-            'title' => $request->title,
-            'description' => $request->description,
-            'file_path' => $filePath,
-            'file_name' => $file->getClientOriginalName(),
-            'file_size' => $file->getSize(),
-            'mime_type' => $file->getMimeType(),
-            'template_id' => $request->template_id,
-            'status' => 'pending_approval',
-            'created_by' => Auth::id(),
-            'approvers' => $request->approvers,
-            'current_level' => 1, // Start from level 1
-            'qr_x' => $request->qr_x,
-            'qr_y' => $request->qr_y,
-            'qr_page' => $request->qr_page ?? 1,
-            'submitted_at' => now(),
-        ]);
+            $document = Document::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'file_path' => $filePath,
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'mime_type' => $file->getMimeType(),
+                'template_id' => $request->template_id,
+                'status' => 'pending_approval',
+                'created_by' => Auth::id(),
+                'approvers' => $request->approvers,
+                'current_level' => 1, // Start from level 1
+                'qr_x' => $request->qr_x,
+                'qr_y' => $request->qr_y,
+                'qr_page' => $request->qr_page ?? 1,
+                'submitted_at' => now(),
+            ]);
 
-        // Initialize level progress for the first level
-        $document->getLevelProgress();
+            // Initialize level progress for the first level
+            $document->getLevelProgress();
 
-        // Generate QR Code
-        $qrPosition = [
-            'x' => $request->qr_x,
-            'y' => $request->qr_y,
-            'page' => $request->qr_page ?? 1,
-        ];
-        $qrCodePath = app(QRCodeService::class)->generateForDocument($document, $qrPosition);
+            // Generate QR Code
+            $qrPosition = [
+                'x' => $request->qr_x,
+                'y' => $request->qr_y,
+                'page' => $request->qr_page ?? 1,
+            ];
 
-        // Update document with QR code path
-        $document->update(['qr_code_path' => $qrCodePath]);
+            try {
+                $qrCodePath = app(QRCodeService::class)->generateForDocument($document, $qrPosition);
+                // Update document with QR code path
+                $document->update(['qr_code_path' => $qrCodePath]);
+            } catch (\Exception $e) {
+                \Log::error('QR Code generation failed for document ' . $document->id . ': ' . $e->getMessage());
+                // Continue without QR code - document is still created
+            }
+
+            return $document;
+        });
 
         return response()->json($document->load(['creator', 'template']), 201);
     }
@@ -144,7 +158,12 @@ class DocumentController extends Controller
         if ($request->hasFile('file')) {
             // Delete old file
             if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
-                Storage::disk('public')->delete($document->file_path);
+                try {
+                    Storage::disk('public')->delete($document->file_path);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to delete old file for document ' . $document->id . ': ' . $e->getMessage());
+                    // Continue with update - old file might remain but document is updated
+                }
             }
 
             $file = $request->file('file');
@@ -179,7 +198,12 @@ class DocumentController extends Controller
 
         // Delete file from storage
         if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+            try {
+                Storage::disk('public')->delete($document->file_path);
+            } catch (\Exception $e) {
+                \Log::error('Failed to delete file for document ' . $document->id . ': ' . $e->getMessage());
+                // Continue with deletion - file might remain but document is deleted
+            }
         }
 
         $document->delete();
@@ -253,26 +277,9 @@ class DocumentController extends Controller
     public function publicInfo(Document $document): JsonResponse
     {
         // Load related data efficiently
-        // disini intinya mau ngambil data dokumen serta proses approvalnya sudah sampai mana, siapa saja yang memproses dan hasilnya apa saja
         $document->load(['creator']);
-        // mengambil     public function getApprovalProgress():  dari model Document
         $approvalProgress = $document->getApprovalProgress();
-        //  mengambil  informasi tambahan tentang approval progressnya, (progress_at dan notes nya  dan info siapa yang sudah memproses)
-        // datanya diambil dari tabel document_approvals
-        //  mencari document_approvals yang sesuai dengan document id, approver_id, dan level
-        //  approval proggres isinya adalah  {
-        // "1": {
-        //     "status": "completed",
-        //     "approved": [
-        //         1,
-        //         2
-        //     ],
-        //     "pending": [],
-        //     "rejected": []
-        // },
-
         $approvalRecords = DocumentApproval::where('document_id', $document->id)->get();
-
 
         return response()->json([
             'document' => $document,
@@ -284,121 +291,6 @@ class DocumentController extends Controller
     /**
      * Calculate approval statistics
      */
-    private function calculateApprovalStats(array $approvalProgress): array
-    {
-        $totalApprovers = collect($approvalProgress)->sum(function ($level) {
-            return count($level['approved']) + count($level['pending']) + count($level['rejected'] ?? []);
-        });
-
-        $approvedCount = collect($approvalProgress)->sum(function ($level) {
-            return count($level['approved']);
-        });
-
-        $pendingCount = collect($approvalProgress)->sum(function ($level) {
-            return count($level['pending']);
-        });
-
-        $rejectedCount = collect($approvalProgress)->sum(function ($level) {
-            return count($level['rejected'] ?? []);
-        });
-
-        return [
-            'total_approvers' => $totalApprovers,
-            'approved_count' => $approvedCount,
-            'pending_count' => $pendingCount,
-            'rejected_count' => $rejectedCount,
-            'completion_percentage' => $totalApprovers > 0 ?
-                round(($approvedCount / $totalApprovers) * 100, 1) : 0,
-        ];
-    }
-
-    /**
-     * Determine document status based on approval progress
-     */
-    private function determineDocumentStatus(Document $document, array $stats): string
-    {
-        if ($stats['rejected_count'] > 0) {
-            return 'rejected';
-        }
-
-        if ($document->isApproved()) {
-            return 'completed';
-        }
-
-        if ($stats['pending_count'] > 0) {
-            return 'pending_approval';
-        }
-
-        return $document->status;
-    }
-
-    /**
-     * Build workflow information with approvers details
-     */
-    private function buildWorkflowInfo(Document $document, array $approvalProgress, $approvalRecords): array
-    {
-        $workflow = [];
-
-        foreach ($document->approvers as $levelIndex => $levelApprovers) {
-            $levelNumber = $levelIndex + 1;
-            $levelData = $approvalProgress[$levelIndex] ?? ['approved' => [], 'pending' => [], 'rejected' => []];
-
-            $approvers = [];
-            foreach ($levelApprovers as $approverId) {
-                $approvalRecord = $approvalRecords->get($levelNumber)?->get($approverId)?->first();
-
-                $status = null;
-                if (isset($levelData['approved']) && in_array($approverId, $levelData['approved'])) {
-                    $status = 'approved';
-                } elseif (isset($levelData['rejected']) && in_array($approverId, $levelData['rejected'])) {
-                    $status = 'rejected';
-                } elseif (isset($levelData['pending']) && in_array($approverId, $levelData['pending'])) {
-                    // Only show pending if level is current or document is not rejected
-                    if ($levelNumber <= $document->current_level || $document->status !== 'rejected') {
-                        $status = 'pending';
-                    }
-                }
-
-                $approvers[] = [
-                    'id' => $approverId,
-                    'name' => $approvalRecord?->approver?->name ?? 'Unknown User',
-                    'email' => $approvalRecord?->approver?->email ?? null,
-                    'status' => $status,
-                    'processed_at' => $approvalRecord?->processed_at?->toISOString(),
-                    'notes' => $approvalRecord?->notes,
-                ];
-            }
-
-            $workflow[$levelNumber] = [
-                'level' => $levelNumber,
-                'status' => $levelData['status'] ?? 'pending',
-                'approvers' => $approvers,
-                'required_approvals' => count($levelApprovers),
-                'approved_count' => count($levelData['approved']),
-                'rejected_count' => count($levelData['rejected'] ?? []),
-                'pending_count' => count($levelData['pending']),
-            ];
-        }
-
-        return $workflow;
-    }
-
-    /**
-     * Find next approver who is pending
-     */
-    private function findNextApprover(array $workflow): ?array
-    {
-        foreach ($workflow as $level) {
-            foreach ($level['approvers'] as $approver) {
-                if ($approver['status'] === 'pending') {
-                    return $approver;
-                }
-            }
-        }
-
-        return null;
-    }
-
     /**
      * Check if user can view/download the document
      */
@@ -409,9 +301,13 @@ class DocumentController extends Controller
             return true;
         }
 
-        // Approvers can view documents they're assigned to
-        if ($document->approvers && in_array($user->id, $document->approvers)) {
-            return true;
+        // Approvers can view documents they're assigned to (check all levels)
+        if ($document->approvers && is_array($document->approvers)) {
+            foreach ($document->approvers as $levelApprovers) {
+                if (is_array($levelApprovers) && in_array($user->id, $levelApprovers)) {
+                    return true;
+                }
+            }
         }
 
         // Admins can view all documents
@@ -436,9 +332,15 @@ class DocumentController extends Controller
 
             // If not valid JSON, try to parse as comma-separated string
             $parsed = array_map('trim', explode(',', trim($approvers, '[]')));
-            return array_filter($parsed, function($item) {
+            $filtered = array_filter($parsed, function($item) {
                 return is_numeric($item) && (int)$item > 0;
             });
+
+            if (empty($filtered)) {
+                throw new \InvalidArgumentException('Invalid approvers format. Must be valid JSON array or comma-separated user IDs.');
+            }
+
+            return $filtered;
         }
 
         return (array) $approvers;
@@ -455,6 +357,24 @@ class DocumentController extends Controller
 
         if (!is_numeric($y) || $y < 0 || $y > 1) {
             throw new \InvalidArgumentException('QR y coordinate must be between 0.0 and 1.0');
+        }
+    }
+
+    /**
+     * Validate approvers structure for duplicates and business rules
+     */
+    private function validateApproversStructure(array $approvers, int $creatorId): void
+    {
+        foreach ($approvers as $levelIndex => $levelApprovers) {
+            // Check for duplicates within the same level
+            if (count($levelApprovers) !== count(array_unique($levelApprovers))) {
+                throw new \InvalidArgumentException("Level " . ($levelIndex + 1) . " contains duplicate approvers.");
+            }
+
+            // Optional: Prevent creator from being an approver (uncomment if needed)
+            // if (in_array($creatorId, $levelApprovers)) {
+            //     throw new \InvalidArgumentException("Creator cannot be an approver.");
+            // }
         }
     }
 }

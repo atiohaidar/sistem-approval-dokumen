@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Document extends Model
 {
@@ -103,7 +104,18 @@ class Document extends Model
 
     public function canBeApprovedBy(int $userId): bool
     {
-        return in_array($userId, $this->getCurrentApproverIds()) && $this->isPendingApproval();
+        if (!$this->isPendingApproval()) {
+            return false;
+        }
+
+        $currentApproverIds = $this->getCurrentApproverIds();
+        if (!in_array($userId, $currentApproverIds)) {
+            return false;
+        }
+
+        // Cek apakah user sudah approve atau reject di level ini
+        $progress = $this->getLevelProgress();
+        return !in_array($userId, $progress['approved']) && !in_array($userId, $progress['rejected']);
     }
 
     public function isLevelComplete(): bool
@@ -132,17 +144,12 @@ class Document extends Model
 
     public function approveByUser(int $userId): bool
     {
-      
-        if (!$this->canBeApprovedBy($userId)) {
-            return false;
-        }
+        return DB::transaction(function () use ($userId) {
+            if (!$this->canBeApprovedBy($userId)) {
+                return false;
+            }
 
-        $progress = $this->getLevelProgress();
-        if (!in_array($userId, $progress['approved'])) {
-            $progress['approved'][] = $userId;
-            $progress['pending'] = array_values(array_diff($progress['pending'], [$userId]));
-            $this->level_progress = $progress;
-            $this->save();
+            $this->updateLevelProgress($userId, 'approved');
 
             // Check if level is complete
             if ($this->isLevelComplete()) {
@@ -151,28 +158,48 @@ class Document extends Model
                     $this->completeApproval();
                 }
             }
-        }
 
-        return true;
+            return true;
+        });
     }
 
     public function rejectByUser(int $userId): bool
     {
-        if (!$this->canBeApprovedBy($userId)) {
-            return false;
-        }
+        return DB::transaction(function () use ($userId) {
+            if (!$this->canBeApprovedBy($userId)) {
+                return false;
+            }
 
-        // Update level progress to mark user as rejected
+            $this->updateLevelProgress($userId, 'rejected');
+            $this->rejectApproval();
+
+            return true;
+        });
+    }
+
+    /**
+     * Update level progress for a user action
+     */
+    private function updateLevelProgress(int $userId, string $action): void
+    {
         $progress = $this->getLevelProgress();
-        if (!in_array($userId, $progress['approved'])) {
-            $progress['rejected'][] = $userId;
-            $progress['pending'] = array_values(array_diff($progress['pending'], [$userId]));
-            $this->level_progress = $progress;
-            $this->save();
+
+        // Remove from pending
+        $progress['pending'] = array_values(array_diff($progress['pending'], [$userId]));
+
+        // Add to appropriate array based on action
+        if ($action === 'approved') {
+            if (!in_array($userId, $progress['approved'])) {
+                $progress['approved'][] = $userId;
+            }
+        } elseif ($action === 'rejected') {
+            if (!in_array($userId, $progress['approved']) && !in_array($userId, $progress['rejected'])) {
+                $progress['rejected'][] = $userId;
+            }
         }
 
-        $this->rejectApproval();
-        return true;
+        $this->level_progress = $progress;
+        $this->save();
     }
 
     public function getLevelProgress(): array
@@ -202,7 +229,6 @@ class Document extends Model
 
     public function getApprovalProgress(): array
     {
-
         $totalLevels = $this->getTotalLevels();
         $progress = [];
 
@@ -210,7 +236,7 @@ class Document extends Model
             if ($level < $this->current_level) {
                 // Level completed - all approvers in this level are approved
                 $levelApprovers = $this->approvers[$level - 1] ?? [];
-                $progress[] = [
+                $progress[$level] = [
                     'status' => 'completed',
                     'approved' => $levelApprovers,
                     'pending' => [],
@@ -218,14 +244,14 @@ class Document extends Model
                 ];
             } elseif ($level === $this->current_level) {
                 $levelProgress = $this->getLevelProgress();
-                $progress[] = [
+                $progress[$level] = [
                     'status' => 'in_progress',
                     'approved' => $levelProgress['approved'],
                     'pending' => $levelProgress['pending'],
                     'rejected' => $levelProgress['rejected'] ?? []
                 ];
             } else {
-                $progress[] = [
+                $progress[$level] = [
                     'status' => 'pending',
                     'approved' => [],
                     'pending' => $this->approvers[$level - 1] ?? [],

@@ -4,14 +4,34 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
-use App\Models\DocumentApproval;
-use App\Services\QRCodeService;
+use App\Services\ApprovalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ApprovalController extends Controller
 {
+    protected ApprovalService $approvalService;
+
+    // Constants for array indexing (since arrays are 0-based)
+    private const LEVEL_INDEX_OFFSET = 1;
+
+    /**
+     * Get the array index for current approval level
+     * Since database levels are 1-based but arrays are 0-based
+     */
+    private function getCurrentLevelIndex(Document $document): int
+    {
+        return $document->current_level - self::LEVEL_INDEX_OFFSET;
+    }
+
+    /**
+     * Get approval service instance
+     */
+    private function getApprovalService(): ApprovalService
+    {
+        return app(ApprovalService::class);
+    }
     /**
      * Get pending approvals for current user
      */
@@ -19,9 +39,13 @@ class ApprovalController extends Controller
     {
         $userId = Auth::id();
 
+        // Use SQLite-compatible JSON query
         $documents = Document::where('status', 'pending_approval')
-            ->whereRaw('JSON_EXTRACT(approvers, CONCAT("$[", current_level - 1, "]")) LIKE ?', ["%{$userId}%"])
-            ->whereRaw('JSON_EXTRACT(level_progress, "$.pending") LIKE ?', ["%{$userId}%"])
+            ->where(function ($query) use ($userId) {
+                // Check if user is in approvers array (any level)
+                $query->whereRaw('json_extract(approvers, "$") LIKE ?', ["%{$userId}%"])
+                      ->whereRaw('json_extract(level_progress, "$.pending") LIKE ?', ["%{$userId}%"]);
+            })
             ->with(['creator'])
             ->get();
 
@@ -47,13 +71,37 @@ class ApprovalController extends Controller
             ], 403);
         }
 
-        if ($request->action === 'approve') {
-            $this->approveDocument($document, $user, $request->comments);
-        } else {
-            $this->rejectDocument($document, $user, $request->comments);
-        }
+        try {
+            if ($request->action === 'approve') {
+                $this->getApprovalService()->approveDocument($document, $user, $request->comments);
+            } else {
+                $this->getApprovalService()->rejectDocument($document, $user, $request->comments);
+            }
 
-        return response()->json(['message' => 'Approval processed successfully']);
+            // Log successful approval action for audit trail
+            \Log::info('Document approval processed', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'document_id' => $document->id,
+                'action' => $request->action,
+                'level' => $document->current_level,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json(['message' => 'Approval processed successfully']);
+        } catch (\Exception $e) {
+            // Log failed approval attempt
+            \Log::warning('Document approval failed', [
+                'user_id' => $user->id,
+                'document_id' => $document->id,
+                'action' => $request->action,
+                'error' => $e->getMessage(),
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json(['message' => 'Failed to process approval'], 500);
+        }
     }
 
     /**
@@ -68,82 +116,48 @@ class ApprovalController extends Controller
         $user = Auth::user();
         $delegateTo = $request->delegate_to;
 
-        // Cannot delegate to yourself
-        if ($delegateTo == $user->id) {
-            return response()->json([
-                'message' => 'You cannot delegate approval to yourself.'
-            ], 422);
+        try {
+            $this->getApprovalService()->delegateApproval($document, $user, $delegateTo);
+
+            // Log successful delegation
+            \Log::info('Document approval delegated', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'document_id' => $document->id,
+                'delegate_to_user_id' => $delegateTo,
+                'level' => $document->current_level,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return response()->json(['message' => 'Approval delegated successfully']);
+        } catch (\InvalidArgumentException $e) {
+            // Log validation error
+            \Log::warning('Document delegation validation failed', [
+                'user_id' => $user->id,
+                'document_id' => $document->id,
+                'delegate_to_user_id' => $delegateTo,
+                'error' => $e->getMessage(),
+                'ip_address' => $request->ip(),
+            ]);
+
+            // Map validation errors to appropriate HTTP status codes
+            $message = $e->getMessage();
+            if (str_contains($message, 'delegate approval to yourself')) {
+                return response()->json(['message' => $message], 422);
+            }
+            return response()->json(['message' => $message], 400);
+        } catch (\Exception $e) {
+            // Log system error
+            \Log::error('Document delegation failed', [
+                'user_id' => $user->id,
+                'document_id' => $document->id,
+                'delegate_to_user_id' => $delegateTo,
+                'error' => $e->getMessage(),
+                'ip_address' => $request->ip(),
+            ]);
+
+            return response()->json(['message' => 'Failed to delegate approval'], 500);
         }
-
-        // Check if user can approve this document
-        if (!$document->canBeApprovedBy($user->id)) {
-            return response()->json([
-                'message' => 'You are not authorized to delegate approval for this document.'
-            ], 403);
-        }
-
-        // Check if delegate_to user is also in the current level
-        $currentApprovers = $document->getCurrentApproverIds();
-        if (!in_array($delegateTo, $currentApprovers)) {
-            return response()->json([
-                'message' => 'Delegate user must be in the same approval level.'
-            ], 400);
-        }
-
-        // Update level progress: remove current user from pending, add delegate_to if not already approved
-        $progress = $document->getLevelProgress();
-        $progress['pending'] = array_values(array_diff($progress['pending'], [$user->id]));
-
-        // Add delegate_to to pending if not already approved
-        if (!in_array($delegateTo, $progress['approved'])) {
-            $progress['pending'][] = $delegateTo;
-        }
-
-        $document->level_progress = $progress;
-        $document->save();
-
-        return response()->json(['message' => 'Approval delegated successfully']);
-    }
-
-    /**
-     * Approve document and move to next level if needed
-     */
-    private function approveDocument(Document $document, $user, ?string $comments): void
-    {
-        // Create approval record
-        DocumentApproval::create([
-            'document_id' => $document->id,
-            'approver_id' => $user->id,
-            'action' => 'approved',
-            'notes' => $comments,
-            'level' => $document->current_level,
-            'processed_at' => now(),
-        ]);
-        $document->approveByUser($user->id);
-
-
-        // Update QR code with new status
-        app(QRCodeService::class)->updateQRCode($document);
-    }
-
-    /**
-     * Reject document
-     */
-    private function rejectDocument(Document $document, $user, ?string $comments): void
-    {
-        $document->rejectByUser($user->id);
-
-        // Create approval record
-        DocumentApproval::create([
-            'document_id' => $document->id,
-            'approver_id' => $user->id,
-            'action' => 'rejected',
-            'notes' => $comments,
-            'level' => $document->current_level,
-            'processed_at' => now(),
-        ]);
-
-        // Update QR code with rejected status
-        app(QRCodeService::class)->updateQRCode($document);
     }
 }
