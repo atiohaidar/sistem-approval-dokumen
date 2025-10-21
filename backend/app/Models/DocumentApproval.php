@@ -13,11 +13,11 @@ class DocumentApproval extends Model
         'action',
         'notes',
         'level',
-        'approved_at',
+        'processed_at',
     ];
 
     protected $casts = [
-        'approved_at' => 'datetime',
+        'processed_at' => 'datetime',
         'level' => 'integer',
     ];
 

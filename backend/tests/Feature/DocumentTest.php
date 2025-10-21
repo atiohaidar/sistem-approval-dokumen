@@ -587,7 +587,7 @@ startxref
     }
 
     #[Test]
-    public function public_info_shows_approved_at_for_completed_documents()
+    public function public_info_shows_processed_at_for_completed_documents()
     {
         $document = Document::factory()->create([
             'created_by' => $this->user->id,
@@ -608,7 +608,7 @@ startxref
             'action' => 'approved',
             'notes' => 'Approved by creator',
             'level' => 1,
-            'approved_at' => now(),
+            'processed_at' => now(),
         ]);
 
         // Access public info without authentication
@@ -645,7 +645,7 @@ startxref
             'action' => 'rejected',
             'notes' => 'Rejected',
             'level' => 1,
-            'approved_at' => now(),
+            'processed_at' => now(),
         ]);
 
         // Access public info without authentication

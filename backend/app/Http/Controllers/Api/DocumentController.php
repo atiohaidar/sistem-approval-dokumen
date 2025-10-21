@@ -364,7 +364,7 @@ class DocumentController extends Controller
                     'name' => $approvalRecord?->approver?->name ?? 'Unknown User',
                     'email' => $approvalRecord?->approver?->email ?? null,
                     'status' => $status,
-                    'processed_at' => $approvalRecord?->approved_at?->toISOString(),
+                    'processed_at' => $approvalRecord?->processed_at?->toISOString(),
                     'notes' => $approvalRecord?->notes,
                 ];
             }

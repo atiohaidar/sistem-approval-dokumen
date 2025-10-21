@@ -117,7 +117,7 @@ class ApprovalController extends Controller
             'action' => 'approved',
             'notes' => $comments,
             'level' => $document->current_level,
-            'approved_at' => now(),
+            'processed_at' => now(),
         ]);
         $document->approveByUser($user->id);
 
@@ -140,7 +140,7 @@ class ApprovalController extends Controller
             'action' => 'rejected',
             'notes' => $comments,
             'level' => $document->current_level,
-            'approved_at' => now(),
+            'processed_at' => now(),
         ]);
 
         // Update QR code with rejected status

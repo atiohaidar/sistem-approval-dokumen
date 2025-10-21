@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('action', ['approved', 'rejected']);
             $table->text('notes')->nullable();
             $table->integer('level');
-            $table->timestamp('approved_at');
+            $table->timestamp('processed_at');
             $table->timestamps();
         });
     }
