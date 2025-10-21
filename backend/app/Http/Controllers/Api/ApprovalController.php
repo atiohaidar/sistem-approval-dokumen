@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\DocumentApproval;
 use App\Services\QRCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -91,7 +92,7 @@ class ApprovalController extends Controller
 
         // Update level progress: remove current user from pending, add delegate_to if not already approved
         $progress = $document->getLevelProgress();
-        $progress['pending'] = array_diff($progress['pending'], [$user->id]);
+        $progress['pending'] = array_values(array_diff($progress['pending'], [$user->id]));
 
         // Add delegate_to to pending if not already approved
         if (!in_array($delegateTo, $progress['approved'])) {
@@ -109,7 +110,17 @@ class ApprovalController extends Controller
      */
     private function approveDocument(Document $document, $user, ?string $comments): void
     {
+        // Create approval record
+        DocumentApproval::create([
+            'document_id' => $document->id,
+            'approver_id' => $user->id,
+            'action' => 'approved',
+            'notes' => $comments,
+            'level' => $document->current_level,
+            'approved_at' => now(),
+        ]);
         $document->approveByUser($user->id);
+
 
         // Update QR code with new status
         app(QRCodeService::class)->updateQRCode($document);
@@ -121,6 +132,16 @@ class ApprovalController extends Controller
     private function rejectDocument(Document $document, $user, ?string $comments): void
     {
         $document->rejectByUser($user->id);
+
+        // Create approval record
+        DocumentApproval::create([
+            'document_id' => $document->id,
+            'approver_id' => $user->id,
+            'action' => 'rejected',
+            'notes' => $comments,
+            'level' => $document->current_level,
+            'approved_at' => now(),
+        ]);
 
         // Update QR code with rejected status
         app(QRCodeService::class)->updateQRCode($document);

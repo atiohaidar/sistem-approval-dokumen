@@ -564,7 +564,9 @@ startxref
                     'file_size', 'mime_type', 'created_at', 'submitted_at', 'creator'
                 ],
                 'approvers' => [
-                    '*' => ['id', 'name', 'email', 'status', 'approved_at', 'notes']
+                    '*' => [
+                        '*' => ['id', 'name', 'email', 'status', 'processed_at', 'notes']
+                    ]
                 ],
                 'progress' => [
                     'total_approvers', 'approved_count', 'pending_count',
@@ -599,14 +601,69 @@ startxref
         $document->level_progress = ['approved' => [$this->user->id], 'pending' => []];
         $document->save();
 
+        // Create approval record for the user
+        \App\Models\DocumentApproval::create([
+            'document_id' => $document->id,
+            'approver_id' => $this->user->id,
+            'action' => 'approved',
+            'notes' => 'Approved by creator',
+            'level' => 1,
+            'approved_at' => now(),
+        ]);
+
         // Access public info without authentication
         $response = $this->getJson("/api/documents/{$document->id}/public-info");
 
         $response->assertStatus(200);
 
         $responseData = $response->json();
-        $this->assertEquals('approved', $responseData['approvers'][0]['status']);
-        $this->assertNotNull($responseData['approvers'][0]['approved_at']);
+        $this->assertEquals('approved', $responseData['approvers'][0][0]['status']);
+        $this->assertNotNull($responseData['approvers'][0][0]['processed_at']);
+    }
+
+    #[Test]
+    public function public_info_shows_rejected_status_for_rejected_document()
+    {
+        $level1Approver = $this->user;
+        $level2Approver = User::factory()->create();
+
+        $document = Document::factory()->create([
+            'created_by' => $this->user->id,
+            'approvers' => [
+                [$level1Approver->id], // Level 1
+                [$level2Approver->id]  // Level 2 - should be null status
+            ],
+            'status' => 'rejected',
+            'level_progress' => ['approved' => [], 'pending' => [], 'rejected' => [$level1Approver->id]],
+            'current_level' => 1,
+        ]);
+
+        // Create rejection record for level 1 approver
+        \App\Models\DocumentApproval::create([
+            'document_id' => $document->id,
+            'approver_id' => $level1Approver->id,
+            'action' => 'rejected',
+            'notes' => 'Rejected',
+            'level' => 1,
+            'approved_at' => now(),
+        ]);
+
+        // Access public info without authentication
+        $response = $this->getJson("/api/documents/{$document->id}/public-info");
+
+        $response->assertStatus(200);
+
+        $responseData = $response->json();
+        $this->assertEquals('rejected', $responseData['document']['status']);
+        
+        // Level 1 approver should be rejected
+        $this->assertEquals('rejected', $responseData['approvers'][0][0]['status']);
+        $this->assertNotNull($responseData['approvers'][0][0]['processed_at']);
+        
+        // Level 2 approver should be null (unprocessed) - even if same user
+        $this->assertNull($responseData['approvers'][1][0]['status']);
+        $this->assertNull($responseData['approvers'][1][0]['processed_at']);
+        $this->assertNull($responseData['approvers'][1][0]['notes']);
     }
 
     #[Test]
@@ -960,13 +1017,13 @@ startxref
         $this->assertEquals(2, count($progress)); // 2 levels
 
         // Level 1 should be in progress
-        $this->assertEquals('in_progress', $progress[1]['status']);
-        $this->assertEquals([], $progress[1]['approved']); // Initially no one approved
-        $this->assertEquals([$level1Approver1->id, $level1Approver2->id], $progress[1]['pending']); // All pending initially
+        $this->assertEquals('in_progress', $progress[0]['status']);
+        $this->assertEquals([], $progress[0]['approved']); // Initially no one approved
+        $this->assertEquals([$level1Approver1->id, $level1Approver2->id], $progress[0]['pending']); // All pending initially
 
         // Level 2 should be pending
-        $this->assertEquals('pending', $progress[2]['status']);
-        $this->assertEquals([], $progress[2]['approved']);
-        $this->assertEquals([$level2Approver->id], $progress[2]['pending']);
+        $this->assertEquals('pending', $progress[1]['status']);
+        $this->assertEquals([], $progress[1]['approved']);
+        $this->assertEquals([$level2Approver->id], $progress[1]['pending']);
     }
 }

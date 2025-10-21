@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\DocumentApproval;
 use App\Models\User;
 use App\Services\PDFWatermarkService;
 use App\Services\QRCodeService;
@@ -58,7 +59,7 @@ class DocumentController extends Controller
             'template_id' => 'nullable|exists:document_templates,id',
             'approvers' => 'required|array|min:1|max:10', // Max 10 levels
             'approvers.*' => 'required|array|min:1', // Each level must have at least 1 approver
-            'approvers.*.*' => 'exists:users,id|different:created_by', // Each approver must be valid user
+            'approvers.*.*' => 'exists:users,id', // Each approver must be valid user
             'qr_x' => 'required|numeric|min:0|max:1',
             'qr_y' => 'required|numeric|min:0|max:1',
             'qr_page' => 'nullable|integer|min:1',
@@ -89,6 +90,9 @@ class DocumentController extends Controller
             'qr_page' => $request->qr_page ?? 1,
             'submitted_at' => now(),
         ]);
+
+        // Initialize level progress for the first level
+        $document->getLevelProgress();
 
         // Generate QR Code
         $qrPosition = [
@@ -248,88 +252,151 @@ class DocumentController extends Controller
      */
     public function publicInfo(Document $document): JsonResponse
     {
-        // Load related data
+        // Load related data efficiently
+        // disini intinya mau ngambil data dokumen serta proses approvalnya sudah sampai mana, siapa saja yang memproses dan hasilnya apa saja
         $document->load(['creator']);
-
-        // Get approval progress for multi-level system
+        // mengambil     public function getApprovalProgress():  dari model Document
         $approvalProgress = $document->getApprovalProgress();
-        $totalApprovers = collect($document->approvers)->flatten()->count();
+        //  mengambil  informasi tambahan tentang approval progressnya, (progress_at dan notes nya  dan info siapa yang sudah memproses)
+        // datanya diambil dari tabel document_approvals
+        //  mencari document_approvals yang sesuai dengan document id, approver_id, dan level
+        //  approval proggres isinya adalah  {
+        // "1": {
+        //     "status": "completed",
+        //     "approved": [
+        //         1,
+        //         2
+        //     ],
+        //     "pending": [],
+        //     "rejected": []
+        // },
+
+        $approvalRecords = DocumentApproval::where('document_id', $document->id)->get();
+
+
+        return response()->json([
+            'document' => $document,
+            'approval_progress' => $approvalProgress,
+            'approval_records' => $approvalRecords,
+        ]);
+    }
+
+    /**
+     * Calculate approval statistics
+     */
+    private function calculateApprovalStats(array $approvalProgress): array
+    {
+        $totalApprovers = collect($approvalProgress)->sum(function ($level) {
+            return count($level['approved']) + count($level['pending']) + count($level['rejected'] ?? []);
+        });
+
         $approvedCount = collect($approvalProgress)->sum(function ($level) {
             return count($level['approved']);
         });
+
         $pendingCount = collect($approvalProgress)->sum(function ($level) {
             return count($level['pending']);
         });
-        $rejectedCount = 0; // We don't track rejections in this simplified system
 
-        // Build approvers info for all levels
-        $approversInfo = collect($document->approvers)->flatten()->map(function ($approverId) use ($document) {
-            $user = User::find($approverId);
-
-            // Determine status based on level progress
-            $status = 'pending';
-            $approvalProgress = $document->getApprovalProgress();
-
-            foreach ($approvalProgress as $level => $levelData) {
-                if (in_array($approverId, $levelData['approved'])) {
-                    $status = 'approved';
-                    break;
-                } elseif (in_array($approverId, $levelData['pending'])) {
-                    $status = 'pending';
-                    break;
-                }
-            }
-
-            return [
-                'id' => $approverId,
-                'name' => $user ? $user->name : 'Unknown User',
-                'email' => $user ? $user->email : null,
-                'status' => $status,
-                'approved_at' => $status === 'approved' ? ($document->completed_at ?? now()) : null,
-                'notes' => null, // We don't have approval notes
-            ];
+        $rejectedCount = collect($approvalProgress)->sum(function ($level) {
+            return count($level['rejected'] ?? []);
         });
 
-        // Calculate current step (for backward compatibility)
-        $currentStep = $document->current_level - 1;
-
-        $response = [
-            'document' => [
-                'id' => $document->id,
-                'title' => $document->title,
-                'description' => $document->description,
-                'status' => $document->status,
-                'file_name' => $document->file_name,
-                'file_size' => $document->file_size,
-                'mime_type' => $document->mime_type,
-                'created_at' => $document->created_at,
-                'submitted_at' => $document->submitted_at,
-                'creator' => [
-                    'id' => $document->creator->id,
-                    'name' => $document->creator->name,
-                    'email' => $document->creator->email,
-                ],
-            ],
-            'approvers' => $approversInfo,
-            'progress' => [
-                'total_approvers' => $totalApprovers,
-                'approved_count' => $approvedCount,
-                'pending_count' => $pendingCount,
-                'rejected_count' => $rejectedCount,
-                'current_level' => $document->current_level,
-                'total_levels' => $document->getTotalLevels(),
-                'completion_percentage' => $totalApprovers > 0 ?
-                    round(($approvedCount / $totalApprovers) * 100, 1) : 0,
-            ],
-            'workflow' => [
-                'is_sequential' => true,
-                'can_download' => $document->isApproved(),
-                'next_approver' => $approversInfo->firstWhere('status', 'pending'),
-                'approval_levels' => $approvalProgress,
-            ],
+        return [
+            'total_approvers' => $totalApprovers,
+            'approved_count' => $approvedCount,
+            'pending_count' => $pendingCount,
+            'rejected_count' => $rejectedCount,
+            'completion_percentage' => $totalApprovers > 0 ?
+                round(($approvedCount / $totalApprovers) * 100, 1) : 0,
         ];
+    }
 
-        return response()->json($response);
+    /**
+     * Determine document status based on approval progress
+     */
+    private function determineDocumentStatus(Document $document, array $stats): string
+    {
+        if ($stats['rejected_count'] > 0) {
+            return 'rejected';
+        }
+
+        if ($document->isApproved()) {
+            return 'completed';
+        }
+
+        if ($stats['pending_count'] > 0) {
+            return 'pending_approval';
+        }
+
+        return $document->status;
+    }
+
+    /**
+     * Build workflow information with approvers details
+     */
+    private function buildWorkflowInfo(Document $document, array $approvalProgress, $approvalRecords): array
+    {
+        $workflow = [];
+
+        foreach ($document->approvers as $levelIndex => $levelApprovers) {
+            $levelNumber = $levelIndex + 1;
+            $levelData = $approvalProgress[$levelIndex] ?? ['approved' => [], 'pending' => [], 'rejected' => []];
+
+            $approvers = [];
+            foreach ($levelApprovers as $approverId) {
+                $approvalRecord = $approvalRecords->get($levelNumber)?->get($approverId)?->first();
+
+                $status = null;
+                if (isset($levelData['approved']) && in_array($approverId, $levelData['approved'])) {
+                    $status = 'approved';
+                } elseif (isset($levelData['rejected']) && in_array($approverId, $levelData['rejected'])) {
+                    $status = 'rejected';
+                } elseif (isset($levelData['pending']) && in_array($approverId, $levelData['pending'])) {
+                    // Only show pending if level is current or document is not rejected
+                    if ($levelNumber <= $document->current_level || $document->status !== 'rejected') {
+                        $status = 'pending';
+                    }
+                }
+
+                $approvers[] = [
+                    'id' => $approverId,
+                    'name' => $approvalRecord?->approver?->name ?? 'Unknown User',
+                    'email' => $approvalRecord?->approver?->email ?? null,
+                    'status' => $status,
+                    'processed_at' => $approvalRecord?->approved_at?->toISOString(),
+                    'notes' => $approvalRecord?->notes,
+                ];
+            }
+
+            $workflow[$levelNumber] = [
+                'level' => $levelNumber,
+                'status' => $levelData['status'] ?? 'pending',
+                'approvers' => $approvers,
+                'required_approvals' => count($levelApprovers),
+                'approved_count' => count($levelData['approved']),
+                'rejected_count' => count($levelData['rejected'] ?? []),
+                'pending_count' => count($levelData['pending']),
+            ];
+        }
+
+        return $workflow;
+    }
+
+    /**
+     * Find next approver who is pending
+     */
+    private function findNextApprover(array $workflow): ?array
+    {
+        foreach ($workflow as $level) {
+            foreach ($level['approvers'] as $approver) {
+                if ($approver['status'] === 'pending') {
+                    return $approver;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**

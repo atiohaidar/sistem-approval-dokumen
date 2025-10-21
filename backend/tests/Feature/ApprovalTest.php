@@ -340,4 +340,83 @@ class ApprovalTest extends TestCase
             ->assertJsonCount(1) // Only document1 should appear
             ->assertJsonFragment(['id' => $document1->id]);
     }
+
+    #[Test]
+    public function approval_creates_history_record_with_notes()
+    {
+        $document = Document::factory()->create([
+            'created_by' => $this->user->id,
+            'approvers' => [
+                [$this->approver1->id],
+            ],
+            'current_level' => 1,
+            'status' => 'pending_approval',
+        ]);
+
+        // Initialize level progress
+        $document->getLevelProgress();
+        $document->save();
+
+        $response = $this->actingAs($this->approver1, 'sanctum')
+            ->postJson("/api/approvals/documents/{$document->id}/process", [
+                'action' => 'approve',
+                'comments' => 'Approved with minor changes',
+            ]);
+
+        $response->assertStatus(200);
+
+        // Check that approval record was created
+        $this->assertDatabaseHas('document_approvals', [
+            'document_id' => $document->id,
+            'approver_id' => $this->approver1->id,
+            'action' => 'approved',
+            'notes' => 'Approved with minor changes',
+            'level' => 1,
+        ]);
+
+        // Check that public info includes approval history
+        $publicResponse = $this->getJson("/api/documents/{$document->id}/public-info");
+        $publicResponse->assertStatus(200)
+            ->assertJsonFragment([
+                'notes' => 'Approved with minor changes',
+            ]);
+    }
+
+    #[Test]
+    public function rejection_creates_history_record_with_notes()
+    {
+        $document = Document::factory()->create([
+            'created_by' => $this->user->id,
+            'approvers' => [
+                [$this->approver1->id],
+            ],
+            'current_level' => 1,
+            'status' => 'pending_approval',
+        ]);
+
+        // Initialize level progress
+        $document->getLevelProgress();
+        $document->save();
+
+        $response = $this->actingAs($this->approver1, 'sanctum')
+            ->postJson("/api/approvals/documents/{$document->id}/process", [
+                'action' => 'reject',
+                'comments' => 'Document needs revision',
+            ]);
+
+        $response->assertStatus(200);
+
+        // Check that rejection record was created
+        $this->assertDatabaseHas('document_approvals', [
+            'document_id' => $document->id,
+            'approver_id' => $this->approver1->id,
+            'action' => 'rejected',
+            'notes' => 'Document needs revision',
+            'level' => 1,
+        ]);
+
+        // Check document status
+        $document->refresh();
+        $this->assertEquals('rejected', $document->status);
+    }
 }
