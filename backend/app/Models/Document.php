@@ -231,6 +231,7 @@ class Document extends Model
     {
         $totalLevels = $this->getTotalLevels();
         $progress = [];
+        $documentStatus = $this->status;
 
         for ($level = 1; $level <= $totalLevels; $level++) {
             if ($level < $this->current_level) {
@@ -242,22 +243,39 @@ class Document extends Model
                     'pending' => [],
                     'rejected' => []
                 ];
-            } elseif ($level === $this->current_level) {
+                continue;
+            }
+
+            if ($level === $this->current_level) {
                 $levelProgress = $this->getLevelProgress();
+                $currentStatus = match ($documentStatus) {
+                    'completed' => 'completed',
+                    'rejected' => 'rejected',
+                    'cancelled' => 'cancelled',
+                    default => 'in_progress',
+                };
+
                 $progress[$level] = [
-                    'status' => 'in_progress',
+                    'status' => $currentStatus,
                     'approved' => $levelProgress['approved'],
-                    'pending' => $levelProgress['pending'],
+                    'pending' => $currentStatus === 'in_progress' ? $levelProgress['pending'] : [],
                     'rejected' => $levelProgress['rejected'] ?? []
                 ];
-            } else {
-                $progress[$level] = [
-                    'status' => 'pending',
-                    'approved' => [],
-                    'pending' => $this->approvers[$level - 1] ?? [],
-                    'rejected' => []
-                ];
+                continue;
             }
+
+            $futureStatus = match ($documentStatus) {
+                'rejected' => 'rejected',
+                'cancelled' => 'cancelled',
+                default => 'pending',
+            };
+
+            $progress[$level] = [
+                'status' => $futureStatus,
+                'approved' => [],
+                'pending' => $futureStatus === 'pending' ? $this->approvers[$level - 1] ?? [] : [],
+                'rejected' => []
+            ];
         }
 
         return $progress;

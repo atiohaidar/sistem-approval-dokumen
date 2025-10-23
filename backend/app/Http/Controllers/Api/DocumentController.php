@@ -279,11 +279,63 @@ class DocumentController extends Controller
         // Load related data efficiently
         $document->load(['creator']);
         $approvalProgress = $document->getApprovalProgress();
-        $approvalRecords = DocumentApproval::where('document_id', $document->id)->get();
+
+        $approverIds = collect($document->approvers ?? [])
+            ->flatten()
+            ->filter()
+            ->unique();
+
+        $approverMap = User::whereIn('id', $approverIds)
+            ->get(['id', 'name', 'email', 'role'])
+            ->keyBy('id');
+
+        $approvalLevels = [];
+
+        foreach (($document->approvers ?? []) as $index => $levelApprovers) {
+            $levelNumber = $index + 1;
+            $levelProgress = $approvalProgress[$levelNumber] ?? [
+                'status' => 'pending',
+                'approved' => [],
+                'pending' => [],
+                'rejected' => [],
+            ];
+
+            $approverDetails = [];
+            foreach ($levelApprovers as $approverId) {
+                $user = $approverMap->get($approverId);
+
+                $approverStatus = match (true) {
+                    in_array($approverId, $levelProgress['approved'] ?? []) => 'approved',
+                    in_array($approverId, ($levelProgress['rejected'] ?? [])) => 'rejected',
+                    default => match ($levelProgress['status'] ?? 'pending') {
+                        'completed' => 'approved',
+                        'rejected' => 'skipped',
+                        'cancelled' => 'cancelled',
+                        default => 'pending',
+                    },
+                };
+
+                $approverDetails[] = [
+                    'id' => $approverId,
+                    'user' => $user ? $user->only(['id', 'name', 'email', 'role']) : null,
+                    'status' => $approverStatus,
+                ];
+            }
+
+            $approvalLevels[$levelNumber] = [
+                'status' => $levelProgress['status'] ?? 'pending',
+                'approvers' => $approverDetails,
+            ];
+        }
+
+        $approvalRecords = DocumentApproval::where('document_id', $document->id)
+            ->with(['approver:id,name,email,role'])
+            ->get();
 
         return response()->json([
             'document' => $document,
             'approval_progress' => $approvalProgress,
+            'approval_levels' => $approvalLevels,
             'approval_records' => $approvalRecords,
         ]);
     }
