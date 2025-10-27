@@ -1,8 +1,13 @@
 <template>
   <div>
-    <NuxtLayout>
+    <div v-if="isAuthenticated">
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
+    </div>
+    <div v-else>
       <NuxtPage />
-    </NuxtLayout>
+    </div>
   </div>
 </template>
 
@@ -10,6 +15,7 @@
 import { useAuthStore } from '~/stores/auth'
 
 const authStore = useAuthStore()
+const { isAuthenticated } = storeToRefs(authStore)
 
 onMounted(() => {
   authStore.initializeFromCookie()
