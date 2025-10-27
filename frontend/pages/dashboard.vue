@@ -247,37 +247,31 @@ definePageMeta({
 const { isDark } = useTheme()
 
 const authStore = useAuthStore()
-const { getDocuments } = useDocuments()
-const { getPendingApprovals } = useApprovals()
+const { useDocumentsQuery } = useDocuments()
+const { usePendingApprovalsQuery } = useApprovals()
 
-const recentDocuments = ref<Document[]>([])
-const loading = ref(true)
-const pendingCount = ref(0)
-const myDocumentsCount = ref(0)
-const completedCount = ref(0)
-const rejectedCount = ref(0)
+// Query for recent documents
+const { data: docsData, isLoading: isLoadingDocs } = useDocumentsQuery({ page: 1 })
+const recentDocuments = computed(() => docsData.value?.data.slice(0, 5) || [])
 
-onMounted(async () => {
-  try {
-    // Load recent documents
-    const docsResponse = await getDocuments({ page: 1 })
-    recentDocuments.value = docsResponse.data.slice(0, 5)
-    
-    // Load statistics
-    const pendingApprovals = await getPendingApprovals()
-    pendingCount.value = pendingApprovals.length
-    
-    // Count by status
-    const allDocs = await getDocuments({ created_by: authStore.user?.id })
-    myDocumentsCount.value = allDocs.data.length
-    completedCount.value = allDocs.data.filter((d: Document) => d.status === 'completed').length
-    rejectedCount.value = allDocs.data.filter((d: Document) => d.status === 'rejected').length
-  } catch (error) {
-    console.error('Error loading dashboard:', error)
-  } finally {
-    loading.value = false
-  }
-})
+// Query for pending approvals
+const { data: pendingApprovals, isLoading: isLoadingApprovals } = usePendingApprovalsQuery()
+const pendingCount = computed(() => pendingApprovals.value?.length || 0)
+
+// Query for user's documents
+const { data: myDocsData, isLoading: isLoadingMyDocs } = useDocumentsQuery(
+  computed(() => ({ created_by: authStore.user?.id }))
+)
+
+const myDocumentsCount = computed(() => myDocsData.value?.data.length || 0)
+const completedCount = computed(() => 
+  myDocsData.value?.data.filter((d: Document) => d.status === 'completed').length || 0
+)
+const rejectedCount = computed(() => 
+  myDocsData.value?.data.filter((d: Document) => d.status === 'rejected').length || 0
+)
+
+const loading = computed(() => isLoadingDocs.value || isLoadingApprovals.value || isLoadingMyDocs.value)
 
 const getStatusClass = (status: string) => {
   const classes: Record<string, string> = {

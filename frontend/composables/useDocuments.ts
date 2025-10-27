@@ -1,8 +1,21 @@
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/vue-query'
 import type { Document, CreateDocumentRequest, PaginatedResponse, PublicDocumentInfo } from '~/types/api'
 
 export const useDocuments = () => {
   const { $api } = useNuxtApp()
+  const queryClient = useQueryClient()
 
+  // Query Keys
+  const documentsKeys = {
+    all: ['documents'] as const,
+    lists: () => [...documentsKeys.all, 'list'] as const,
+    list: (params?: any) => [...documentsKeys.lists(), params] as const,
+    details: () => [...documentsKeys.all, 'detail'] as const,
+    detail: (id: number) => [...documentsKeys.details(), id] as const,
+    publicInfo: (id: number) => [...documentsKeys.all, 'public-info', id] as const,
+  }
+
+  // API Functions
   const getDocuments = async (params?: {
     status?: string
     created_by?: number
@@ -69,7 +82,75 @@ export const useDocuments = () => {
     return response.data
   }
 
+  // Query Hooks
+  const useDocumentsQuery = (params?: MaybeRef<{
+    status?: string
+    created_by?: number
+    search?: string
+    page?: number
+  }>, options?: Omit<UseQueryOptions<PaginatedResponse<Document>>, 'queryKey' | 'queryFn'>) => {
+    const paramsRef = computed(() => unref(params))
+    
+    return useQuery({
+      queryKey: computed(() => documentsKeys.list(paramsRef.value)),
+      queryFn: () => getDocuments(paramsRef.value),
+      ...options,
+    })
+  }
+
+  const useDocumentQuery = (id: MaybeRef<number>, options?: Omit<UseQueryOptions<Document>, 'queryKey' | 'queryFn'>) => {
+    const idRef = computed(() => unref(id))
+    
+    return useQuery({
+      queryKey: computed(() => documentsKeys.detail(idRef.value)),
+      queryFn: () => getDocument(idRef.value),
+      enabled: computed(() => !!idRef.value),
+      ...options,
+    })
+  }
+
+  const usePublicInfoQuery = (id: MaybeRef<number>, options?: Omit<UseQueryOptions<PublicDocumentInfo>, 'queryKey' | 'queryFn'>) => {
+    const idRef = computed(() => unref(id))
+    
+    return useQuery({
+      queryKey: computed(() => documentsKeys.publicInfo(idRef.value)),
+      queryFn: () => getPublicInfo(idRef.value),
+      enabled: computed(() => !!idRef.value),
+      ...options,
+    })
+  }
+
+  // Mutation Hooks
+  const useCreateDocumentMutation = () => {
+    return useMutation({
+      mutationFn: createDocument,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: documentsKeys.lists() })
+      },
+    })
+  }
+
+  const useUpdateDocumentMutation = () => {
+    return useMutation({
+      mutationFn: ({ id, data }: { id: number; data: FormData }) => updateDocument(id, data),
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({ queryKey: documentsKeys.detail(variables.id) })
+        queryClient.invalidateQueries({ queryKey: documentsKeys.lists() })
+      },
+    })
+  }
+
+  const useDeleteDocumentMutation = () => {
+    return useMutation({
+      mutationFn: deleteDocument,
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: documentsKeys.lists() })
+      },
+    })
+  }
+
   return {
+    // Raw API functions (for backward compatibility or special cases)
     getDocuments,
     getDocument,
     createDocument,
@@ -77,5 +158,16 @@ export const useDocuments = () => {
     deleteDocument,
     downloadDocument,
     getPublicInfo,
+    
+    // TanStack Query hooks
+    useDocumentsQuery,
+    useDocumentQuery,
+    usePublicInfoQuery,
+    useCreateDocumentMutation,
+    useUpdateDocumentMutation,
+    useDeleteDocumentMutation,
+    
+    // Query keys (for manual invalidation if needed)
+    documentsKeys,
   }
 }

@@ -219,68 +219,62 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
-const { getDocuments, deleteDocument } = useDocuments()
+const { useDocumentsQuery, useDeleteDocumentMutation } = useDocuments()
 
-const documents = ref<Document[]>([])
-const loading = ref(true)
 const filters = reactive({
   search: '',
   status: '',
   created_by: '',
 })
-const pagination = ref({
-  current_page: 1,
-  last_page: 1,
-  per_page: 15,
-  total: 0,
+const currentPage = ref(1)
+
+// Build query params reactively
+const queryParams = computed(() => {
+  const params: any = {
+    page: currentPage.value,
+  }
+  if (filters.search) params.search = filters.search
+  if (filters.status) params.status = filters.status
+  if (filters.created_by) params.created_by = filters.created_by
+  return params
 })
 
+// Query for documents with reactive params
+const { data: docsData, isLoading: loading, refetch } = useDocumentsQuery(queryParams)
+
+const documents = computed(() => docsData.value?.data || [])
+const pagination = computed(() => ({
+  current_page: docsData.value?.current_page || 1,
+  last_page: docsData.value?.last_page || 1,
+  per_page: docsData.value?.per_page || 15,
+  total: docsData.value?.total || 0,
+}))
+
+// Delete mutation
+const deleteMutation = useDeleteDocumentMutation()
+
 let searchTimeout: ReturnType<typeof setTimeout>
-
-const loadDocuments = async () => {
-  loading.value = true
-  try {
-    const params: any = {
-      page: pagination.value.current_page,
-    }
-    if (filters.search) params.search = filters.search
-    if (filters.status) params.status = filters.status
-    if (filters.created_by) params.created_by = filters.created_by
-
-    const response = await getDocuments(params)
-    documents.value = response.data
-    pagination.value = {
-      current_page: response.current_page,
-      last_page: response.last_page,
-      per_page: response.per_page,
-      total: response.total,
-    }
-  } catch (error) {
-    console.error('Error loading documents:', error)
-  } finally {
-    loading.value = false
-  }
-}
 
 const handleSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    pagination.value.current_page = 1
-    loadDocuments()
+    currentPage.value = 1
   }, 500)
 }
 
+const loadDocuments = () => {
+  currentPage.value = 1
+}
+
 const changePage = (page: number) => {
-  pagination.value.current_page = page
-  loadDocuments()
+  currentPage.value = page
 }
 
 const handleDelete = async (id: number) => {
   if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) return
 
   try {
-    await deleteDocument(id)
-    loadDocuments()
+    await deleteMutation.mutateAsync(id)
   } catch (error: any) {
     alert(error.response?.data?.message || 'Gagal menghapus dokumen')
   }
@@ -339,8 +333,4 @@ const formatDate = (date: string) => {
     day: 'numeric',
   })
 }
-
-onMounted(() => {
-  loadDocuments()
-})
 </script>
