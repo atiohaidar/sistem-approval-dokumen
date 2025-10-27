@@ -102,7 +102,7 @@ class PDFWatermarkService
         $qrFullPath = Storage::disk('public')->path($qrCodePath);
 
         // Calculate QR code position
-    $qrSize = 50; // Default QR code size in mm (fallback)
+        $qrSize = 50; // Default QR code size in mm (fallback)
 
         // Default position (top-right) for backward compatibility
         $x = $pageWidth - $qrSize - 10;

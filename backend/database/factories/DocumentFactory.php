@@ -55,7 +55,7 @@ class DocumentFactory extends Factory
      */
     public function draft(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'draft',
             'submitted_at' => null,
             'completed_at' => null,
@@ -67,7 +67,7 @@ class DocumentFactory extends Factory
      */
     public function pending(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'pending_approval',
             'submitted_at' => now(),
             'completed_at' => null,
@@ -79,7 +79,7 @@ class DocumentFactory extends Factory
      */
     public function completed(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'status' => 'completed',
             'submitted_at' => now(),
             'completed_at' => now(),

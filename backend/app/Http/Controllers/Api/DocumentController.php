@@ -134,7 +134,7 @@ class DocumentController extends Controller
     {
         // Load document with related data including approval records
         $document->load([
-            'creator:id,name,email,role', 
+            'creator:id,name,email,role',
             'template:id,name,description',
             'approvals.approver:id,name,email,role'
         ]);
@@ -506,5 +506,30 @@ class DocumentController extends Controller
             //     throw new \InvalidArgumentException("Creator cannot be an approver.");
             // }
         }
+    }
+
+    /**
+     * Normalize QR size coming from the request to a safe range.
+     */
+    private function normalizeQrSize($size): float
+    {
+        $defaultSize = 50 / 210; // ≈0.238 – aligns with frontend default (50mm on A4 width)
+        $minSize = 0.05;
+        $maxSize = 0.5;
+
+        if ($size === null) {
+            return $defaultSize;
+        }
+
+        if (!is_numeric($size)) {
+            return $defaultSize;
+        }
+
+        $numericSize = (float) $size;
+        if (!is_finite($numericSize)) {
+            return $defaultSize;
+        }
+
+        return max($minSize, min($maxSize, $numericSize));
     }
 }

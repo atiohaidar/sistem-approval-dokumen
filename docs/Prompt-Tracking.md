@@ -1314,12 +1314,19 @@ const { data: documents, isLoading: loading } = useDocumentsQuery()
 
 **System Status:** Production-ready dengan automatic background refetching, intelligent caching, dan zero reload errors. Frontend sekarang enterprise-grade dengan proper data synchronization strategy! 🚀
 
-**Tanggal:** 28 Oktober 2025
+**Tanggal:** 27 Oktober 2025
 **Prompt:** Melanjutkan pekerjaan frontend berdasarkan rangkuman percakapan sebelumnya: pastikan ukuran QR preview mengikuti `qr_size`, kirim nilai tersebut ke backend, bersihkan helper yang tidak dipakai, dan jaga posisi tetap valid.
 
 **Evaluasi:** Prompt berupa rekap plus daftar tugas sisa; arahan cukup jelas meski tidak dalam satu kalimat perintah. Detail sasaran membantu fokus pengerjaan.
 
 **Rekap Hasil:** Memperbarui `frontend/pages/documents/create.vue` agar overlay QR memakai lebar/tinggi sesuai rasio halaman, mengirim `qr_size` lewat FormData, mensinkronkan ulang posisi setelah render, serta menghapus helper tak terpakai. Preview kini mencerminkan ukuran QR yang sama dengan PDF backend.
 
-**Ringkasan Evaluasi Terbaru (28 Oktober 2025):** Tahap lanjutan memoles integrasi QR di halaman create dokumen. Overlay kini responsif terhadap rasio canvas, payload menyertakan `qr_size`, dan logika penjagaan posisi menjadi lebih rapih tanpa helper sisa. Frontend-backend kembali selaras untuk parameter ukuran QR.
+**Tanggal:** 27 Oktober 2025 20:15
+**Prompt:** Call to undefined method App\Http\Controllers\Api\DocumentController::normalizeQrSize()
+
+**Evaluasi:** Prompt singkat berupa pesan error fatal saat runtime; konteks cukup untuk menelusuri hilangnya helper pada controller. Instruksi eksplisit sehingga tidak ambigu.
+
+**Rekap Hasil:** Menambahkan kembali helper `normalizeQrSize()` di `backend/app/Http/Controllers/Api/DocumentController.php` untuk mengembalikan nilai default saat null/non-numeric dan meng-clamp ke rentang 0.05–0.5. Error hilang dan penyimpanan dokumen kembali berjalan.
+
+**Ringkasan Evaluasi Terbaru (27 Oktober 2025 20:15):** Respons terkini fokus memperbaiki error runtime dengan memulihkan helper yang hilang di controller. Validasi ukuran QR kini konsisten lagi, memastikan proses upload tak terhenti karena metode tak terdefinisi.
 
