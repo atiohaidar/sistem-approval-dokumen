@@ -248,8 +248,8 @@
                       @mousedown.prevent="startDragging"
                       @touchstart.prevent="startDragging"
                     >
-                      <div class="relative group">
-                        <div class="w-20 h-20 bg-white border-4 border-blue-500 rounded-xl shadow-lg flex items-center justify-center"
+                      <div class="relative group w-full h-full">
+                        <div class="w-full h-full bg-white border-4 border-blue-500 rounded-xl shadow-lg flex items-center justify-center"
                           :class="isDark ? 'bg-gray-900/90 border-blue-400 shadow-blue-900/40' : ''"
                         >
                           <svg class="w-12 h-12" :class="isDark ? 'text-blue-300' : 'text-blue-500'" fill="currentColor" viewBox="0 0 24 24">
@@ -259,7 +259,7 @@
                         <div class="absolute -top-10 left-1/2 -translate-x-1/2 rounded-lg px-3 py-1 text-xs font-semibold transition opacity-0 group-hover:opacity-100"
                           :class="isDark ? 'bg-gray-800 text-gray-100' : 'bg-gray-900 text-white'"
                         >
-                          Halaman {{ form.qr_page }} · Geser untuk ubah posisi
+                          Halaman {{ form.qr_page }} · Geser atau ubah ukuran
                         </div>
                       </div>
                     </div>
@@ -268,7 +268,7 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label class="block text-sm font-semibold mb-2" :class="isDark ? 'text-gray-300' : 'text-gray-600'">
                   Posisi X (0.0 - 1.0) *
@@ -276,7 +276,7 @@
                 <input
                   v-model.number="form.qr_x"
                   type="number"
-                  step="0.01"
+                  step="0.0001"
                   min="0"
                   max="1"
                   class="glass-input w-full"
@@ -295,7 +295,7 @@
                 <input
                   v-model.number="form.qr_y"
                   type="number"
-                  step="0.01"
+                  step="0.0001"
                   min="0"
                   max="1"
                   class="glass-input w-full"
@@ -324,12 +324,41 @@
                   {{ pdfTotalPages ? `Total: ${pdfTotalPages} halaman` : 'Nomor halaman' }}
                 </p>
               </div>
+
+              <div>
+                <label class="block text-sm font-semibold mb-2" :class="isDark ? 'text-gray-300' : 'text-gray-600'">
+                  Ukuran QR (0.05 - 0.5)
+                </label>
+                <div class="flex items-center gap-3">
+                  <input
+                    v-model.number="form.qr_size"
+                    type="range"
+                    min="0.05"
+                    max="0.5"
+                    step="0.01"
+                    class="flex-1 accent-telkom-red"
+                  />
+                  <input
+                    v-model.number="form.qr_size"
+                    type="number"
+                    min="0.05"
+                    max="0.5"
+                    step="0.01"
+                    class="glass-input w-24"
+                    :class="isDark ? 'bg-gray-950/60 border border-gray-700 text-gray-100' : ''"
+                  />
+                </div>
+                <p class="text-sm mt-1" :class="isDark ? 'text-gray-500' : 'text-gray-500'">
+                  Lebar sekitar {{ (form.qr_size * 100).toFixed(1) }}% dari halaman
+                </p>
+              </div>
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-4 text-sm">
               <div class="flex flex-wrap gap-4" :class="isDark ? 'text-gray-400' : 'text-gray-600'">
-                <span><strong>X:</strong> {{ form.qr_x.toFixed(2) }}</span>
-                <span><strong>Y:</strong> {{ form.qr_y.toFixed(2) }}</span>
+                <span><strong>X:</strong> {{ form.qr_x.toFixed(4) }}</span>
+                <span><strong>Y:</strong> {{ form.qr_y.toFixed(4) }}</span>
+                <span><strong>Ukuran:</strong> {{ (form.qr_size * 100).toFixed(1) }}% lebar</span>
                 <span><strong>Halaman:</strong> {{ form.qr_page }} / {{ pdfTotalPages || '?' }}</span>
               </div>
               <button
@@ -387,6 +416,10 @@ const { createDocument } = useDocuments()
 const { getUsers } = useUsers()
 const router = useRouter()
 
+const MIN_QR_SIZE = 0.05
+const MAX_QR_SIZE = 0.5
+const DEFAULT_QR_SIZE = 50 / 210 // ≈0.238, set to 50mm on A4 width
+
 interface FormState {
   title: string
   description: string
@@ -395,6 +428,7 @@ interface FormState {
   qr_x: number
   qr_y: number
   qr_page: number
+  qr_size: number
 }
 
 const form = reactive<FormState>({
@@ -405,6 +439,7 @@ const form = reactive<FormState>({
   qr_x: 0.85,
   qr_y: 0.9,
   qr_page: 1,
+  qr_size: DEFAULT_QR_SIZE,
 })
 
 const availableUsers = ref<User[]>([])
@@ -421,6 +456,11 @@ const pdfError = ref<string | null>(null)
 const isDragging = ref(false)
 const activeRenderTask = shallowRef<RenderTask | null>(null)
 const pdfReady = computed(() => !!pdfDoc.value)
+const canvasSize = reactive({ width: 0, height: 0 })
+const canvasAspect = computed(() => {
+  if (!canvasSize.width || !canvasSize.height) return 1
+  return canvasSize.height / canvasSize.width
+})
 
 type PdfJsModule = typeof import('pdfjs-dist/build/pdf')
 let pdfJsModule: PdfJsModule | null = null
@@ -437,6 +477,47 @@ const ensurePdfJs = async (): Promise<PdfJsModule | null> => {
 }
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(Math.max(value, min), max)
+
+const updateCanvasSize = () => {
+  const canvas = pdfCanvas.value
+  if (!canvas) {
+    canvasSize.width = 0
+    canvasSize.height = 0
+    return
+  }
+
+  const rect = canvas.getBoundingClientRect()
+  canvasSize.width = rect.width
+  canvasSize.height = rect.height
+}
+
+const getVerticalSizeRatio = () => {
+  const aspect = canvasAspect.value || 1
+  if (!aspect) return clamp(form.qr_size, MIN_QR_SIZE, MAX_QR_SIZE)
+  return clamp(form.qr_size / aspect, 0, 1)
+}
+
+const enforcePosition = (value: number, sizeRatio: number) => {
+  const normalizedSize = clamp(Number.isFinite(sizeRatio) ? sizeRatio : 0, 0, 1)
+  const half = normalizedSize / 2
+  const sanitizedValue = Number.isFinite(value) ? value : half
+  return clamp(sanitizedValue, half, 1 - half)
+}
+
+const enforcePositionX = (value: number) => enforcePosition(value, clamp(form.qr_size, MIN_QR_SIZE, MAX_QR_SIZE))
+const enforcePositionY = (value: number) => enforcePosition(value, getVerticalSizeRatio())
+
+const syncPositionWithinBounds = () => {
+  const adjustedX = enforcePositionX(form.qr_x)
+  if (adjustedX !== form.qr_x) {
+    form.qr_x = adjustedX
+  }
+
+  const adjustedY = enforcePositionY(form.qr_y)
+  if (adjustedY !== form.qr_y) {
+    form.qr_y = adjustedY
+  }
+}
 
 const cleanupRender = () => {
   if (activeRenderTask.value) {
@@ -461,6 +542,8 @@ const cleanupDocument = async () => {
     pdfDoc.value = null
   }
   pdfTotalPages.value = 0
+  canvasSize.width = 0
+  canvasSize.height = 0
 }
 
 const renderPage = async (pageNumber: number) => {
@@ -470,7 +553,10 @@ const renderPage = async (pageNumber: number) => {
   pdfRendering.value = true
 
   try {
-    const page = await pdfDoc.value.getPage(pageNumber)
+  const doc = pdfDoc.value
+  if (!doc) return
+
+  const page = await doc.getPage(pageNumber)
     const viewport = page.getViewport({ scale: 1 })
     const containerWidth = pdfContainer.value?.clientWidth || viewport.width
     const scale = containerWidth / viewport.width
@@ -488,9 +574,14 @@ const renderPage = async (pageNumber: number) => {
     canvas.style.width = '100%'
     canvas.style.height = 'auto'
 
-    const renderTask = page.render({ canvasContext: context, viewport: scaledViewport })
-    activeRenderTask.value = renderTask
-    await renderTask.promise
+  await nextTick()
+  updateCanvasSize()
+
+  const renderTask = page.render({ canvasContext: context, viewport: scaledViewport })
+  activeRenderTask.value = renderTask
+  await renderTask.promise
+  updateCanvasSize()
+  syncPositionWithinBounds()
   } catch (err: any) {
     if (err?.name !== 'RenderingCancelledException') {
       console.error('PDF render error:', err)
@@ -512,8 +603,9 @@ const loadPdfDocument = async (file: File) => {
     await cleanupDocument()
     const arrayBuffer = await file.arrayBuffer()
     const loadingTask = pdfLib.getDocument({ data: arrayBuffer })
-    pdfDoc.value = await loadingTask.promise
-    pdfTotalPages.value = pdfDoc.value.numPages || 1
+  const doc = await loadingTask.promise
+  pdfDoc.value = doc
+  pdfTotalPages.value = doc.numPages || 1
     form.qr_page = 1
     await nextTick()
     await renderPage(form.qr_page)
@@ -572,11 +664,12 @@ const updatePositionFromEvent = (event: MouseEvent | TouchEvent) => {
   const rect = pdfCanvas.value.getBoundingClientRect()
   if (!rect.width || !rect.height) return
 
-  const relativeX = (point.x - rect.left) / rect.width
-  const relativeY = (point.y - rect.top) / rect.height
+  const relativeX = clamp((point.x - rect.left) / rect.width)
+  const relativeY = clamp((point.y - rect.top) / rect.height)
 
-  form.qr_x = clamp(relativeX)
-  form.qr_y = clamp(relativeY)
+  form.qr_x = relativeX
+  form.qr_y = relativeY
+  syncPositionWithinBounds()
 }
 
 const startDragging = (event: MouseEvent | TouchEvent) => {
@@ -629,11 +722,18 @@ const removeApprover = (levelIndex: number, approverIndex: number) => {
   level.splice(approverIndex, 1)
 }
 
-const qrOverlayStyle = computed(() => ({
-  left: `${form.qr_x * 100}%`,
-  top: `${form.qr_y * 100}%`,
-  transform: 'translate(-50%, -50%)',
-}))
+const qrOverlayStyle = computed(() => {
+  const widthRatio = clamp(form.qr_size, MIN_QR_SIZE, MAX_QR_SIZE)
+  const heightRatio = getVerticalSizeRatio()
+
+  return {
+    left: `${form.qr_x * 100}%`,
+    top: `${form.qr_y * 100}%`,
+    width: `${widthRatio * 100}%`,
+    height: `${heightRatio * 100}%`,
+    transform: 'translate(-50%, -50%)',
+  }
+})
 
 const handleSubmit = async () => {
   loading.value = true
@@ -663,7 +763,8 @@ const handleSubmit = async () => {
     formData.append('approvers', JSON.stringify(validApprovers))
     formData.append('qr_x', form.qr_x.toString())
     formData.append('qr_y', form.qr_y.toString())
-    formData.append('qr_page', form.qr_page.toString())
+  formData.append('qr_page', form.qr_page.toString())
+  formData.append('qr_size', form.qr_size.toString())
 
     await createDocument(formData)
     await router.push('/documents')
@@ -675,7 +776,6 @@ const handleSubmit = async () => {
   }
 }
 
-const enforceBounds = (value: number) => clamp(Number.isFinite(value) ? value : 0)
 
 watch(() => form.qr_page, async (page) => {
   if (!pdfReady.value) return
@@ -689,17 +789,26 @@ watch(() => form.qr_page, async (page) => {
 })
 
 watch(() => form.qr_x, (value) => {
-  const normalized = enforceBounds(value)
+  const normalized = enforcePositionX(value)
   if (normalized !== value) {
     form.qr_x = normalized
   }
 })
 
 watch(() => form.qr_y, (value) => {
-  const normalized = enforceBounds(value)
+  const normalized = enforcePositionY(value)
   if (normalized !== value) {
     form.qr_y = normalized
   }
+})
+
+watch(() => form.qr_size, (value) => {
+  const normalized = clamp(Number.isFinite(value) ? value : DEFAULT_QR_SIZE, MIN_QR_SIZE, MAX_QR_SIZE)
+  if (normalized !== value) {
+    form.qr_size = normalized
+    return
+  }
+  syncPositionWithinBounds()
 })
 
 let resizeTimeout: ReturnType<typeof setTimeout> | null = null
@@ -709,6 +818,8 @@ const handleResize = () => {
     clearTimeout(resizeTimeout)
   }
   resizeTimeout = window.setTimeout(() => {
+    updateCanvasSize()
+    syncPositionWithinBounds()
     renderPage(form.qr_page)
   }, 150)
 }
@@ -726,6 +837,10 @@ onMounted(async () => {
   if (import.meta.client) {
     window.addEventListener('resize', handleResize)
   }
+
+  await nextTick()
+  updateCanvasSize()
+  syncPositionWithinBounds()
 })
 
 onBeforeUnmount(async () => {

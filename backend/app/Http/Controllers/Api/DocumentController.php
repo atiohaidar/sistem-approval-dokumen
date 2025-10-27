@@ -65,6 +65,7 @@ class DocumentController extends Controller
             'qr_x' => 'required|numeric|min:0|max:1',
             'qr_y' => 'required|numeric|min:0|max:1',
             'qr_page' => 'nullable|integer|min:1',
+            'qr_size' => 'nullable|numeric|min:0.05|max:0.5',
         ]);
 
         // Additional custom validation for approvers structure
@@ -73,7 +74,9 @@ class DocumentController extends Controller
         // Validate QR coordinates
         $this->validateQRCoodinates($request->qr_x, $request->qr_y);
 
-        $document = DB::transaction(function () use ($request) {
+        $qrSize = $this->normalizeQrSize($request->input('qr_size'));
+
+        $document = DB::transaction(function () use ($request, $qrSize) {
             // Handle file upload
             $file = $request->file('file');
             $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
@@ -94,6 +97,7 @@ class DocumentController extends Controller
                 'qr_x' => $request->qr_x,
                 'qr_y' => $request->qr_y,
                 'qr_page' => $request->qr_page ?? 1,
+                'qr_size' => $qrSize,
                 'submitted_at' => now(),
             ]);
 
@@ -105,6 +109,7 @@ class DocumentController extends Controller
                 'x' => $request->qr_x,
                 'y' => $request->qr_y,
                 'page' => $request->qr_page ?? 1,
+                'size' => $qrSize,
             ];
 
             try {
@@ -127,7 +132,24 @@ class DocumentController extends Controller
      */
     public function show(Document $document): JsonResponse
     {
-        return response()->json($document->load(['creator', 'template']));
+        // Load document with related data including approval records
+        $document->load([
+            'creator:id,name,email,role', 
+            'template:id,name,description',
+            'approvals.approver:id,name,email,role'
+        ]);
+
+        // Get approval records for timeline display
+        $approvalRecords = $document->approvals()
+            ->with(['approver:id,name,email,role'])
+            ->orderBy('level')
+            ->orderBy('processed_at')
+            ->get();
+
+        return response()->json([
+            'document' => $document,
+            'approval_records' => $approvalRecords,
+        ]);
     }
 
     /**
@@ -232,6 +254,7 @@ class DocumentController extends Controller
                     'x' => $document->qr_x,
                     'y' => $document->qr_y,
                     'page' => $document->qr_page ?? 1,
+                    'size' => $document->qr_size,
                 ];
                 $tempPath = $watermarkService->addWatermark($filePath, 'BELUM APPROVE', $document->qr_code_path, $qrPosition);
 
@@ -253,6 +276,7 @@ class DocumentController extends Controller
                     'x' => $document->qr_x,
                     'y' => $document->qr_y,
                     'page' => $document->qr_page ?? 1,
+                    'size' => $document->qr_size,
                 ];
                 $tempPath = $watermarkService->addWatermark($filePath, '', $document->qr_code_path, $qrPosition);
 
@@ -363,6 +387,7 @@ class DocumentController extends Controller
             'x' => $document->qr_x,
             'y' => $document->qr_y,
             'page' => $document->qr_page ?? 1,
+            'size' => $document->qr_size,
         ];
 
         try {

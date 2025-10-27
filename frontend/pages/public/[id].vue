@@ -74,44 +74,27 @@
           </p>
         </div>
 
-        <!-- Approval Progress Card -->
+        <!-- Timeline Approval Progress -->
         <div class="card">
-          <h3 class="text-xl font-bold text-gray-800 mb-4">Approval Progress</h3>
-          
-          <div class="space-y-4">
-            <div
-              v-for="(level, levelNumber) in approvalLevels"
-              :key="levelNumber"
-              class="p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex items-center justify-between mb-3">
-                <h4 class="font-semibold text-gray-700">Level {{ levelNumber }}</h4>
-                <span :class="getLevelStatusBadge(level.status)">
-                  {{ formatLevelStatus(level.status) }}
-                </span>
-              </div>
-
-              <div class="space-y-2">
-                <div
-                  v-for="approver in level.approvers"
-                  :key="approver.id"
-                  class="flex items-center justify-between p-3 bg-white rounded"
-                >
-                  <div v-if="approver.user" class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-telkom-grey rounded-full flex items-center justify-center text-white font-medium">
-                      {{ getInitials(approver.user.name) }}
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-900">{{ approver.user.name }}</p>
-                      <p class="text-sm text-gray-500">{{ approver.user.email }}</p>
-                    </div>
-                  </div>
-                  <span :class="getApproverStatusBadge(approver.status)">
-                    {{ formatApproverStatus(approver.status) }}
-                  </span>
-                </div>
-              </div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
+            <h3 class="text-xl font-bold text-gray-800">Timeline Persetujuan</h3>
+          </div>
+          
+          <div v-if="approvalTimelineData && approvalTimelineData.length > 0">
+            <ApprovalTimeline :approval-levels="approvalTimelineData" />
+          </div>
+          <div v-else class="text-center py-8">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-gray-100 text-gray-400">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p class="font-medium text-gray-600">Belum ada proses persetujuan</p>
           </div>
         </div>
 
@@ -155,6 +138,7 @@ const { getPublicInfo } = useDocuments()
 
 const document = ref<Document | null>(null)
 const approvalLevels = ref<Record<number, ApprovalLevel>>({})
+const approvalRecords = ref<any[]>([])
 const loading = ref(true)
 const previewUrl = ref<string | null>(null)
 
@@ -165,6 +149,65 @@ const previewSrc = computed(() => {
   return `${previewUrl.value}#view=FitH`
 })
 
+// Transform approval data into timeline format
+const approvalTimelineData = computed(() => {
+  if (!document.value || !approvalLevels.value) return []
+  
+  const levels = []
+  const levelNumbers = Object.keys(approvalLevels.value).map(Number).sort()
+  
+  for (const levelNumber of levelNumbers) {
+    const level = approvalLevels.value[levelNumber]
+    if (!level) continue
+    
+    // Determine level status and timestamp
+    let levelStatus = 'pending'
+    let levelTimestamp = null
+    
+    if (level.status === 'completed') {
+      levelStatus = 'completed'
+    } else if (level.status === 'in_progress') {
+      levelStatus = 'in_progress'
+    } else if (level.status === 'rejected') {
+      levelStatus = 'rejected'
+    }
+    
+    // Build approvers list with approval records data
+    const approvers = level.approvers.map(approver => {
+      let approverStatus = approver.status === 'approved' ? 'approved' : 
+                          approver.status === 'rejected' ? 'rejected' : 'pending'
+      let approverTimestamp = null
+      let approverNotes = null
+      
+      // Find approval record for this approver at this level
+      const approvalRecord = approvalRecords.value.find(record => 
+        record.approver_id === approver.id && record.level === levelNumber
+      )
+      
+      if (approvalRecord) {
+        approverTimestamp = approvalRecord.processed_at
+        approverNotes = approvalRecord.notes
+      }
+      
+      return {
+        id: approver.id,
+        name: approver.user?.name || 'Unknown User',
+        status: approverStatus,
+        timestamp: approverTimestamp,
+        notes: approverNotes
+      }
+    })
+    
+    levels.push({
+      status: levelStatus,
+      approvers,
+      timestamp: levelTimestamp
+    })
+  }
+  
+  return levels
+})
+
 const loadDocumentInfo = async () => {
   loading.value = true
   try {
@@ -172,18 +215,16 @@ const loadDocumentInfo = async () => {
     const info: PublicDocumentInfo = await getPublicInfo(id)
     document.value = info.document
     approvalLevels.value = info.approval_levels
+    approvalRecords.value = info.approval_records || []
     previewUrl.value = info.preview_url ?? null
   } catch (error) {
     console.error('Error loading document info:', error)
     previewUrl.value = null
     document.value = null
+    approvalRecords.value = []
   } finally {
     loading.value = false
   }
-}
-
-const getInitials = (name: string) => {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
 const getStatusClass = (status: string) => {
@@ -196,53 +237,12 @@ const getStatusClass = (status: string) => {
   return classes[status] || 'badge'
 }
 
-const getLevelStatusBadge = (status: string) => {
-  const classes: Record<string, string> = {
-    completed: 'badge badge-approved',
-    in_progress: 'badge badge-pending',
-    pending: 'badge',
-    rejected: 'badge badge-rejected',
-  }
-  return classes[status] || 'badge'
-}
-
-const getApproverStatusBadge = (status: string) => {
-  const classes: Record<string, string> = {
-    approved: 'badge badge-approved',
-    pending: 'badge badge-pending',
-    rejected: 'badge badge-rejected',
-    skipped: 'badge',
-  }
-  return classes[status] || 'badge'
-}
-
 const formatStatus = (status: string) => {
   const labels: Record<string, string> = {
     draft: 'Draft',
     pending_approval: 'Pending Approval',
     completed: 'Completed',
     rejected: 'Rejected',
-  }
-  return labels[status] || status
-}
-
-const formatLevelStatus = (status: string) => {
-  const labels: Record<string, string> = {
-    completed: 'Completed',
-    in_progress: 'In Progress',
-    pending: 'Pending',
-    rejected: 'Rejected',
-  }
-  return labels[status] || status
-}
-
-const formatApproverStatus = (status: string) => {
-  const labels: Record<string, string> = {
-    approved: 'Approved',
-    pending: 'Pending',
-    rejected: 'Rejected',
-    skipped: 'Skipped',
-    cancelled: 'Cancelled',
   }
   return labels[status] || status
 }

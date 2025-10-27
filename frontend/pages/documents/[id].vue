@@ -65,42 +65,35 @@
           </div>
 
           <!-- Approval Progress -->
-          <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Approval Progress</h2>
-            
-            <div v-if="doc.approvers && doc.approvers.length > 0" class="space-y-4">
-              <div
-                v-for="(level, index) in doc.approvers"
-                :key="index"
-                class="p-4 rounded-lg border-2"
-                :class="getLevelBorderClass(index + 1)"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <h3 class="font-semibold text-gray-700">Level {{ index + 1 }}</h3>
-                  <span :class="getLevelStatusBadge(index + 1)">
-                    {{ getLevelStatusText(index + 1) }}
-                  </span>
+          <div 
+            class="animate-fade-in-up delay-200 transition-colors"
+            :class="isDark ? 'bg-gray-800/80 border border-gray-700 text-gray-100' : 'bg-white/80'"
+          >
+            <GlassCard>
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                 </div>
-
-                <div class="space-y-2">
-                  <div
-                    v-for="approverId in level"
-                    :key="approverId"
-                    class="flex items-center justify-between p-2 bg-gray-50 rounded"
-                  >
-                    <div class="flex items-center space-x-2">
-                      <div class="w-8 h-8 bg-telkom-grey rounded-full flex items-center justify-center text-white font-medium">
-                        {{ getUserInitials(approverId) }}
-                      </div>
-                      <span class="text-sm text-gray-700">{{ getUserName(approverId) }}</span>
-                    </div>
-                    <span :class="getApproverStatusBadge(index + 1, approverId)">
-                      {{ getApproverStatusText(index + 1, approverId) }}
-                    </span>
-                  </div>
-                </div>
+                <h2 class="text-xl font-bold" :class="isDark ? 'text-white' : 'text-gray-900'">Timeline Persetujuan</h2>
               </div>
-            </div>
+              
+              <div v-if="approvalTimelineData && approvalTimelineData.length > 0">
+                <ApprovalTimeline :approval-levels="approvalTimelineData" />
+              </div>
+              <div v-else class="text-center py-8">
+                <div 
+                  class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  :class="isDark ? 'bg-gray-800 text-gray-500' : 'bg-gray-100 text-gray-400'"
+                >
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p class="font-medium" :class="isDark ? 'text-gray-300' : 'text-gray-600'">Belum ada proses persetujuan</p>
+              </div>
+            </GlassCard>
           </div>
         </div>
 
@@ -208,6 +201,7 @@ const authStore = useAuthStore()
 const { useDocumentQuery, downloadDocument } = useDocuments()
 const { useProcessApprovalMutation } = useApprovals()
 const { useUsersQuery } = useUsers()
+const { isDark } = useTheme()
 
 const documentId = computed(() => Number(route.params.id))
 
@@ -232,6 +226,84 @@ const canApprove = computed(() => {
   if (!doc.value || !authStore.user) return false
   return doc.value.status === 'pending_approval' &&
     doc.value.level_progress?.pending?.includes(authStore.user.id)
+})
+
+// Transform document data into timeline format with approval records
+const approvalTimelineData = computed(() => {
+  if (!doc.value || !doc.value.approvers || !users.value) return []
+  
+  const levels = []
+  const totalLevels = doc.value.approvers.length
+  const approvalRecords = doc.value.approval_records || []
+  
+  for (let levelIndex = 0; levelIndex < totalLevels; levelIndex++) {
+    const levelNumber = levelIndex + 1
+    const approverIds = doc.value.approvers[levelIndex] || []
+    
+    // Determine level status
+    let levelStatus = 'pending'
+    let levelTimestamp = null
+    
+    if (levelNumber < doc.value.current_level) {
+      levelStatus = 'completed'
+    } else if (levelNumber === doc.value.current_level) {
+      if (doc.value.status === 'completed') {
+        levelStatus = 'completed'
+        levelTimestamp = doc.value.completed_at
+      } else if (doc.value.status === 'rejected') {
+        levelStatus = 'rejected'
+        levelTimestamp = doc.value.completed_at
+      } else {
+        levelStatus = 'in_progress'
+      }
+    }
+    
+    // Build approvers list for this level with approval records data
+    const approvers = approverIds.map(approverId => {
+      const user = users.value.find(u => u.id === approverId)
+      let approverStatus = 'pending'
+      let approverTimestamp = null
+      let approverNotes = null
+      
+      // Find approval record for this approver at this level
+      const approvalRecord = approvalRecords.find(record => 
+        record.approver_id === approverId && record.level === levelNumber
+      )
+      
+      if (approvalRecord) {
+        approverStatus = approvalRecord.action === 'approved' ? 'approved' : 'rejected'
+        approverTimestamp = approvalRecord.processed_at
+        approverNotes = approvalRecord.notes
+      } else {
+        // Fallback to level progress data
+        if (levelNumber < doc.value.current_level) {
+          approverStatus = 'approved'
+        } else if (levelNumber === doc.value.current_level && doc.value.level_progress) {
+          if (doc.value.level_progress.approved?.includes(approverId)) {
+            approverStatus = 'approved'
+          } else if (doc.value.level_progress.rejected?.includes(approverId)) {
+            approverStatus = 'rejected'
+          }
+        }
+      }
+      
+      return {
+        id: approverId,
+        name: user?.name || 'Unknown User',
+        status: approverStatus,
+        timestamp: approverTimestamp,
+        notes: approverNotes
+      }
+    })
+    
+    levels.push({
+      status: levelStatus,
+      approvers,
+      timestamp: levelTimestamp
+    })
+  }
+  
+  return levels
 })
 
 // Watch for document load error and redirect
@@ -295,63 +367,7 @@ const handleReject = async () => {
   }
 }
 
-const getUserName = (userId: number) => {
-  const user = users.value?.find(u => u.id === userId)
-  return user?.name || 'Unknown'
-}
 
-const getUserInitials = (userId: number) => {
-  const user = users.value?.find(u => u.id === userId)
-  if (!user) return '?'
-  return user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-}
-
-const getLevelBorderClass = (level: number) => {
-  if (!doc.value) return 'border-gray-200'
-  if (level < doc.value.current_level) return 'border-green-500'
-  if (level === doc.value.current_level) return 'border-telkom-red'
-  return 'border-gray-200'
-}
-
-const getLevelStatusBadge = (level: number) => {
-  if (!doc.value) return 'badge'
-  if (level < doc.value.current_level) return 'badge badge-approved'
-  if (level === doc.value.current_level && doc.value.status === 'pending_approval') {
-    return 'badge badge-pending'
-  }
-  if (doc.value.status === 'rejected') return 'badge badge-rejected'
-  return 'badge'
-}
-
-const getLevelStatusText = (level: number) => {
-  if (!doc.value) return 'Pending'
-  if (level < doc.value.current_level) return 'Completed'
-  if (level === doc.value.current_level) {
-    if (doc.value.status === 'rejected') return 'Rejected'
-    return 'In Progress'
-  }
-  return 'Pending'
-}
-
-const getApproverStatusBadge = (level: number, approverId: number) => {
-  if (!doc.value) return 'badge'
-  if (level < doc.value.current_level) return 'badge badge-approved'
-  
-  const progress = doc.value.level_progress
-  if (progress?.approved?.includes(approverId)) return 'badge badge-approved'
-  if (progress?.rejected?.includes(approverId)) return 'badge badge-rejected'
-  return 'badge badge-pending'
-}
-
-const getApproverStatusText = (level: number, approverId: number) => {
-  if (!doc.value) return 'Pending'
-  if (level < doc.value.current_level) return 'Approved'
-  
-  const progress = doc.value.level_progress
-  if (progress?.approved?.includes(approverId)) return 'Approved'
-  if (progress?.rejected?.includes(approverId)) return 'Rejected'
-  return 'Pending'
-}
 
 const getStatusClass = (status: string) => {
   const classes: Record<string, string> = {

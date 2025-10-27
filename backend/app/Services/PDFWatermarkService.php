@@ -102,7 +102,7 @@ class PDFWatermarkService
         $qrFullPath = Storage::disk('public')->path($qrCodePath);
 
         // Calculate QR code position
-        $qrSize = 50; // QR code size in mm
+    $qrSize = 50; // Default QR code size in mm (fallback)
 
         // Default position (top-right) for backward compatibility
         $x = $pageWidth - $qrSize - 10;
@@ -110,10 +110,17 @@ class PDFWatermarkService
 
         // If new coordinate format is provided
         if (is_array($qrPosition)) {
+            if (isset($qrPosition['size']) && is_numeric($qrPosition['size']) && $qrPosition['size'] > 0) {
+                $qrSize = $qrPosition['size'] * $pageWidth; // normalize relative width (0-1) to page width
+            }
             if (isset($qrPosition['x']) && isset($qrPosition['y'])) {
-                // Convert relative coordinates (0.0-1.0) to absolute coordinates
-                $x = $qrPosition['x'] * $pageWidth;
-                $y = $qrPosition['y'] * $pageHeight;
+                // Convert relative coordinates (0.0-1.0) to absolute coordinates using center point
+                $centerX = $qrPosition['x'] * $pageWidth;
+                $centerY = $qrPosition['y'] * $pageHeight;
+
+                // Translate center-based coordinates to top-left origin expected by FPDF
+                $x = $centerX - ($qrSize / 2);
+                $y = $centerY - ($qrSize / 2);
 
                 // Ensure QR code stays within page bounds
                 $x = max(0, min($x, $pageWidth - $qrSize));

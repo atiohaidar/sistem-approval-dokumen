@@ -46,6 +46,7 @@ class DocumentFactory extends Factory
             'qr_x' => $this->faker->randomFloat(2, 0.1, 0.9), // Random coordinate between 0.1 and 0.9
             'qr_y' => $this->faker->randomFloat(2, 0.1, 0.9), // Random coordinate between 0.1 and 0.9
             'qr_page' => $this->faker->numberBetween(1, 5), // Random page between 1 and 5
+            'qr_size' => $this->faker->randomFloat(2, 0.1, 0.3), // Relative width between 10% and 30%
         ];
     }
 

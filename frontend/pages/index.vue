@@ -2,63 +2,7 @@
   <div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
     <!-- Header Top - Glassmorphism -->
     <header class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/10 border-b border-white/20">
-      <div class="container mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
-          <!-- Logo with Glow Effect -->
-          <div class="flex items-center space-x-3 group">
-            <div class="relative">
-              <div class="absolute inset-0 bg-telkom-red rounded-full blur-lg opacity-50 group-hover:opacity-75 transition"></div>
-              <div class="relative w-12 h-12 bg-gradient-to-br from-telkom-red to-telkom-red-dark rounded-full flex items-center justify-center shadow-lg">
-                <span class="text-white font-bold text-xl">T</span>
-              </div>
-            </div>
-            <div>
-              <h1 class="text-xl font-bold text-white">Sistem Approval Dokumen</h1>
-              <p class="text-sm text-gray-300">YPT</p>
-            </div>
-          </div>
-
-          <!-- Search & Social -->
-          <div class="flex items-center space-x-4">
-            <div class="hidden md:flex items-center">
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                class="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-telkom-red focus:border-transparent transition"
-              />
-              <button class="ml-2 p-2 text-gray-300 hover:text-telkom-red transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            </div>
-            
-            <!-- Social Icons with Hover Effect -->
-            <div class="flex space-x-2">
-              <a href="#" class="w-10 h-10 bg-blue-600/20 backdrop-blur-md border border-blue-500/30 rounded-lg flex items-center justify-center hover:bg-blue-600 hover:scale-110 transition-all duration-300">
-                <svg class="w-5 h-5 text-blue-400 hover:text-white transition" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-              </a>
-              <a href="#" class="w-10 h-10 bg-red-600/20 backdrop-blur-md border border-red-500/30 rounded-lg flex items-center justify-center hover:bg-red-600 hover:scale-110 transition-all duration-300">
-                <svg class="w-5 h-5 text-red-400 hover:text-white transition" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                </svg>
-              </a>
-              <a href="#" class="w-10 h-10 bg-pink-600/20 backdrop-blur-md border border-pink-500/30 rounded-lg flex items-center justify-center hover:bg-pink-600 hover:scale-110 transition-all duration-300">
-                <svg class="w-5 h-5 text-pink-400 hover:text-white transition" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Navigation Bar - Glassmorphism -->
-    <nav class="fixed top-20 left-0 right-0 z-40 backdrop-blur-md bg-gradient-to-r from-telkom-red/90 to-telkom-red-dark/90 shadow-2xl border-b border-white/10">
-      <div class="container mx-auto px-4">
+   <div class="container mx-auto px-4">
         <div class="flex items-center justify-between">
           <div class="flex space-x-2">
             <a href="#" class="text-white px-6 py-4 border-b-2 border-yellow-400 hover:bg-white/10 transition-all font-medium relative group">
@@ -79,7 +23,28 @@
             </a>
           </div>
           
+          <!-- User Menu for Authenticated Users -->
+          <div v-if="auth.user" class="flex items-center gap-4">
+            <div class="flex items-center gap-3 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
+              <div class="w-8 h-8 bg-gradient-to-br from-telkom-red to-orange-600 rounded-full flex items-center justify-center">
+                <span class="text-white font-bold text-sm">{{ getUserInitials(auth.user.name) }}</span>
+              </div>
+              <div class="text-white">
+                <div class="text-sm font-semibold">{{ auth.user.name }}</div>
+                <div class="text-xs text-gray-300">{{ auth.user.role }}</div>
+              </div>
+            </div>
+            <NuxtLink 
+              to="/dashboard" 
+              class="relative group bg-gradient-to-r from-telkom-red to-orange-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:from-orange-600 hover:to-red-700 transition-all duration-300 shadow-lg overflow-hidden"
+            >
+              <span class="relative z-10">Dashboard</span>
+            </NuxtLink>
+          </div>
+          
+          <!-- Login Button for Guest Users -->
           <NuxtLink 
+            v-else
             to="/login" 
             class="relative group bg-white text-telkom-red px-8 py-2.5 rounded-lg font-semibold hover:bg-yellow-400 hover:text-white transition-all duration-300 shadow-lg hover:shadow-yellow-400/50 overflow-hidden"
           >
@@ -88,10 +53,14 @@
           </NuxtLink>
         </div>
       </div>
-    </nav>
+ 
+    </header>
+
+    <!-- Navigation Bar - Glassmorphism -->
+    
 
     <!-- Hero Section - Modern & Futuristic -->
-    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-32">
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-24">
       <!-- Animated Background -->
       <div class="absolute inset-0">
         <div class="absolute inset-0 bg-gradient-to-br from-telkom-red/20 via-purple-900/20 to-blue-900/20"></div>
@@ -106,7 +75,8 @@
           <div class="text-white space-y-8 animate-fade-in-up">
             <div class="inline-block">
               <span class="text-yellow-400 text-sm font-semibold tracking-widest uppercase px-4 py-2 bg-yellow-400/10 backdrop-blur-sm rounded-full border border-yellow-400/30">
-                Welcome to the Future
+                <template v-if="auth.user">Welcome back, {{ auth.user.name.split(' ')[0] }}!</template>
+                <template v-else>Welcome to the Future</template>
               </span>
             </div>
             
@@ -133,25 +103,51 @@
             </p>
             
             <div class="flex flex-wrap gap-4 pt-4">
-              <NuxtLink 
-                to="/login" 
-                class="group relative px-8 py-4 bg-gradient-to-r from-telkom-red to-orange-600 rounded-xl font-bold text-white shadow-2xl shadow-telkom-red/50 hover:shadow-telkom-red overflow-hidden transition-all duration-300 hover:scale-105"
-              >
-                <span class="relative z-10 flex items-center gap-2">
-                  MULAI SEKARANG
-                  <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </span>
-                <div class="absolute inset-0 bg-gradient-to-r from-orange-600 to-red-700 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
-              </NuxtLink>
+              <!-- Authenticated User Buttons -->
+              <template v-if="auth.user">
+                <NuxtLink 
+                  to="/dashboard" 
+                  class="group relative px-8 py-4 bg-gradient-to-r from-telkom-red to-orange-600 rounded-xl font-bold text-white shadow-2xl shadow-telkom-red/50 hover:shadow-telkom-red overflow-hidden transition-all duration-300 hover:scale-105"
+                >
+                  <span class="relative z-10 flex items-center gap-2">
+                    BUKA DASHBOARD
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </span>
+                  <div class="absolute inset-0 bg-gradient-to-r from-orange-600 to-red-700 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                </NuxtLink>
+                
+                <NuxtLink 
+                  to="/documents/create" 
+                  class="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl font-bold text-white hover:bg-white/20 transition-all duration-300 hover:scale-105"
+                >
+                  Upload Dokumen
+                </NuxtLink>
+              </template>
               
-              <a 
-                href="#fitur" 
-                class="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl font-bold text-white hover:bg-white/20 transition-all duration-300 hover:scale-105"
-              >
-                Pelajari Lebih Lanjut
-              </a>
+              <!-- Guest User Buttons -->
+              <template v-else>
+                <NuxtLink 
+                  to="/login" 
+                  class="group relative px-8 py-4 bg-gradient-to-r from-telkom-red to-orange-600 rounded-xl font-bold text-white shadow-2xl shadow-telkom-red/50 hover:shadow-telkom-red overflow-hidden transition-all duration-300 hover:scale-105"
+                >
+                  <span class="relative z-10 flex items-center gap-2">
+                    MULAI SEKARANG
+                    <svg class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </span>
+                  <div class="absolute inset-0 bg-gradient-to-r from-orange-600 to-red-700 translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                </NuxtLink>
+                
+                <a 
+                  href="#fitur" 
+                  class="px-8 py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl font-bold text-white hover:bg-white/20 transition-all duration-300 hover:scale-105"
+                >
+                  Pelajari Lebih Lanjut
+                </a>
+              </template>
             </div>
 
             <!-- Stats -->
@@ -239,6 +235,99 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         </a>
+      </div>
+    </section>
+
+    <!-- Quick Actions Section - Only for Authenticated Users -->
+    <section v-if="auth.user" class="py-20 bg-gradient-to-b from-gray-900 to-gray-800 relative overflow-hidden">
+      <!-- Background Pattern -->
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 30px 30px;"></div>
+      </div>
+
+      <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center mb-16 animate-fade-in-up">
+          <span class="text-telkom-red text-sm font-semibold tracking-widest uppercase">Quick Access</span>
+          <h2 class="text-4xl md:text-5xl font-black text-white mt-4 mb-6">
+            <span class="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+              Aksi Cepat
+            </span>
+          </h2>
+          <div class="w-24 h-1 bg-gradient-to-r from-telkom-red to-orange-500 mx-auto mb-6 rounded-full"></div>
+          <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+            Akses cepat ke fitur-fitur yang sering Anda gunakan
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-4 gap-6">
+          <!-- Upload Document -->
+          <NuxtLink 
+            to="/documents/create"
+            class="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-telkom-red/50 transition-all duration-500 hover:scale-105"
+          >
+            <div class="absolute inset-0 bg-gradient-to-br from-telkom-red/20 to-orange-600/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-75 transition-opacity duration-500"></div>
+            <div class="relative">
+              <div class="w-16 h-16 bg-gradient-to-br from-telkom-red to-orange-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2 group-hover:text-telkom-red transition-colors">Upload Dokumen</h3>
+              <p class="text-gray-400 text-sm">Upload dokumen baru untuk approval</p>
+            </div>
+          </NuxtLink>
+
+          <!-- My Documents -->
+          <NuxtLink 
+            to="/documents"
+            class="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-blue-500/50 transition-all duration-500 hover:scale-105"
+          >
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-75 transition-opacity duration-500"></div>
+            <div class="relative">
+              <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">Dokumen Saya</h3>
+              <p class="text-gray-400 text-sm">Lihat semua dokumen yang telah diupload</p>
+            </div>
+          </NuxtLink>
+
+          <!-- Pending Approvals -->
+          <NuxtLink 
+            to="/approvals"
+            class="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-yellow-500/50 transition-all duration-500 hover:scale-105"
+          >
+            <div class="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-75 transition-opacity duration-500"></div>
+            <div class="relative">
+              <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">Pending Approval</h3>
+              <p class="text-gray-400 text-sm">Dokumen yang menunggu persetujuan Anda</p>
+            </div>
+          </NuxtLink>
+
+          <!-- Dashboard -->
+          <NuxtLink 
+            to="/dashboard"
+            class="group relative bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-purple-500/50 transition-all duration-500 hover:scale-105"
+          >
+            <div class="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-75 transition-opacity duration-500"></div>
+            <div class="relative">
+              <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-bold text-white mb-2 group-hover:text-purple-400 transition-colors">Dashboard</h3>
+              <p class="text-gray-400 text-sm">Lihat statistik dan ringkasan aktivitas</p>
+            </div>
+          </NuxtLink>
+        </div>
       </div>
     </section>
 
@@ -431,6 +520,17 @@
         <!-- CTA Section -->
         <div class="text-center mt-20 animate-fade-in-up delay-600">
           <NuxtLink 
+            v-if="auth.user"
+            to="/dashboard" 
+            class="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-telkom-red via-orange-600 to-red-600 rounded-2xl font-bold text-white shadow-2xl shadow-telkom-red/50 hover:shadow-telkom-red hover:scale-105 transition-all duration-300"
+          >
+            <span class="text-lg">Buka Dashboard</span>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </NuxtLink>
+          <NuxtLink 
+            v-else
             to="/login" 
             class="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-telkom-red via-orange-600 to-red-600 rounded-2xl font-bold text-white shadow-2xl shadow-telkom-red/50 hover:shadow-telkom-red hover:scale-105 transition-all duration-300"
           >
@@ -601,16 +701,22 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from '~/stores/auth'
+
 definePageMeta({
   layout: false,
 })
 
-// Redirect to dashboard if authenticated
+// Initialize auth store without redirecting
 const auth = useAuthStore()
 try {
   await auth.fetchUser()
-} catch (_) {}
-if (auth.user) {
-  navigateTo('/dashboard')
+} catch (_) {
+  // Silently handle auth errors - user is not logged in
+}
+
+// Helper function to get user initials
+const getUserInitials = (name: string) => {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 </script>

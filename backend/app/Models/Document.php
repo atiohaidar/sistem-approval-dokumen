@@ -30,6 +30,7 @@ class Document extends Model
         'qr_x',
         'qr_y',
         'qr_page',
+        'qr_size',
         'qr_code_path',
     ];
 
@@ -43,6 +44,7 @@ class Document extends Model
         'qr_x' => 'float',
         'qr_y' => 'float',
         'qr_page' => 'integer',
+        'qr_size' => 'float',
     ];
 
     // Relationships

@@ -147,10 +147,19 @@
                   <div class="text-sm mt-1" :class="isDark ? 'text-gray-500' : 'text-gray-600'">{{ doc.description || '-' }}</div>
                 </td>
                 <td class="px-4 py-4">
-                  <span :class="getStatusClass(doc.status)" class="inline-flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full" :class="getStatusDotClass(doc.status)"></span>
-                    {{ formatStatus(doc.status) }}
-                  </span>
+                  <div v-if="doc.approvers && doc.approvers.length > 0">
+                    <MiniApprovalTimeline 
+                      :document-status="doc.status"
+                      :current-level="doc.current_level || 1"
+                      :total-levels="doc.approvers.length"
+                    />
+                  </div>
+                  <div v-else>
+                    <span :class="getStatusClass(doc.status)" class="inline-flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full" :class="getStatusDotClass(doc.status)"></span>
+                      {{ formatStatus(doc.status) }}
+                    </span>
+                  </div>
                 </td>
                 <td class="px-4 py-4">
                   <div class="flex items-center gap-2">

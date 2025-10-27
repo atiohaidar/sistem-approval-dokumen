@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/vue-query'
-import type { Document, CreateDocumentRequest, PaginatedResponse, PublicDocumentInfo } from '~/types/api'
+import type { Document, CreateDocumentRequest, PaginatedResponse, PublicDocumentInfo, DocumentDetailResponse } from '~/types/api'
 
 export const useDocuments = () => {
   const { $api } = useNuxtApp()
@@ -27,8 +27,12 @@ export const useDocuments = () => {
   }
 
   const getDocument = async (id: number) => {
-    const response = await $api.get<Document>(`/documents/${id}`)
-    return response.data
+    const response = await $api.get<DocumentDetailResponse>(`/documents/${id}`)
+    // Merge approval_records into document object for backward compatibility
+    return {
+      ...response.data.document,
+      approval_records: response.data.approval_records
+    }
   }
 
   const createDocument = async (data: FormData) => {

@@ -49,12 +49,26 @@ export interface Document {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  approval_records?: ApprovalRecord[];
 }
 
 export interface LevelProgress {
   approved: number[];
   pending: number[];
   rejected: number[];
+}
+
+export interface ApprovalRecord {
+  id: number;
+  document_id: number;
+  approver_id: number;
+  approver?: User;
+  action: 'approved' | 'rejected';
+  notes: string | null;
+  level: number;
+  processed_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DocumentTemplate {
@@ -102,6 +116,11 @@ export interface ApproverDetail {
   status: string;
 }
 
+export interface DocumentDetailResponse {
+  document: Document;
+  approval_records: ApprovalRecord[];
+}
+
 export interface PublicDocumentInfo {
   document: Document;
   public_url: string;
@@ -109,5 +128,5 @@ export interface PublicDocumentInfo {
   preview_url?: string;
   approval_progress: Record<number, LevelProgress>;
   approval_levels: Record<number, ApprovalLevel>;
-  approval_records: any[];
+  approval_records: ApprovalRecord[];
 }
