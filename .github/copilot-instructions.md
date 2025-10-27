@@ -11,76 +11,65 @@ contoh:
 tambahkan ringkasan evaluasi nya di paling bawah file ini, dan ini di update setiap kali ada prompt baru.
 
 ## Design Guidelines for Frontend
+# Palet Warna & Panduan Desain
 
-### Telkom University Color Palette
+Dokumen singkat yang merangkum palet warna dan aturan desain yang digunakan di project.
 
-Berdasarkan filosofi dan makna kode warna logo Telkom University, berikut adalah panduan desain untuk frontend project ini. Warna-warna ini telah diintegrasikan ke dalam Tailwind CSS config.
+## Palet warna (variables SCSS)
+- Primary: `$primary` — #4F5686
+  - Kegunaan: warna utama branding, tombol utama, header/ikon aksen.
+- Secondary: `$secondary` — #F17641
+  - Kegunaan: aksen, CTA, link penting.
+- Success: `$success` — #05AA5B
+  - Kegunaan: status sukses, aksi positif, badge.
+- Danger: `$danger` — #DA3732
+  - Kegunaan: error, aksi destruktif, peringatan.
+- Dark: `$dark` — #212529
+  - Kegunaan: teks utama, latar gelap.
 
-#### Warna Primer dan Filosofinya:
+Variabel ini didefinisikan di: `assets/scss/colors.scss` dan di-mapping ke `$theme-colors` untuk override tema Bootstrap.
 
-1. **Merah Maroon** (`#B6252A` / `bg-telkom-maroon`)
-   - Filosofi: Melambangkan semangat eksplorasi dan keberanian menciptakan keilmuan baru dengan dilandasi oleh tekad yang kuat.
-   - Penggunaan: Header, tombol utama, accent color untuk elemen penting.
+## Tipografi & spacing
+- Font global: `Poppins`, sans-serif.
+- Ukuran font dasar: `14px` (di `assets/scss/app.scss`).
+- Letter-spacing: `1px` untuk elemen teks (`*a` override di `app.scss`).
 
-2. **Merah** (`#ED1E28` / `bg-telkom-red`)
-   - Filosofi: Melambangkan semangat eksplorasi dan keberanian.
-   - Penggunaan: Highlight, error states, secondary accents.
+## Aturan tombol yang ada
+- `.btn { font-size: 14px; }` — ukuran font tombol.
+- `.btn-success` dan `.btn-secondary` dipaksa berwarna teks putih (`color: white !important;`) di `assets/scss/button.scss` untuk meningkatkan kontras.
+- `.btn-outline-success:hover` juga memaksa teks putih pada hover.
 
-3. **Abu-abu Tua** (`#55565B` / `bg-telkom-grey-dark`)
-   - Filosofi: Menjadi lambang bagi teknologi modern sebagai modal dasar bagi Keluarga Besar Telkom Indonesia.
-   - Penggunaan: Text utama, borders, dark backgrounds.
+> Catatan: penggunaan `!important` membuat override berat. Pertimbangkan menggunakan variabel Bootstrap (`$btn-*`) atau menurunkan spesifisitas untuk maintainability.
 
-4. **Abu-abu** (`#959597` / `bg-telkom-grey`)
-   - Filosofi: Menjadi lambang bagi teknologi modern, kekhasan pada ICT.
-   - Penggunaan: Secondary text, muted elements, table headers.
+## Cara menggunakan warna dalam SCSS
+Import urutannya penting: override variabel harus di-define sebelum mengimpor Bootstrap.
 
-5. **Putih** (`#FFFFFF` / `bg-telkom-white`)
-   - Filosofi: Melambangkan tata kelola yang bersih dan bertujuan murni.
-   - Penggunaan: Background utama, card backgrounds.
+Contoh SCSS singkat:
 
-6. **Hitam** (`#000000` / `bg-telkom-black`)
-   - Filosofi: Menjadi lambang sebuah ketegasan prinsip dan keyakinan.
-   - Penggunaan: Text headings, strong contrasts.
+```scss
+// assets/scss/colors.scss  (sudah ada)
+@import 'colors';
+@import 'bootstrap/scss/bootstrap';
 
-#### Kombinasi Warna:
+// memakai variabel
+.header {
+  background-color: $primary;
+  color: #fff;
+}
 
-- **Merah-Putih**: Spirit kebanggaan dalam berkarya.
-- **Abu-abu dan Hitam**: Kekuatan karakter bijaksana, dinamika kampus.
-
-#### Implementasi di Tailwind CSS:
-
-```javascript
-// tailwind.config.js
-colors: {
-  'telkom-maroon': '#B6252A',
-  'telkom-red': '#ED1E28',
-  'telkom-grey-dark': '#55565B',
-  'telkom-grey': '#959597',
-  'telkom-white': '#FFFFFF',
-  'telkom-black': '#000000',
+.btn-cta {
+  background-color: $secondary;
+  color: #fff;
 }
 ```
 
-#### Contoh Penggunaan:
+## Lokasi file terkait
+- `assets/scss/colors.scss` — definisi variabel warna dan `$theme-colors` map
+- `assets/scss/app.scss` — mengimpor colors dan bootstrap, serta aturan global
+- `assets/scss/button.scss` — override styling tombol
 
-- Header: `bg-telkom-maroon text-telkom-white`
-- Body text: `text-telkom-grey-dark`
-- Accent: `text-telkom-red`
-- Cards: `bg-telkom-white border border-telkom-grey`
+## Rekomendasi singkat
+- Buat satu halaman dokumentasi (contoh ini) sudah dibuat di `docs/colors.md` untuk rujukan tim.
+- Hindari `!important` jika memungkinkan; prefer men-set variabel Bootstrap seperti `$btn-success-color` atau gunakan class spesifik.
+- Jika ingin akses palet di TypeScript (komponen inline style atau storybook), saya bisa membuat `src/styles/colors.ts` yang mengekspor object warna.
 
-#### Prinsip Desain:
-
-1. **Konsistensi**: Gunakan warna sesuai filosofi - maroon untuk eksplorasi, grey untuk teknologi.
-2. **Kontras**: Pastikan readability dengan kombinasi warna yang tepat.
-3. **Hierarki**: Gunakan ukuran dan warna untuk menunjukkan importance.
-4. **Responsivitas**: Pastikan design bekerja di semua device.
-
-#### Page Design Guidelines:
-
-Page `/design-guidelines` telah dibuat sebagai contoh implementasi lengkap dengan:
-- Layout blog-style
-- Sections untuk setiap warna dengan swatches
-- Table kode warna
-- Responsive design
-
-Gunakan page ini sebagai reference untuk komponen UI lainnya.

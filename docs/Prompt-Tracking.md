@@ -333,3 +333,28 @@ Sesi pengembangan hari ini fokus pada perbaikan internal sistem tanpa prompt eks
 **Evaluasi:** Prompt singkat dan jelas: pengguna meminta penjelasan non-teknis dari aplikasi sistem approval dokumen dan meminta dokumen ditulis ke file `rencana prompt.md`. Tidak ada ambiguitas penting. Saran: jika menginginkan variasi (presentasi singkat, panduan pengguna, atau versi cetak), sertakan format target.
 
 **Rekap Hasil:** Menambahkan bagian "Penjelasan Aplikasi Sistem Approval Dokumen (untuk orang awam)" ke file `rencana prompt.md`. Dokumen mencakup tujuan, pengguna, alur sederhana, contoh nyata, manfaat, glossary singkat, catatan fitur yang belum ada, dan langkah selanjutnya. File berhasil diperbarui.
+
+**Tanggal:** 23 Oktober 2025
+**Prompt:** npm install failed with oxc-parser "Cannot find native binding" error during Nuxt postinstall in `frontend`. Error message suggested removing package-lock.json and node_modules and reinstalling.
+
+**Evaluasi:** The error is caused by missing optional native bindings for `oxc-parser` (prebuilt .node binary or binding package). I attempted the recommended steps:
+- Removed `frontend/node_modules` and `frontend/package-lock.json` and ran `npm install` in `frontend` (failed because `nuxt prepare` during postinstall tried to load the native binding).
+- Retried with `npm install --no-optional` (still failed because `nuxt prepare` invoked `oxc-parser` during postinstall).
+- Installed dependencies with `npm install --ignore-scripts` to avoid running `nuxt prepare` (this succeeded and installed JS-only files).
+- Investigated `node_modules/oxc-parser` and found no platform `.node` bindings under `generated`.
+- Attempted to use `pnpm` via `corepack`, but activation failed due to permission restrictions on this machine.
+
+Root causes and observations:
+- Node engine warnings: local Node is v20.12.2 while packages require >= v20.19.0. This can cause mismatch with prebuilt native binaries.
+- npm optional dependency installation bug (or npm behavior) can leave native bindings missing; `nuxt prepare` then fails when it requires the native module during postinstall.
+
+Recommendations / next steps (what I suggest you run locally):
+1. Upgrade Node to a compatible version (>= 20.19.0). Using Node 20.19+ usually allows prebuilt native packages to match and avoids many binding issues.
+2. Re-run in `frontend`: remove `node_modules` and `package-lock.json`, then run `npm install` (or use `pnpm install` if you prefer). If you can't upgrade Node, use `npm install --ignore-scripts` then run `npx nuxt prepare` after ensuring native bindings are present or skipping optional bindings.
+3. If permission to install pnpm/corepack is an issue, run the Corepack activation as admin or install pnpm manually.
+
+If you'd like, I can:
+- Create a short script or instructions to upgrade Node (using nvm-windows or Node installer) and then re-run the install steps; or
+- Try to vendor a pure-JS fallback by patching `node_modules/oxc-parser/src-js/bindings.js` to skip requiring native binding (not recommended long-term).
+
+**Rekap Hasil:** I was able to install dependencies while skipping scripts (`npm install --ignore-scripts`) so the repo has JS files installed but `nuxt prepare` still fails if run because native oxc-parser binding is missing. Best fix: upgrade Node to >=20.19.0 and reinstall (or install pnpm properly). 
