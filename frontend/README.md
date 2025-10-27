@@ -1,44 +1,194 @@
-aku belum begitu mood utuk ngoding, jadi aku tulis dulu rencananya ya. jadi untuk project yang ini rencannanya uth aku mau bikin tampilannya. nah dari api yang udah ada, aku pertama
-1. minta AI unutuk buatoin rencanan frontendnnya gimana
-2. ikutin step by step. misal bikin fitur loigin, nah yaudah bikin fitur loginnya dulu sampai bagus
-2. lanjut ke foitur berukutnnya dgan pendekatan tadi
+# Frontend - Sistem Approval Dokumen
 
-catatan juga mungkin point1 bisa dilakkuan dengan baik ya, cuman sepertinya feel untuk mengambil keputusannya jadi kruang dapet\
-kalau aku rencanan ya itu gin
+Frontend application untuk Sistem Approval Dokumen Multi Tingkat dengan tema Telkom Indonesia.
 
-- bikin bhalmana login
-- implementasiin
-- bikin register
-- implementasiin
-- bikin dashboard, bentuknnya mungkin kayak dashboard pada umum nya yang  ada sidebar nya, ada navbar nya
+## 🚀 Tech Stack
 
-di kiri nya itu ada bebrapa menu
-untuk admin itu dia bisa ada fitur manajemenuser juga
-tapi utamannya bikin fitur untuk manajemen dokumennya
+- **Framework**: Nuxt.js 3 (Vue.js)
+- **Styling**: Tailwind CSS dengan color palette Telkom Indonesia
+- **State Management**: Pinia
+- **HTTP Client**: Axios
+- **Type Safety**: TypeScript
 
-jadi mungkin ada di kiri ata tombol untuk upload dokumen, nanti disitu ada form juntuk ngisi dokumennya. misal uplod dokumen, gterus posisin QR nya mau dimana. terus yang nge approve siapa aja. untuk yang nge approve siapa aja nih nanti bentuknnya tuh aku belum kebayang jega , ini riset dulu. intinyna di level 1 mau siapa aja yan gnge approe, level 2 siapa aja. 
-terus buat. 
+## 🎨 Design System
 
-nah habis itu di orang yang mau nge approve, nanti ada merah menu untuk melakukann approval. jadi si setiap user itu ada tampilan untuk upload, dan ada tampilan untuk 
+### Color Palette Telkom Indonesia
+- Primary Red: `#EE3124`
+- Grey: `#6D6E71`
+- Blue: `#0071BC`
 
-nah ini mungkin diskusi ya, tapmpilan dashboard nya bagusnya kayka gimana
+### Component Classes
+- Buttons: `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-outline`
+- Cards: `.card`
+- Forms: `.form-input`, `.form-label`
+- Badges: `.badge`, `.badge-pending`, `.badge-approved`, `.badge-rejected`
 
-aku kebayangnngya itu dashboard nya da sidebar, terus untuk page pertama itu kayak tulisan kosong aja engga apa apa sih. engga harus yang gimana giamana
-di sidebar itu ada menu untuk upload dokumen approve dokumen, terus tracking dokumen 
+## 📦 Installation
 
-untuk apporve dikmen ini kalau misal ada dokumen yang harus di approve, ada angka nya, misal ada 1 dokumen harus di approve
+```bash
+# Install dependencies
+npm install
 
-imtintuk approve dokumen ini  tampilannya itu form untuk ngisi data dokumennya, misal upload pdf dokuemnnya, posisi dari qr nya, terus siapa aja ayng bakal nge approve nya juga
+# Copy environment file
+cp .env.example .env
 
-nah ketikika dah selesai, dia otomatis masuk ke menu yang tracking statu s approval. disitu tapi langsung masuk ke halaman detail nya, jadi kelihatan timeline siapa ajayang belum nge approve dll
+# Update API base URL in .env
+# NUXT_PUBLIC_API_BASE=http://localhost:8000/api
+```
 
+## 🏃 Development
 
-terus untuk tracing approval itu bisa kelihatan, dokumen mana yang masih in proggress, dokumen mana yang udah approved, dan dokumen mana yang di reject. dan nanti ketika di klik tuh ke detail dari status approvalnya
+```bash
+# Start development server
+npm run dev
 
-nah tadi  kan menu yang tracking approval
+# Build for production
+npm run build
 
-kalau menu yang melakukan pprovalnya itu ada lagi, ada di sidebar juga. kalau di lihat itu nanti siinya adalah dokumen   dokumen yang harus user nya approve. jadi nanti kelihatan dokumen man aja yang belum di approve dan udah di approve sam aku. dan lagi lagi bisa ada 3 ya, belum di approve, sudah di approve dan yang udah aku reject. dan lagi lagi di halaman itu kalau nanti di pencet detail, masuknnya ke tracing statusnya.. cuman bedannya ini ad tombol untuk nge approve nya
+# Preview production build
+npm run preview
+```
 
+## 📁 Project Structure
 
+```
+frontend/
+├── app.vue                 # Root component
+├── nuxt.config.ts         # Nuxt configuration
+├── tailwind.config.js     # Tailwind configuration
+├── assets/
+│   └── css/
+│       └── main.css       # Global styles & Tailwind
+├── components/            # Reusable Vue components
+├── composables/           # Composable functions
+│   ├── useDocuments.ts   # Document API calls
+│   ├── useApprovals.ts   # Approval API calls
+│   └── useUsers.ts       # User API calls
+├── layouts/
+│   └── default.vue       # Main layout with sidebar
+├── middleware/
+│   └── auth.ts           # Authentication middleware
+├── pages/                # Route pages
+│   ├── index.vue        # Landing page
+│   ├── login.vue        # Login page
+│   ├── register.vue     # Register page
+│   ├── dashboard.vue    # Dashboard
+│   ├── documents/       # Document management
+│   ├── approvals/       # Approval pages
+│   ├── users/          # User management (admin)
+│   └── public/         # Public document info (QR)
+├── plugins/
+│   └── api.ts          # Axios plugin with interceptors
+├── stores/
+│   └── auth.ts         # Auth store (Pinia)
+└── types/
+    └── api.ts          # TypeScript types
+```
 
+## 🔐 Features Implemented
 
+### Authentication
+- [x] Login page with Telkom theme
+- [x] Register page
+- [x] JWT token authentication
+- [x] Auto-redirect on auth status
+- [x] Logout functionality
+
+### Dashboard
+- [x] Statistics cards
+- [x] Recent documents list
+- [x] Quick actions
+- [x] Pending approvals count
+
+### Document Management
+- [x] List all documents with filters (status, search, creator)
+- [x] Create document with PDF upload
+- [x] Multi-level approver configuration
+- [x] QR code position selector
+- [x] Document detail view
+- [x] Download document
+- [x] Approval progress visualization
+- [x] Delete draft documents
+
+### Approval System
+- [x] List pending approvals
+- [x] View document details
+- [x] Approve/Reject with comments
+- [x] Quick approve functionality
+- [x] Level-based approval tracking
+
+### User Management (Admin Only)
+- [x] List all users
+- [x] Create new user
+- [x] Edit user (name, email, role)
+- [x] Delete user
+- [x] Role management (admin/user)
+
+### Public Features
+- [x] Public document info page (for QR code scan)
+- [x] Approval progress visualization
+- [x] Verification badge
+
+### Additional Features
+- [x] Responsive design for mobile
+- [x] Loading states
+- [x] Error handling
+- [x] Pagination
+- [x] Date formatting (Indonesian locale)
+- [x] File size formatting
+
+## 🌐 API Integration
+
+All API endpoints are integrated through composables:
+
+- `useDocuments()` - Document CRUD operations
+- `useApprovals()` - Approval processing
+- `useUsers()` - User management
+
+Base API URL is configured in `.env` file.
+
+## 🎯 Pages & Routes
+
+| Route | Page | Auth Required | Admin Only |
+|-------|------|---------------|------------|
+| `/` | Landing page | No | No |
+| `/login` | Login | No | No |
+| `/register` | Register | No | No |
+| `/dashboard` | Dashboard | Yes | No |
+| `/documents` | Document list | Yes | No |
+| `/documents/create` | Create document | Yes | No |
+| `/documents/[id]` | Document detail | Yes | No |
+| `/approvals` | Pending approvals | Yes | No |
+| `/users` | User management | Yes | Yes |
+| `/public/[id]` | Public document info | No | No |
+
+## 🔒 Security
+
+- JWT token stored in cookies (7 days expiry)
+- Automatic token refresh on API calls
+- Auto-logout on 401 response
+- Role-based access control
+- Protected routes with middleware
+
+## 🎨 Telkom Indonesia Branding
+
+The application uses Telkom Indonesia's official color scheme:
+- Primary brand color (Red #EE3124) for CTAs and important elements
+- Grey (#6D6E71) for secondary elements
+- Blue (#0071BC) for informational elements
+
+All UI components follow Telkom's design language with clean, professional styling.
+
+## 📝 Environment Variables
+
+```env
+NUXT_PUBLIC_API_BASE=http://localhost:8000/api
+```
+
+## 🤝 Contributing
+
+This frontend is designed to work with the Laravel backend API. Ensure backend is running before starting frontend development.
+
+## 📄 License
+
+Property of Telkom Indonesia
