@@ -1,21 +1,35 @@
 # Frontend - Sistem Approval Dokumen
 
-Frontend application untuk Sistem Approval Dokumen Multi Tingkat dengan tema Telkom Indonesia.
+Frontend application untuk Sistem Approval Dokumen Multi Tingkat dengan tema **Yayasan Pendidikan Telkom (YPT)**.
 
 ## 🚀 Tech Stack
 
 - **Framework**: Nuxt.js 3 (Vue.js)
-- **Styling**: Tailwind CSS dengan color palette Telkom Indonesia
+- **Styling**: Tailwind CSS v3 dengan color palette YPT/Telkom Indonesia
 - **State Management**: Pinia
 - **HTTP Client**: Axios
 - **Type Safety**: TypeScript
 
-## 🎨 Design System
+## 🎨 Design System - YPT Theme
 
 ### Color Palette Telkom Indonesia
-- Primary Red: `#EE3124`
+- Primary Red: `#EE3124` (Merah Telkom)
+- Red Dark: `#C61E1E`
+- Red Light: `#F25C50`
 - Grey: `#6D6E71`
+- Grey Dark: `#58595B`
+- Grey Light: `#BCBEC0`
 - Blue: `#0071BC`
+- Blue Light: `#5CB3E5`
+- Yellow Accent: `#FCD116` (untuk highlights)
+
+### Design Features
+- **Hero Section**: Background merah diagonal dengan logo besar dan teks bold
+- **Navigation**: Top header dengan logo, search bar, dan social media icons
+- **Navigation Bar**: Background merah dengan border bottom kuning pada active menu
+- **Cards**: Shadow elevation dengan hover effects
+- **Buttons**: Solid red dengan shadow, hover scale animation
+- **Typography**: Bold headings dengan underline kuning accent
 
 ### Component Classes
 - Buttons: `.btn`, `.btn-primary`, `.btn-secondary`, `.btn-outline`

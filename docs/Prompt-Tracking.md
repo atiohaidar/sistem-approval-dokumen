@@ -327,6 +327,12 @@ Sesi pengembangan hari ini fokus pada perbaikan internal sistem tanpa prompt eks
 **Rekap Hasil:** Berhasil memperbaiki bug duplicate approval dengan menambahkan cek di canBeApprovedBy() agar user tidak bisa approve/reject berkali-kali di level yang sama. Ditambahkan test komprehensif dan semua 69 tests pass. Sistem approval sekarang lebih robust dan aman.
 
 
+**Tanggal:** 27 Oktober 2025
+**Prompt:** kenapa ketika login ada pesan "CSRF token mismatch."?
+
+**Evaluasi:** Error muncul karena request login dianggap "stateful" oleh Sanctum (domain frontend termasuk SANCTUM_STATEFUL_DOMAINS) sehingga CSRF token wajib. Frontend belum mengambil CSRF cookie (`/sanctum/csrf-cookie`) dan belum mengirim credential cookie, sehingga terjadi CSRF mismatch. Dua opsi: (1) pakai SPA Sanctum (fetch CSRF, withCredentials, CORS credentials on) atau (2) pakai Bearer token murni dan kosongkan SANCTUM_STATEFUL_DOMAINS. Dipilih opsi (1) agar kompatibel dengan middleware yang ada.
+
+**Rekap Hasil:** Menambahkan `backend/config/cors.php` dengan `supports_credentials: true` dan allowed origins lokal; mengubah `frontend/plugins/api.ts` agar `withCredentials` aktif dan XSRF header diset; mengubah `frontend/stores/auth.ts` untuk memanggil `${apiOrigin}/sanctum/csrf-cookie` sebelum `POST /auth/login` dan `POST /auth/register`. Instruksi ENV: set `SANCTUM_STATEFUL_DOMAINS` (contoh: `localhost:3000,127.0.0.1:3000`) dan `SESSION_DOMAIN=localhost`. Setelah ini, login via `admin@example.com` / `password` harus berjalan.
 **Tanggal:** 23 Oktober 2025
 **Prompt:** ok coba jelaskan aplikasi yang aku buat kepada orang awam. buatkan dokuemnnya pada #file:rencana prompt.md
 
@@ -426,8 +432,40 @@ Saran: Sangat baik! Prompt singkat tapi langsung ke masalah. Screenshot attachme
 
 **Rekap Hasil:** ✅ **Masalah styling berhasil diperbaiki!** Konflik Tailwind v3/v4 diselesaikan dengan menguninstall @tailwindcss/postcss, update PostCSS config ke syntax v3, dan restart dev server. Sekarang menggunakan Tailwind v3.4.18 stable dengan config yang benar. Dev server running di http://localhost:3000/ dengan warning minor (layouts not used). Style Telkom Indonesia seharusnya sudah muncul dengan benar.
 
+**Tanggal:** 27 Oktober 2025 16:15
+**Prompt:** #fetch_webpage https://ypt.or.id/ ubah tampilan project ini dengan kurang lebih seperti ini
+
+**Evaluasi:** Prompt sangat kreatif meminta redesign landing page dengan mengambil inspirasi dari website YPT (https://ypt.or.id/). Meskipun fetch_webpage gagal (invalid URL), berhasil menggunakan screenshot yang dilampirkan untuk menganalisis desain YPT dan mengimplementasikannya.
+
+Elemen desain YPT yang berhasil diimplementasikan:
+1. **Header Top**: Logo kiri + search bar + social media icons (Facebook, YouTube, Instagram)
+2. **Navigation Bar**: Background merah Telkom dengan menu horizontal dan border bottom kuning untuk active state
+3. **Hero Section**: Background merah diagonal dengan teks bold besar di kiri ("SISTEM APPROVAL DOKUMEN TELKOM") dan logo/visual di kanan
+4. **Typography**: Bold uppercase untuk heading utama dengan underline kuning accent
+5. **Color Scheme**: Merah Telkom (#EE3124), kuning accent (#FCD116), putih, abu-abu
+6. **Features Section**: 3 kolom card dengan icons, hover effects, dan shadow elevation
+7. **Footer**: 4 kolom dengan informasi, quick links, kontak, dan social media
+
+Halaman yang diupdate:
+- `pages/index.vue` - Landing page lengkap dengan hero, features, dan footer
+- `pages/login.vue` - Split screen design (merah di kiri, form di kanan) dengan statistik
+- `assets/css/main.css` - Tambahan utility classes untuk smooth scroll dan enhanced shadows
+- `README.md` - Update dokumentasi dengan desain YPT
+
+Kesalahan: Tidak ada kesalahan. Prompt sangat efektif dengan attachment screenshot yang membantu.
+
+Saran: Excellent! Menggunakan visual reference (screenshot) untuk redesign adalah pendekatan yang sangat baik. Untuk future redesign, bisa juga sertakan specific elements yang ingin dipertahankan atau diubah.
+
+**Rekap Hasil:** ✅ **Redesign landing page selesai 100%!** Berhasil mengimplementasikan desain YPT-inspired dengan:
+- Landing page lengkap: Header with search & social media, Navigation bar merah dengan yellow accent, Hero section diagonal background, Features section 3 kolom, Footer 4 kolom
+- Login page redesign: Split-screen layout dengan branding di kiri dan form di kanan
+- Enhanced CSS: Smooth scrolling, improved shadows, better transitions
+- Mobile responsive dengan fallback logo untuk layar kecil
+
+Tampilan sekarang jauh lebih professional, modern, dan sesuai dengan branding YPT/Telkom Indonesia. Dev server masih running di http://localhost:3000/ untuk preview langsung.
+
 ## Ringkasan Evaluasi
 Prompt dalam sesi pengembangan sistem approval dokumen ini secara keseluruhan sangat efektif dan jelas, terutama prompt terakhir yang meminta implementasi frontend lengkap berdasarkan API backend dengan tema Telkom Indonesia. Pendekatan step-by-step yang digunakan sepanjang development (dari backend hingga frontend) membuahkan hasil yang solid dengan semua tests passing dan sistem fully functional. Frontend implementation sangat komprehensif dengan 25 files yang mencakup semua requirement tanpa ada yang terlewat. Kekuatan utama: spesifikasi yang jelas, theme branding yang konsisten, dan structure code yang maintainable. Tidak ada kesalahan signifikan dalam formulasi prompt. Saran untuk masa depan: Pertahankan pendekatan ini dengan dokumentasi yang jelas dan testing yang comprehensive di setiap tahap development.
 
 **Ringkasan Evaluasi Update (27 Oktober 2025):**
-Dua prompt terbaru menunjukkan pendekatan maintenance dan troubleshooting yang sangat baik. Prompt audit konfigurasi berhasil mengidentifikasi masalah struktural dan versioning yang tidak terlihat saat development. Prompt troubleshooting styling langsung ke masalah dengan bantuan screenshot. Kedua prompt ini melengkapi siklus development: build → audit → fix. Kekuatan: proactive maintenance check dan reactive problem solving yang efektif. Rekomendasi: Lakukan audit konfigurasi setelah major feature implementation dan sebelum production deployment. Maintain habit menyertakan visual evidence (screenshot/video) untuk UI/UX issues.
+Tiga prompt terbaru menunjukkan progression yang excellent: audit → troubleshoot → redesign. Prompt audit konfigurasi mengidentifikasi masalah struktural, prompt troubleshooting styling memperbaiki konflik Tailwind, dan prompt redesign mengimplementasikan design language YPT yang professional. Kekuatan utama: menggunakan visual reference (screenshot) untuk redesign, iterative problem solving, dan comprehensive implementation. Setiap prompt menghasilkan improvement yang measurable. Rekomendasi: Pattern ini sangat efektif untuk development - audit system health, fix issues immediately, then enhance UI/UX. Pertahankan penggunaan visual references untuk design-related tasks.

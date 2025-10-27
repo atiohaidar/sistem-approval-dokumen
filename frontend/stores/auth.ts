@@ -19,8 +19,13 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       const { $api } = useNuxtApp()
+      const config = useRuntimeConfig()
 
       try {
+        // Ensure CSRF cookie is set for stateful requests when using Sanctum
+        const apiOrigin = new URL(config.public.apiBase).origin
+        await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
+
         const response = await $api.post<AuthResponse>('/auth/login', credentials)
         const { user, token } = response.data
 
@@ -46,8 +51,13 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       const { $api } = useNuxtApp()
+      const config = useRuntimeConfig()
 
       try {
+        // Ensure CSRF cookie is set for stateful requests when using Sanctum
+        const apiOrigin = new URL(config.public.apiBase).origin
+        await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
+
         const response = await $api.post<AuthResponse>('/auth/register', data)
         const { user, token } = response.data
 

@@ -6,6 +6,9 @@ export default defineNuxtPlugin(() => {
 
   const api = axios.create({
     baseURL: config.public.apiBase,
+    withCredentials: true, // needed for Sanctum cookie-based auth
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -18,6 +21,15 @@ export default defineNuxtPlugin(() => {
       const token = useCookie('auth_token').value
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
+      }
+      // Ensure CSRF header is set when cookie is present (Sanctum SPA)
+      try {
+        const xsrf = useCookie('XSRF-TOKEN').value
+        if (xsrf) {
+          config.headers['X-XSRF-TOKEN'] = xsrf
+        }
+      } catch (_) {
+        // ignore if cookie not accessible
       }
       return config
     },
