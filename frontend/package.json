@@ -10,6 +10,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@pinia/nuxt": "^0.11.2",
+    "@tailwindcss/postcss": "^4.1.16",
     "@tanstack/vue-query": "^5.90.5",
     "axios": "^1.12.2",
     "nuxt": "^4.1.3",
