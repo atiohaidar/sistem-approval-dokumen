@@ -398,6 +398,18 @@ Saran: Sempurna! Frontend implementation 100% complete sesuai requirement. Untuk
 - Dashboard dengan statistik & recent documents
 - Document management (CRUD dengan multi-level approvers selector)
 - Approval workflow (approve/reject dengan comments)
+- Users management for admin (invite/edit/deactivate)
+- Public document info (QR friendly)
+- Responsive glassmorphism UI bertema Telkom dengan dark mode toggle
+
+**Tanggal:** 27 Oktober 2025 21:00
+**Prompt:** untuk #file:create.vue , coba penampil pdf nya menggunakan package mozila pdf, jadi suapya halmannya bisa diatur dengan mudah. dan posisiinya jadi lebih fix untuk possisi qr nya, bisa terlihat
+
+**Evaluasi:** Prompt jelas dan fokus meminta penggantian preview PDF agar memanfaatkan PDF.js serta mengunci posisi QR yang lebih presisi. Tidak ada ambigu, hanya menuntut implementasi teknis di satu file dan sudah dilengkapi konteks yang cukup.
+
+**Rekap Hasil:** Mengintegrasikan `pdfjs-dist` pada `documents/create.vue`, menghadirkan canvas preview dengan render dinamis per halaman, drag-and-drop QR overlay yang menyimpan koordinat normatif, serta kontrol navigasi halaman dengan feedback loading/render. Form section ikut diperbarui agar ramah dark mode dan input koordinat otomatis terjaga dalam rentang 0-1.
+
+**Ringkasan Evaluasi Terbaru (27 Oktober 2025 21:00):** Fokus sesi ini pada peningkatan UX unggah dokumen: viewer kini memakai Mozilla PDF.js untuk rotasi/halaman akurat, overlay QR interaktif lebih presisi, serta formulir dan kartu mengikuti tema dark mode baru. Dependency `pdfjs-dist` ditambahkan; perlu `npm install` ulang di frontend.
 
 
 **Tanggal:** 27 Oktober 2025
@@ -576,6 +588,13 @@ Sekarang seluruh project bisa menggunakan design system yang konsisten dengan ca
   </GradientButton>
 </GlassCard>
 ```
+
+**Tanggal:** 27 Oktober 2025
+**Prompt:** PDF render error: TypeError: Cannot read private member #pagePromises from an object whose class did not declare it
+
+**Evaluasi:** Prompt sangat jelas; user melaporkan stack trace saat mencoba menampilkan preview PDF dengan pdf.js di halaman upload dokumen. Analisis menunjukkan penyebabnya adalah objek `PDFDocumentProxy` dibungkus reaktivitas Vue (`ref`) sehingga private field milik pdf.js hilang. Solusi teknisnya mengganti `ref` menjadi `shallowRef` untuk menyimpan instance pdf.js agar tidak diproksikan.
+
+**Rekap Hasil:** Mengubah `frontend/pages/documents/create.vue` menggunakan `shallowRef` untuk `pdfDoc` dan `activeRenderTask`. Preview PDF kembali berfungsi tanpa error, posisi QR bisa diatur melalui canvas seperti semula.
 
 Design system siap digunakan di dashboard, documents, approvals, users pages, dan future pages! 🚀
 
