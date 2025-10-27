@@ -205,14 +205,24 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
-const { getDocument, downloadDocument } = useDocuments()
-const { processApproval } = useApprovals()
-const { getUsers } = useUsers()
+const { useDocumentQuery, downloadDocument } = useDocuments()
+const { useProcessApprovalMutation } = useApprovals()
+const { useUsersQuery } = useUsers()
 
-const doc = ref<Document | null>(null)
-const users = ref<User[]>([])
-const loading = ref(true)
-const processing = ref(false)
+const documentId = computed(() => Number(route.params.id))
+
+// Query for document
+const { data: doc, isLoading: loading } = useDocumentQuery(documentId, {
+  retry: 0,
+})
+
+// Query for users
+const { data: users } = useUsersQuery()
+
+// Mutation for approval
+const processApprovalMutation = useProcessApprovalMutation()
+
+const processing = computed(() => processApprovalMutation.isPending.value)
 const showApprovalModal = ref(false)
 const showRejectModal = ref(false)
 const approvalComments = ref('')
@@ -224,23 +234,16 @@ const canApprove = computed(() => {
     doc.value.level_progress?.pending?.includes(authStore.user.id)
 })
 
-const loadDocument = async () => {
-  loading.value = true
-  try {
-    const id = Number(route.params.id)
-    doc.value = await getDocument(id)
-    users.value = await getUsers()
-  } catch (error) {
-    console.error('Error loading document:', error)
+// Watch for document load error and redirect
+watch(() => doc.value, (newDoc) => {
+  if (newDoc === undefined && !loading.value) {
     router.push('/documents')
-  } finally {
-    loading.value = false
   }
-}
+})
 
 const handleDownload = async () => {
   try {
-    const blob = await downloadDocument(Number(route.params.id))
+    const blob = await downloadDocument(documentId.value)
     const url = window.URL.createObjectURL(blob)
     const a = window.document.createElement('a')
     a.href = url
@@ -256,18 +259,18 @@ const handleDownload = async () => {
 }
 
 const handleApprove = async () => {
-  processing.value = true
   try {
-    await processApproval(Number(route.params.id), {
-      action: 'approve',
-      comments: approvalComments.value || null,
+    await processApprovalMutation.mutateAsync({
+      documentId: documentId.value,
+      data: {
+        action: 'approve',
+        comments: approvalComments.value || null,
+      },
     })
     showApprovalModal.value = false
-    await loadDocument()
+    approvalComments.value = ''
   } catch (error: any) {
     alert(error.response?.data?.message || 'Gagal approve dokumen')
-  } finally {
-    processing.value = false
   }
 }
 
@@ -277,28 +280,28 @@ const handleReject = async () => {
     return
   }
   
-  processing.value = true
   try {
-    await processApproval(Number(route.params.id), {
-      action: 'reject',
-      comments: rejectComments.value,
+    await processApprovalMutation.mutateAsync({
+      documentId: documentId.value,
+      data: {
+        action: 'reject',
+        comments: rejectComments.value,
+      },
     })
     showRejectModal.value = false
-    await loadDocument()
+    rejectComments.value = ''
   } catch (error: any) {
     alert(error.response?.data?.message || 'Gagal reject dokumen')
-  } finally {
-    processing.value = false
   }
 }
 
 const getUserName = (userId: number) => {
-  const user = users.value.find(u => u.id === userId)
+  const user = users.value?.find(u => u.id === userId)
   return user?.name || 'Unknown'
 }
 
 const getUserInitials = (userId: number) => {
-  const user = users.value.find(u => u.id === userId)
+  const user = users.value?.find(u => u.id === userId)
   if (!user) return '?'
   return user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
@@ -385,8 +388,4 @@ const formatFileSize = (bytes: number) => {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
 }
-
-onMounted(() => {
-  loadDocument()
-})
 </script>

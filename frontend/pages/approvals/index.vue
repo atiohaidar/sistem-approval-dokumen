@@ -98,25 +98,18 @@ definePageMeta({
   middleware: 'auth',
 })
 
-const { getPendingApprovals, processApproval } = useApprovals()
+const { usePendingApprovalsQuery, useProcessApprovalMutation } = useApprovals()
 
-const pendingApprovals = ref<Document[]>([])
-const loading = ref(true)
-const processing = ref(false)
+// Query for pending approvals
+const { data: pendingApprovals, isLoading: loading } = usePendingApprovalsQuery()
+
+// Mutation for processing approval
+const processApprovalMutation = useProcessApprovalMutation()
+
+const processing = computed(() => processApprovalMutation.isPending.value)
 const showQuickApproveModal = ref(false)
 const quickApproveComments = ref('')
 const selectedDocumentId = ref<number | null>(null)
-
-const loadPendingApprovals = async () => {
-  loading.value = true
-  try {
-    pendingApprovals.value = await getPendingApprovals()
-  } catch (error) {
-    console.error('Error loading pending approvals:', error)
-  } finally {
-    loading.value = false
-  }
-}
 
 const quickApprove = (documentId: number) => {
   selectedDocumentId.value = documentId
@@ -126,20 +119,19 @@ const quickApprove = (documentId: number) => {
 const confirmQuickApprove = async () => {
   if (!selectedDocumentId.value) return
 
-  processing.value = true
   try {
-    await processApproval(selectedDocumentId.value, {
-      action: 'approve',
-      comments: quickApproveComments.value || null,
+    await processApprovalMutation.mutateAsync({
+      documentId: selectedDocumentId.value,
+      data: {
+        action: 'approve',
+        comments: quickApproveComments.value || null,
+      },
     })
     showQuickApproveModal.value = false
     quickApproveComments.value = ''
     selectedDocumentId.value = null
-    await loadPendingApprovals()
   } catch (error: any) {
     alert(error.response?.data?.message || 'Gagal approve dokumen')
-  } finally {
-    processing.value = false
   }
 }
 
@@ -150,8 +142,4 @@ const formatDate = (date: string) => {
     day: 'numeric',
   })
 }
-
-onMounted(() => {
-  loadPendingApprovals()
-})
 </script>

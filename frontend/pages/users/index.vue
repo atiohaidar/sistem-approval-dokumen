@@ -139,16 +139,29 @@ definePageMeta({
 })
 
 const authStore = useAuthStore()
-const { getUsers, createUser, updateUser, deleteUser } = useUsers()
+const { 
+  useUsersQuery,
+  useCreateUserMutation,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} = useUsers()
 
 // Redirect non-admin
 if (!authStore.isAdmin) {
   navigateTo('/dashboard')
 }
 
-const users = ref<User[]>([])
-const loading = ref(true)
-const processing = ref(false)
+// Query for users
+const { data: users, isLoading: loading } = useUsersQuery()
+
+// Mutations
+const createMutation = useCreateUserMutation()
+const updateMutation = useUpdateUserMutation()
+const deleteMutation = useDeleteUserMutation()
+
+const processing = computed(() => 
+  createMutation.isPending.value || updateMutation.isPending.value
+)
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const error = ref<string | null>(null)
@@ -161,17 +174,6 @@ const form = reactive({
   role: 'user' as 'user' | 'admin',
 })
 
-const loadUsers = async () => {
-  loading.value = true
-  try {
-    users.value = await getUsers()
-  } catch (err) {
-    console.error('Error loading users:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
 const editUser = (user: User) => {
   editingUserId.value = user.id
   form.name = user.name
@@ -181,18 +183,20 @@ const editUser = (user: User) => {
 }
 
 const handleSubmit = async () => {
-  processing.value = true
   error.value = null
 
   try {
     if (showEditModal.value && editingUserId.value) {
-      await updateUser(editingUserId.value, {
-        name: form.name,
-        email: form.email,
-        role: form.role,
+      await updateMutation.mutateAsync({
+        id: editingUserId.value,
+        data: {
+          name: form.name,
+          email: form.email,
+          role: form.role,
+        },
       })
     } else {
-      await createUser({
+      await createMutation.mutateAsync({
         name: form.name,
         email: form.email,
         password: form.password,
@@ -200,11 +204,8 @@ const handleSubmit = async () => {
       })
     }
     closeModal()
-    await loadUsers()
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Gagal menyimpan user'
-  } finally {
-    processing.value = false
   }
 }
 
@@ -212,8 +213,7 @@ const handleDelete = async (id: number) => {
   if (!confirm('Apakah Anda yakin ingin menghapus user ini?')) return
 
   try {
-    await deleteUser(id)
-    await loadUsers()
+    await deleteMutation.mutateAsync(id)
   } catch (err: any) {
     alert(err.response?.data?.message || 'Gagal menghapus user')
   }
@@ -237,8 +237,4 @@ const formatDate = (date: string) => {
     day: 'numeric',
   })
 }
-
-onMounted(() => {
-  loadUsers()
-})
 </script>

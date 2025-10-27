@@ -18,9 +18,17 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   const options: VueQueryPluginOptions = {
     queryClient,
+    enableDevtoolsV6Plugin: true,
   }
 
   nuxtApp.vueApp.use(VueQueryPlugin, options)
+
+  // Add devtools in development
+  if (process.dev && typeof window !== 'undefined') {
+    import('@tanstack/vue-query-devtools').then(({ VueQueryDevtools }) => {
+      nuxtApp.vueApp.component('VueQueryDevtools', VueQueryDevtools)
+    })
+  }
 
   return {
     provide: {
