@@ -14,8 +14,10 @@ class QRCodeService
      */
     public function generateForDocument(Document $document, $position): string
     {
-        // Generate URL to public document info
-        $url = url('/api/documents/' . $document->id . '/public-info');
+        // Generate URL to frontend public document page (so QR opens the frontend)
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendBase = rtrim($frontendBase, '/');
+        $url = $frontendBase . '/public/' . $document->id;
 
         $builder = new Builder(
             writer: new PngWriter(),
@@ -41,7 +43,9 @@ class QRCodeService
      */
     public function getQRUrl(Document $document): string
     {
-        return url('/api/documents/' . $document->id . '/public-info');
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendBase = rtrim($frontendBase, '/');
+        return $frontendBase . '/public/' . $document->id;
     }
 
     /**

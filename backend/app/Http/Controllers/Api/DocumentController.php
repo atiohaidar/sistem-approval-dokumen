@@ -332,11 +332,64 @@ class DocumentController extends Controller
             ->with(['approver:id,name,email,role'])
             ->get();
 
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendBase = rtrim($frontendBase, '/');
+        $frontendPublicUrl = $frontendBase . '/public/' . $document->id;
+
         return response()->json([
             'document' => $document,
+            // backend API public url (existing)
+            'public_url' => url("/api/documents/{$document->id}/public-info"),
+            // frontend page that shows public info (for QR and user-facing links)
+            'frontend_url' => $frontendPublicUrl,
+            'preview_url' => url("/api/documents/{$document->id}/public-preview"),
             'approval_progress' => $approvalProgress,
             'approval_levels' => $approvalLevels,
             'approval_records' => $approvalRecords,
+        ]);
+    }
+
+    /**
+     * Stream document for public preview (used by QR landing page)
+     */
+    public function publicPreview(Document $document)
+    {
+        if (!$document->file_path || !Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'Document file not found');
+        }
+
+        $fileName = $document->file_name ?? 'document.pdf';
+        $qrPosition = [
+            'x' => $document->qr_x,
+            'y' => $document->qr_y,
+            'page' => $document->qr_page ?? 1,
+        ];
+
+        try {
+            $watermarkService = app(PDFWatermarkService::class);
+            $watermarkText = $document->isApproved() ? '' : 'BELUM APPROVE';
+            $tempPath = $watermarkService->addWatermark(
+                $document->file_path,
+                $watermarkText,
+                $document->qr_code_path,
+                $qrPosition
+            );
+
+            $fullTempPath = Storage::disk('public')->path($tempPath);
+
+            return response()->file($fullTempPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            \Log::error('Public preview failed for document ' . $document->id . ': ' . $e->getMessage());
+        }
+
+        $fullPath = Storage::disk('public')->path($document->file_path);
+
+        return response()->file($fullPath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
         ]);
     }
 

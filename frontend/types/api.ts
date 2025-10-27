@@ -103,6 +103,9 @@ export interface ApproverDetail {
 
 export interface PublicDocumentInfo {
   document: Document;
+  public_url: string;
+  frontend_url: string;
+  preview_url?: string;
   approval_progress: Record<number, LevelProgress>;
   approval_levels: Record<number, ApprovalLevel>;
   approval_records: any[];

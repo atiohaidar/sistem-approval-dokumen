@@ -2,9 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Custom CSS */
+@import './glassmorphism.css';
+@import './gradients.css';
+@import './animations.css';
+
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-50 text-gray-900 font-sans;
   }
   
   html {

@@ -44,6 +44,36 @@
           </dl>
         </div>
 
+        <!-- Document Preview -->
+        <div v-if="previewUrl" class="card">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-gray-800">Preview Dokumen</h3>
+            <a
+              :href="previewUrl"
+              target="_blank"
+              rel="noopener"
+              class="text-telkom-red hover:text-orange-500 font-semibold text-sm"
+            >
+              Buka di tab baru
+            </a>
+          </div>
+          <div class="aspect-[3/4] w-full bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+            <iframe
+              v-if="previewSrc"
+              :src="previewSrc"
+              class="w-full h-full"
+              title="Preview dokumen"
+              frameborder="0"
+            ></iframe>
+            <div v-else class="flex items-center justify-center h-full text-sm text-gray-500">
+              Preview tidak tersedia
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-3">
+            Catatan: Jika preview tidak muncul, Anda dapat membuka dokumen di tab baru atau mengunduhnya dari tombol di atas.
+          </p>
+        </div>
+
         <!-- Approval Progress Card -->
         <div class="card">
           <h3 class="text-xl font-bold text-gray-800 mb-4">Approval Progress</h3>
@@ -126,6 +156,14 @@ const { getPublicInfo } = useDocuments()
 const document = ref<Document | null>(null)
 const approvalLevels = ref<Record<number, ApprovalLevel>>({})
 const loading = ref(true)
+const previewUrl = ref<string | null>(null)
+
+const previewSrc = computed(() => {
+  if (!previewUrl.value) {
+    return null
+  }
+  return `${previewUrl.value}#view=FitH`
+})
 
 const loadDocumentInfo = async () => {
   loading.value = true
@@ -134,8 +172,11 @@ const loadDocumentInfo = async () => {
     const info: PublicDocumentInfo = await getPublicInfo(id)
     document.value = info.document
     approvalLevels.value = info.approval_levels
+    previewUrl.value = info.preview_url ?? null
   } catch (error) {
     console.error('Error loading document info:', error)
+    previewUrl.value = null
+    document.value = null
   } finally {
     loading.value = false
   }

@@ -22,9 +22,11 @@ export const useAuthStore = defineStore('auth', {
       const config = useRuntimeConfig()
 
       try {
-        // Ensure CSRF cookie is set for stateful requests when using Sanctum
-        const apiOrigin = new URL(config.public.apiBase).origin
-        await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
+        // Optional: attempt CSRF cookie for setups using Sanctum SPA. Ignore if not configured.
+        try {
+          const apiOrigin = new URL(config.public.apiBase).origin
+          await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
+        } catch (_) { /* ignore */ }
 
         const response = await $api.post<AuthResponse>('/auth/login', credentials)
         const { user, token } = response.data
@@ -54,9 +56,11 @@ export const useAuthStore = defineStore('auth', {
       const config = useRuntimeConfig()
 
       try {
-        // Ensure CSRF cookie is set for stateful requests when using Sanctum
-        const apiOrigin = new URL(config.public.apiBase).origin
-        await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
+        // Optional: attempt CSRF cookie for setups using Sanctum SPA. Ignore if not configured.
+        try {
+          const apiOrigin = new URL(config.public.apiBase).origin
+          await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
+        } catch (_) { /* ignore */ }
 
         const response = await $api.post<AuthResponse>('/auth/register', data)
         const { user, token } = response.data
@@ -114,13 +118,20 @@ export const useAuthStore = defineStore('auth', {
       const authToken = useCookie('auth_token')
       const userCookie = useCookie('user')
 
-      if (authToken.value && userCookie.value) {
-        this.token = authToken.value
+      // token may exist without user (e.g., after refresh); handle separately
+      if (authToken.value) {
+        this.token = authToken.value as unknown as string
+      }
+
+      if (userCookie.value) {
         try {
-          this.user = JSON.parse(userCookie.value as string)
+          const v: any = userCookie.value as any
+          this.user = typeof v === 'string' ? JSON.parse(v) : v
         } catch (error) {
           console.error('Parse user cookie error:', error)
-          this.logout()
+          // Fallback: clear invalid user cookie but keep token if present
+          useCookie('user').value = null
+          this.user = null
         }
       }
     },

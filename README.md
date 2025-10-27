@@ -15,9 +15,11 @@ Sistem ini memungkinkan organisasi untuk mengelola proses approval dokumen secar
 
 ### 📄 Manajemen Dokumen
 - Upload dokumen dalam format PDF
+- **Interactive QR Code Positioning** - Drag & drop QR code placement dengan visual preview
 - Template dokumen dengan approval flow bawaan (dapat diedit)
 - Tracking versi dan riwayat dokumen
 - Support dokumen dari berbagai sumber (internal/eksternal)
+- Real-time PDF preview untuk QR code positioning
 
 ### ⚡ Sistem Approval
 - **Multi-level approval** yang dapat dikonfigurasi per dokumen

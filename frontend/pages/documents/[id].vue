@@ -5,18 +5,18 @@
       <p class="text-gray-600 mt-2">Loading...</p>
     </div>
 
-    <div v-else-if="document">
+  <div v-else-if="doc">
       <div class="mb-8">
         <NuxtLink to="/documents" class="text-telkom-red hover:text-telkom-red-dark mb-4 inline-block">
           ← Kembali ke Dokumen
         </NuxtLink>
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-3xl font-bold text-gray-800">{{ document.title }}</h1>
-            <p class="text-gray-600 mt-2">{{ document.description || 'Tidak ada deskripsi' }}</p>
+            <h1 class="text-3xl font-bold text-gray-800">{{ doc.title }}</h1>
+            <p class="text-gray-600 mt-2">{{ doc.description || 'Tidak ada deskripsi' }}</p>
           </div>
-          <span :class="getStatusClass(document.status)">
-            {{ formatStatus(document.status) }}
+          <span :class="getStatusClass(doc.status)">
+            {{ formatStatus(doc.status) }}
           </span>
         </div>
       </div>
@@ -30,27 +30,27 @@
             <dl class="grid grid-cols-2 gap-4">
               <div>
                 <dt class="text-sm font-medium text-gray-500">Creator</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ document.creator?.name || '-' }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ doc.creator?.name || '-' }}</dd>
               </div>
               <div>
                 <dt class="text-sm font-medium text-gray-500">File Name</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ document.file_name }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ doc.file_name }}</dd>
               </div>
               <div>
                 <dt class="text-sm font-medium text-gray-500">File Size</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ formatFileSize(document.file_size) }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ formatFileSize(doc.file_size) }}</dd>
               </div>
               <div>
                 <dt class="text-sm font-medium text-gray-500">Created At</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ formatDate(document.created_at) }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ formatDate(doc.created_at) }}</dd>
               </div>
               <div>
                 <dt class="text-sm font-medium text-gray-500">Current Level</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ document.current_level }} / {{ document.approvers?.length || 0 }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ doc.current_level }} / {{ doc.approvers?.length || 0 }}</dd>
               </div>
               <div>
                 <dt class="text-sm font-medium text-gray-500">Completed At</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ document.completed_at ? formatDate(document.completed_at) : '-' }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ doc.completed_at ? formatDate(doc.completed_at) : '-' }}</dd>
               </div>
             </dl>
 
@@ -68,9 +68,9 @@
           <div class="card">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Approval Progress</h2>
             
-            <div v-if="document.approvers && document.approvers.length > 0" class="space-y-4">
+            <div v-if="doc.approvers && doc.approvers.length > 0" class="space-y-4">
               <div
-                v-for="(level, index) in document.approvers"
+                v-for="(level, index) in doc.approvers"
                 :key="index"
                 class="p-4 rounded-lg border-2"
                 :class="getLevelBorderClass(index + 1)"
@@ -107,13 +107,13 @@
         <!-- Sidebar -->
         <div class="space-y-6">
           <!-- QR Code Info -->
-          <div class="card" v-if="document.qr_code_path">
+          <div class="card" v-if="doc.qr_code_path">
             <h2 class="text-lg font-bold text-gray-800 mb-4">QR Code</h2>
             <div class="text-center">
               <div class="bg-gray-100 p-4 rounded-lg inline-block">
                 <p class="text-sm text-gray-600 mb-2">QR Code Position:</p>
-                <p class="text-sm font-medium">X: {{ document.qr_x }}, Y: {{ document.qr_y }}</p>
-                <p class="text-sm font-medium">Page: {{ document.qr_page }}</p>
+                <p class="text-sm font-medium">X: {{ doc.qr_x }}, Y: {{ doc.qr_y }}</p>
+                <p class="text-sm font-medium">Page: {{ doc.qr_page }}</p>
               </div>
             </div>
           </div>
@@ -209,7 +209,7 @@ const { getDocument, downloadDocument } = useDocuments()
 const { processApproval } = useApprovals()
 const { getUsers } = useUsers()
 
-const document = ref<Document | null>(null)
+const doc = ref<Document | null>(null)
 const users = ref<User[]>([])
 const loading = ref(true)
 const processing = ref(false)
@@ -219,16 +219,16 @@ const approvalComments = ref('')
 const rejectComments = ref('')
 
 const canApprove = computed(() => {
-  if (!document.value || !authStore.user) return false
-  return document.value.status === 'pending_approval' &&
-    document.value.level_progress?.pending?.includes(authStore.user.id)
+  if (!doc.value || !authStore.user) return false
+  return doc.value.status === 'pending_approval' &&
+    doc.value.level_progress?.pending?.includes(authStore.user.id)
 })
 
 const loadDocument = async () => {
   loading.value = true
   try {
     const id = Number(route.params.id)
-    document.value = await getDocument(id)
+    doc.value = await getDocument(id)
     users.value = await getUsers()
   } catch (error) {
     console.error('Error loading document:', error)
@@ -242,13 +242,13 @@ const handleDownload = async () => {
   try {
     const blob = await downloadDocument(Number(route.params.id))
     const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = window.document.createElement('a')
     a.href = url
-    a.download = document.value?.file_name || 'document.pdf'
-    document.body.appendChild(a)
+    a.download = doc.value?.file_name || 'document.pdf'
+    window.document.body.appendChild(a)
     a.click()
     window.URL.revokeObjectURL(url)
-    document.body.removeChild(a)
+    window.document.body.removeChild(a)
   } catch (error) {
     console.error('Error downloading document:', error)
     alert('Gagal mendownload dokumen')
@@ -304,47 +304,47 @@ const getUserInitials = (userId: number) => {
 }
 
 const getLevelBorderClass = (level: number) => {
-  if (!document.value) return 'border-gray-200'
-  if (level < document.value.current_level) return 'border-green-500'
-  if (level === document.value.current_level) return 'border-telkom-red'
+  if (!doc.value) return 'border-gray-200'
+  if (level < doc.value.current_level) return 'border-green-500'
+  if (level === doc.value.current_level) return 'border-telkom-red'
   return 'border-gray-200'
 }
 
 const getLevelStatusBadge = (level: number) => {
-  if (!document.value) return 'badge'
-  if (level < document.value.current_level) return 'badge badge-approved'
-  if (level === document.value.current_level && document.value.status === 'pending_approval') {
+  if (!doc.value) return 'badge'
+  if (level < doc.value.current_level) return 'badge badge-approved'
+  if (level === doc.value.current_level && doc.value.status === 'pending_approval') {
     return 'badge badge-pending'
   }
-  if (document.value.status === 'rejected') return 'badge badge-rejected'
+  if (doc.value.status === 'rejected') return 'badge badge-rejected'
   return 'badge'
 }
 
 const getLevelStatusText = (level: number) => {
-  if (!document.value) return 'Pending'
-  if (level < document.value.current_level) return 'Completed'
-  if (level === document.value.current_level) {
-    if (document.value.status === 'rejected') return 'Rejected'
+  if (!doc.value) return 'Pending'
+  if (level < doc.value.current_level) return 'Completed'
+  if (level === doc.value.current_level) {
+    if (doc.value.status === 'rejected') return 'Rejected'
     return 'In Progress'
   }
   return 'Pending'
 }
 
 const getApproverStatusBadge = (level: number, approverId: number) => {
-  if (!document.value) return 'badge'
-  if (level < document.value.current_level) return 'badge badge-approved'
+  if (!doc.value) return 'badge'
+  if (level < doc.value.current_level) return 'badge badge-approved'
   
-  const progress = document.value.level_progress
+  const progress = doc.value.level_progress
   if (progress?.approved?.includes(approverId)) return 'badge badge-approved'
   if (progress?.rejected?.includes(approverId)) return 'badge badge-rejected'
   return 'badge badge-pending'
 }
 
 const getApproverStatusText = (level: number, approverId: number) => {
-  if (!document.value) return 'Pending'
-  if (level < document.value.current_level) return 'Approved'
+  if (!doc.value) return 'Pending'
+  if (level < doc.value.current_level) return 'Approved'
   
-  const progress = document.value.level_progress
+  const progress = doc.value.level_progress
   if (progress?.approved?.includes(approverId)) return 'Approved'
   if (progress?.rejected?.includes(approverId)) return 'Rejected'
   return 'Pending'

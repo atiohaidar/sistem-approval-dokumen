@@ -24,6 +24,7 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 
 // Public document info (accessible via QR code)
 Route::get('/documents/{document}/public-info', [DocumentController::class, 'publicInfo']);
+Route::get('/documents/{document}/public-preview', [DocumentController::class, 'publicPreview']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

@@ -46,6 +46,21 @@ export const useDocuments = () => {
     const response = await $api.get(`/documents/${id}/download`, {
       responseType: 'blob',
     })
+
+    // If server returned JSON error (often as a blob when responseType='blob'),
+    // parse it and throw a readable error so UI can show correct message.
+    const contentType = (response.headers && (response.headers['content-type'] || response.headers['Content-Type'])) || ''
+    if (contentType.includes('application/json')) {
+      try {
+        const text = await (response.data as Blob).text()
+        const json = JSON.parse(text)
+        throw new Error(json.message || 'Gagal mendownload dokumen')
+      } catch (err: any) {
+        // If parsing fails, throw a generic error including status
+        throw new Error(err?.message || 'Gagal mendownload dokumen')
+      }
+    }
+
     return response.data
   }
 
