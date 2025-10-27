@@ -60,9 +60,9 @@
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm font-medium">Completed</p>
-            <p class="text-4xl font-black text-gray-900 mt-3">{{ completedCount }}</p>
-            <p class="text-green-600 text-xs mt-2 font-semibold">Selesai diproses</p>
+            <p class="text-sm font-medium" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Completed</p>
+            <p class="text-4xl font-black mt-3" :class="isDark ? 'text-white' : 'text-gray-900'">{{ completedCount }}</p>
+            <p class="text-xs mt-2 font-semibold" :class="isDark ? 'text-green-400' : 'text-green-600'">Selesai diproses</p>
           </div>
           <FloatingIcon icon="check" color="green" size="md" delay="1000" />
         </div>
@@ -77,9 +77,9 @@
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm font-medium">Rejected</p>
-            <p class="text-4xl font-black text-gray-900 mt-3">{{ rejectedCount }}</p>
-            <p class="text-red-600 text-xs mt-2 font-semibold">Perlu revisi</p>
+            <p class="text-sm font-medium" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Rejected</p>
+            <p class="text-4xl font-black mt-3" :class="isDark ? 'text-white' : 'text-gray-900'">{{ rejectedCount }}</p>
+            <p class="text-xs mt-2 font-semibold" :class="isDark ? 'text-red-400' : 'text-red-600'">Perlu revisi</p>
           </div>
           <FloatingIcon icon="custom" color="telkom" size="md">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +99,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900">Quick Actions</h2>
+        <h2 class="text-2xl font-bold" :class="isDark ? 'text-white' : 'text-gray-900'">Quick Actions</h2>
       </div>
       <div class="flex flex-wrap gap-4">
         <GradientButton 
@@ -155,9 +155,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 class="text-2xl font-bold text-gray-900">Recent Documents</h2>
+          <h2 class="text-2xl font-bold" :class="isDark ? 'text-white' : 'text-gray-900'">Recent Documents</h2>
         </div>
-        <NuxtLink to="/documents" class="text-telkom-red hover:text-orange-500 font-semibold transition flex items-center gap-2">
+        <NuxtLink to="/documents" class="font-semibold transition flex items-center gap-2" :class="isDark ? 'text-red-400 hover:text-red-300' : 'text-telkom-red hover:text-orange-500'">
           View All
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -167,41 +167,42 @@
 
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-12">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-telkom-red border-t-transparent"></div>
-        <p class="text-gray-600 mt-4 font-medium">Loading...</p>
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-t-transparent" :class="isDark ? 'border-red-500' : 'border-telkom-red'"></div>
+        <p class="mt-4 font-medium" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Loading...</p>
       </div>
 
       <!-- Empty State -->
       <div v-else-if="recentDocuments.length === 0" class="text-center py-12">
-        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" :class="isDark ? 'bg-gray-700' : 'bg-gray-100'">
+          <svg class="w-10 h-10" :class="isDark ? 'text-gray-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
-        <p class="text-gray-700 font-medium">Tidak ada dokumen</p>
-        <p class="text-gray-500 text-sm mt-2">Upload dokumen pertama Anda</p>
+        <p class="font-medium" :class="isDark ? 'text-gray-300' : 'text-gray-700'">Tidak ada dokumen</p>
+        <p class="text-sm mt-2" :class="isDark ? 'text-gray-500' : 'text-gray-500'">Upload dokumen pertama Anda</p>
       </div>
 
       <!-- Documents Table -->
       <div v-else class="overflow-x-auto">
         <table class="w-full">
           <thead>
-            <tr class="border-b border-gray-200">
-              <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Title</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Created</th>
-              <th class="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Action</th>
+            <tr class="border-b" :class="isDark ? 'border-gray-700' : 'border-gray-200'">
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Title</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Status</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Created</th>
+              <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Action</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
+          <tbody class="divide-y" :class="isDark ? 'divide-gray-700' : 'divide-gray-100'">
             <tr 
               v-for="doc in recentDocuments" 
               :key="doc.id" 
-              class="hover:bg-gray-50 transition-colors group"
+              class="transition-colors group"
+              :class="isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'"
             >
               <td class="px-4 py-4">
-                <div class="font-semibold text-gray-900 group-hover:text-telkom-red transition">{{ doc.title }}</div>
-                <div class="text-sm text-gray-500 mt-1">{{ doc.description }}</div>
+                <div class="font-semibold transition" :class="isDark ? 'text-white group-hover:text-red-400' : 'text-gray-900 group-hover:text-telkom-red'">{{ doc.title }}</div>
+                <div class="text-sm mt-1" :class="isDark ? 'text-gray-500' : 'text-gray-500'">{{ doc.description }}</div>
               </td>
               <td class="px-4 py-4">
                 <span :class="getStatusClass(doc.status)" class="inline-flex items-center gap-2">
@@ -209,13 +210,14 @@
                   {{ formatStatus(doc.status) }}
                 </span>
               </td>
-              <td class="px-4 py-4 text-sm text-gray-600">
+              <td class="px-4 py-4 text-sm" :class="isDark ? 'text-gray-400' : 'text-gray-600'">
                 {{ formatDate(doc.created_at) }}
               </td>
               <td class="px-4 py-4">
                 <NuxtLink 
                   :to="`/documents/${doc.id}`" 
-                  class="inline-flex items-center gap-2 text-telkom-red hover:text-orange-500 font-semibold transition group"
+                  class="inline-flex items-center gap-2 font-semibold transition group"
+                  :class="isDark ? 'text-red-400 hover:text-red-300' : 'text-telkom-red hover:text-orange-500'"
                 >
                   View
                   <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

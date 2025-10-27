@@ -75,7 +75,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.token = null
         // backend will clear httpOnly cookie; clear any JS-stored user cookie if present
-        try { useCookie('user').value = null } catch (_) {}
+        try { useCookie('user').value = null } catch (_) { }
 
         // Redirect to login
         navigateTo('/login')
