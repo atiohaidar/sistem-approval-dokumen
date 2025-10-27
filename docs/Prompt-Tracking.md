@@ -399,6 +399,14 @@ Saran: Sempurna! Frontend implementation 100% complete sesuai requirement. Untuk
 - Document management (CRUD dengan multi-level approvers selector)
 - Approval workflow (approve/reject dengan comments)
 
+
+**Tanggal:** 27 Oktober 2025
+**Prompt:** ok solusinya apa
+
+**Evaluasi:** Prompt singkat dan jelas; penanya ingin solusi konkret setelah mengetahui penyebab sidebar/nav tidak muncul. Tidak ada ambiguitas.
+
+**Rekap Hasil:** Mengubah `isAuthenticated` di `frontend/stores/auth.ts` agar bergantung pada keberadaan `user` dan menambahkan inisialisasi sesi (`initializeFromCookie` memanggil `fetchUser()`). Dengan ini layout default (navbar + sidebar) kembali muncul setelah login menggunakan sesi httpOnly. Perlu memastikan backend menerima request `/auth/user` saat aplikasi dimulai.
+
 **Tanggal:** 27 Oktober 2025
 **Prompt:** kenapa tombol untuk ‘Upload Dokumen Baru’ tidak bisa ditekan?
 

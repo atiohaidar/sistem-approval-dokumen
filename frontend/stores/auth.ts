@@ -11,7 +11,7 @@ export const useAuthStore = defineStore('auth', {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token,
+  isAuthenticated: (state) => !!state.user,
     isAdmin: (state) => state.user?.role === 'admin',
   },
 
@@ -94,10 +94,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    initializeFromCookie() {
-      // Prefer fetching user from server (will use httpOnly cookie for auth)
-      // This method can be called on app start to hydrate user state.
-      // Keep it lightweight: do not read tokens from JS-accessible storage.
+    async initializeFromCookie() {
+      // Hydrate user state using server-side session (httpOnly cookie)
+      // Safe to ignore errors: fetchUser already handles invalid sessions
+      try {
+        await this.fetchUser()
+      } catch (error) {
+        console.error('Failed to initialize auth from cookie:', error)
+      }
     },
   },
 })
