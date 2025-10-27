@@ -14,7 +14,7 @@
             </div>
             <div>
               <h1 class="text-xl font-bold text-white">Sistem Approval Dokumen</h1>
-              <p class="text-sm text-gray-300">Telkom Indonesia</p>
+              <p class="text-sm text-gray-300">YPT</p>
             </div>
           </div>
 
@@ -129,7 +129,7 @@
             <p class="text-xl text-gray-300 leading-relaxed max-w-xl">
               Platform approval dokumen digital dengan teknologi blockchain-ready, 
               AI-powered validation, dan sistem keamanan multi-layer untuk 
-              <span class="text-telkom-red font-semibold">Telkom Indonesia</span>
+              <span class="text-telkom-red font-semibold">YPT</span>
             </p>
             
             <div class="flex flex-wrap gap-4 pt-4">
@@ -460,7 +460,7 @@
               </div>
               <div>
                 <h3 class="text-lg font-bold">Sistem Approval</h3>
-                <p class="text-sm text-gray-400">Telkom Indonesia</p>
+                <p class="text-sm text-gray-400">YPT</p>
               </div>
             </div>
             <p class="text-gray-400 text-sm leading-relaxed">
@@ -583,7 +583,7 @@
         <!-- Bottom Bar -->
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
           <p class="text-gray-400 text-sm">
-            &copy; 2025 <span class="text-telkom-red font-semibold">Telkom Indonesia</span>. All rights reserved.
+            &copy; 2025 <span class="text-telkom-red font-semibold">YPT</span>. All rights reserved.
           </p>
           <div class="flex gap-6 text-sm text-gray-400">
             <a href="#" class="hover:text-white transition">Privacy Policy</a>
@@ -606,8 +606,11 @@ definePageMeta({
 })
 
 // Redirect to dashboard if authenticated
-const authToken = useCookie('auth_token')
-if (authToken.value) {
+const auth = useAuthStore()
+try {
+  await auth.fetchUser()
+} catch (_) {}
+if (auth.user) {
   navigateTo('/dashboard')
 }
 </script>

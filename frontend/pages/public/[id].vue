@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-50 py-12 px-4">
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-telkom-red mb-2">Telkom Indonesia</h1>
+        <h1 class="text-3xl font-bold text-telkom-red mb-2">YPT</h1>
         <p class="text-gray-600">Informasi Dokumen</p>
       </div>
 
@@ -124,7 +124,7 @@
             <div>
               <h4 class="font-bold text-green-800 mb-1">Dokumen Terverifikasi</h4>
               <p class="text-sm text-green-700">
-                Dokumen ini telah diverifikasi dan terdaftar dalam sistem approval Telkom Indonesia.
+                Dokumen ini telah diverifikasi dan terdaftar dalam sistem approval YPT.
                 Informasi di atas menunjukkan status terkini dari proses approval dokumen.
               </p>
             </div>

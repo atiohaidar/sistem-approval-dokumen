@@ -18,19 +18,8 @@ export default defineNuxtPlugin(() => {
   // Request interceptor
   api.interceptors.request.use(
     (config) => {
-      const token = useCookie('auth_token').value
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-      }
-      // Ensure CSRF header is set when cookie is present (Sanctum SPA)
-      try {
-        const xsrf = useCookie('XSRF-TOKEN').value
-        if (xsrf) {
-          config.headers['X-XSRF-TOKEN'] = xsrf
-        }
-      } catch (_) {
-        // ignore if cookie not accessible
-      }
+      // We rely on httpOnly cookie 'access_token' set by server and server-side middleware
+      // to authenticate requests. Do NOT attach tokens from JS-accessible storage.
       return config
     },
     (error) => {
@@ -43,11 +32,27 @@ export default defineNuxtPlugin(() => {
     (response) => response,
     (error) => {
       if (error.response?.status === 401) {
-        // Clear auth data
-        useCookie('auth_token').value = null
-        useCookie('user').value = null
-        // Redirect to login
-        router.push('/login')
+        // Avoid infinite loop: if the failing request was the logout endpoint,
+        // don't call auth.logout() which itself calls the logout endpoint.
+        const reqUrl = error.config?.url || ''
+        if (typeof reqUrl === 'string' && reqUrl.includes('/auth/logout')) {
+          try {
+            const auth = useAuthStore()
+            auth.user = null
+            // redirect to login
+            router.push('/login')
+          } catch (_) {
+            router.push('/login')
+          }
+        } else {
+          try {
+            // Call auth store logout to ensure server-side cookie is cleared
+            const auth = useAuthStore()
+            auth.logout()
+          } catch (_) {
+            router.push('/login')
+          }
+        }
       }
       return Promise.reject(error)
     }

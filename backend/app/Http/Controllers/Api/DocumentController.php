@@ -308,11 +308,11 @@ class DocumentController extends Controller
                     in_array($approverId, $levelProgress['approved'] ?? []) => 'approved',
                     in_array($approverId, ($levelProgress['rejected'] ?? [])) => 'rejected',
                     default => match ($levelProgress['status'] ?? 'pending') {
-                        'completed' => 'approved',
-                        'rejected' => 'skipped',
-                        'cancelled' => 'cancelled',
-                        default => 'pending',
-                    },
+                            'completed' => 'approved',
+                            'rejected' => 'skipped',
+                            'cancelled' => 'cancelled',
+                            default => 'pending',
+                        },
                 };
 
                 $approverDetails[] = [
@@ -437,8 +437,8 @@ class DocumentController extends Controller
 
             // If not valid JSON, try to parse as comma-separated string
             $parsed = array_map('trim', explode(',', trim($approvers, '[]')));
-            $filtered = array_filter($parsed, function($item) {
-                return is_numeric($item) && (int)$item > 0;
+            $filtered = array_filter($parsed, function ($item) {
+                return is_numeric($item) && (int) $item > 0;
             });
 
             if (empty($filtered)) {

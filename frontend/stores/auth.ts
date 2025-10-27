@@ -4,6 +4,7 @@ import type { User, AuthResponse, LoginRequest, RegisterRequest } from '~/types/
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
+    // token is not stored in JS; access token is stored httpOnly cookie by backend
     token: null as string | null,
     loading: false,
     error: null as string | null,
@@ -22,23 +23,13 @@ export const useAuthStore = defineStore('auth', {
       const config = useRuntimeConfig()
 
       try {
-        // Optional: attempt CSRF cookie for setups using Sanctum SPA. Ignore if not configured.
-        try {
-          const apiOrigin = new URL(config.public.apiBase).origin
-          await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
-        } catch (_) { /* ignore */ }
-
+        // Directly call login endpoint. We use httpOnly access_token cookie set by backend
+        // and axios is configured with withCredentials: true so cookies are handled automatically.
         const response = await $api.post<AuthResponse>('/auth/login', credentials)
-        const { user, token } = response.data
+        const { user } = response.data
 
+        // Server sets httpOnly cookie 'access_token'. Keep only user in store.
         this.user = user
-        this.token = token
-
-        // Save to cookies
-        const authToken = useCookie('auth_token', { maxAge: 60 * 60 * 24 * 7 }) // 7 days
-        const userCookie = useCookie('user', { maxAge: 60 * 60 * 24 * 7 })
-        authToken.value = token
-        userCookie.value = JSON.stringify(user)
 
         return { success: true }
       } catch (error: any) {
@@ -56,23 +47,12 @@ export const useAuthStore = defineStore('auth', {
       const config = useRuntimeConfig()
 
       try {
-        // Optional: attempt CSRF cookie for setups using Sanctum SPA. Ignore if not configured.
-        try {
-          const apiOrigin = new URL(config.public.apiBase).origin
-          await $api.get(`${apiOrigin}/sanctum/csrf-cookie`)
-        } catch (_) { /* ignore */ }
-
+        // Directly call register endpoint. Server will set httpOnly access_token cookie.
         const response = await $api.post<AuthResponse>('/auth/register', data)
-        const { user, token } = response.data
+        const { user } = response.data
 
+        // Server sets httpOnly cookie 'access_token'. Keep only user in store.
         this.user = user
-        this.token = token
-
-        // Save to cookies
-        const authToken = useCookie('auth_token', { maxAge: 60 * 60 * 24 * 7 })
-        const userCookie = useCookie('user', { maxAge: 60 * 60 * 24 * 7 })
-        authToken.value = token
-        userCookie.value = JSON.stringify(user)
 
         return { success: true }
       } catch (error: any) {
@@ -94,8 +74,8 @@ export const useAuthStore = defineStore('auth', {
         // Clear state and cookies
         this.user = null
         this.token = null
-        useCookie('auth_token').value = null
-        useCookie('user').value = null
+        // backend will clear httpOnly cookie; clear any JS-stored user cookie if present
+        try { useCookie('user').value = null } catch (_) {}
 
         // Redirect to login
         navigateTo('/login')
@@ -115,25 +95,9 @@ export const useAuthStore = defineStore('auth', {
     },
 
     initializeFromCookie() {
-      const authToken = useCookie('auth_token')
-      const userCookie = useCookie('user')
-
-      // token may exist without user (e.g., after refresh); handle separately
-      if (authToken.value) {
-        this.token = authToken.value as unknown as string
-      }
-
-      if (userCookie.value) {
-        try {
-          const v: any = userCookie.value as any
-          this.user = typeof v === 'string' ? JSON.parse(v) : v
-        } catch (error) {
-          console.error('Parse user cookie error:', error)
-          // Fallback: clear invalid user cookie but keep token if present
-          useCookie('user').value = null
-          this.user = null
-        }
-      }
+      // Prefer fetching user from server (will use httpOnly cookie for auth)
+      // This method can be called on app start to hydrate user state.
+      // Keep it lightweight: do not read tokens from JS-accessible storage.
     },
   },
 })

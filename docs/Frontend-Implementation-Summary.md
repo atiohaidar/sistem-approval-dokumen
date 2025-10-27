@@ -5,18 +5,18 @@
 
 ## Overview
 
-Frontend untuk Sistem Approval Dokumen telah selesai diimplementasikan secara lengkap dengan menggunakan tema Telkom Indonesia. Semua halaman dan fitur yang diperlukan sudah dibuat dan siap untuk integrasi dengan backend API.
+Frontend untuk Sistem Approval Dokumen telah selesai diimplementasikan secara lengkap dengan menggunakan tema YPT. Semua halaman dan fitur yang diperlukan sudah dibuat dan siap untuk integrasi dengan backend API.
 
 ## Tech Stack Yang Digunakan
 
 - **Framework:** Nuxt.js 3 (Vue.js 3.5.22)
-- **Styling:** Tailwind CSS v4 dengan custom theme Telkom Indonesia
+- **Styling:** Tailwind CSS v4 dengan custom theme YPT
 - **State Management:** Pinia
 - **HTTP Client:** Axios dengan interceptors
 - **Type Safety:** TypeScript
 - **Build Tool:** Vite
 
-## Tema Telkom Indonesia
+## Tema YPT
 
 ### Color Palette
 - **Primary Red:** #EE3124 (warna utama brand Telkom)
@@ -42,7 +42,7 @@ Semua komponen menggunakan konsisten dengan brand Telkom:
   - Form login dengan email & password
   - Error handling untuk kredensial salah
   - Auto-redirect ke dashboard setelah login
-  - Tema Telkom Indonesia dengan gradient background
+  - Tema YPT dengan gradient background
 
 - [x] **Halaman Register** (`/register`)
   - Form registrasi dengan validasi
@@ -176,7 +176,7 @@ Semua komponen menggunakan konsisten dengan brand Telkom:
 ### 7. Layout & Navigation
 - [x] **Default Layout** (`layouts/default.vue`)
   - Header dengan:
-    - Telkom Indonesia logo & branding
+    - YPT logo & branding
     - User name display
     - Admin badge (jika admin)
     - Logout button
@@ -353,7 +353,7 @@ npm run dev
 
 ## 🎨 UI/UX Highlights
 
-1. **Telkom Indonesia Branding Konsisten**
+1. **YPT Branding Konsisten**
    - Warna merah #EE3124 sebagai primary color di semua CTA
    - Typography dan spacing yang clean
    - Professional appearance
@@ -418,7 +418,7 @@ Frontend implementation sudah **100% COMPLETE** sesuai dengan requirement:
 ✅ Approval workflow dengan visualization  
 ✅ User management untuk admin  
 ✅ Public document info page  
-✅ Telkom Indonesia branding  
+✅ YPT branding  
 ✅ Responsive design  
 ✅ Error handling & loading states  
 ✅ API integration lengkap  

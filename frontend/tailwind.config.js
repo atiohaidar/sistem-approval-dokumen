@@ -13,7 +13,7 @@ export default {
         sans: ['Poppins', 'ui-sans-serif', 'system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'],
       },
       colors: {
-        // Telkom Indonesia Brand Colors
+        // YPT Brand Colors
         telkom: {
           red: '#EE3124',
           'red-dark': '#C61E1E',

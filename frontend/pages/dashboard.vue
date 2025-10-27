@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 p-6">
+  <div class="min-h-screen p-6" :class="isDark ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-50 via-white to-orange-50'">
     <!-- Header with Animation -->
     <div class="mb-8 animate-fade-in-up">
       <h1 class="text-5xl font-black mb-2">
         <span class="text-gradient-telkom">Dashboard</span>
       </h1>
-      <p class="text-gray-600 text-lg">Selamat datang di Sistem Approval Dokumen, {{ authStore.user?.name }}</p>
+      <p class="text-lg" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Selamat datang di Sistem Approval Dokumen, {{ authStore.user?.name }}</p>
     </div>
 
     <!-- Statistics Cards with Glassmorphism -->
@@ -18,9 +18,9 @@
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm font-medium">Pending Approvals</p>
-            <p class="text-4xl font-black text-gray-900 mt-3">{{ pendingCount }}</p>
-            <p class="text-telkom-red text-xs mt-2 font-semibold">{{ pendingCount > 0 ? 'Butuh perhatian' : 'Semua clear!' }}</p>
+            <p class="text-sm font-medium" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Pending Approvals</p>
+            <p class="text-4xl font-black mt-3" :class="isDark ? 'text-white' : 'text-gray-900'">{{ pendingCount }}</p>
+            <p class="text-xs mt-2 font-semibold" :class="isDark ? 'text-red-400' : 'text-telkom-red'">{{ pendingCount > 0 ? 'Butuh perhatian' : 'Semua clear!' }}</p>
           </div>
           <FloatingIcon icon="custom" color="telkom" size="md">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,9 +39,9 @@
       >
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-gray-600 text-sm font-medium">My Documents</p>
-            <p class="text-4xl font-black text-gray-900 mt-3">{{ myDocumentsCount }}</p>
-            <p class="text-blue-600 text-xs mt-2 font-semibold">Total dokumen Anda</p>
+            <p class="text-sm font-medium" :class="isDark ? 'text-gray-400' : 'text-gray-600'">My Documents</p>
+            <p class="text-4xl font-black mt-3" :class="isDark ? 'text-white' : 'text-gray-900'">{{ myDocumentsCount }}</p>
+            <p class="text-xs mt-2 font-semibold" :class="isDark ? 'text-blue-400' : 'text-blue-600'">Total dokumen Anda</p>
           </div>
           <FloatingIcon icon="custom" color="blue" size="md" delay="500">
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -240,6 +240,9 @@ import type { Document } from '~/types/api'
 definePageMeta({
   middleware: 'auth',
 })
+
+// Use global theme
+const { isDark } = useTheme()
 
 const authStore = useAuthStore()
 const { getDocuments } = useDocuments()

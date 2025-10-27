@@ -4,13 +4,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   css: ['~/assets/css/main.css'],
-  
+
   postcss: {
     plugins: {
       tailwindcss: {},
       autoprefixer: {},
     },
-  },  modules: [
+  }, modules: [
     '@pinia/nuxt',
   ],
 
@@ -22,14 +22,14 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Sistem Approval Dokumen - Telkom Indonesia',
+      title: 'Sistem Approval Dokumen - YPT',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'description', content: 'Sistem Approval Dokumen Multi Tingkat dengan Digital Signature' }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', href: '/logo.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap' }

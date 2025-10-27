@@ -21,7 +21,8 @@ export interface RegisterRequest {
 
 export interface AuthResponse {
   user: User;
-  token: string;
+  // token may be omitted when backend sets httpOnly cookie instead of returning token
+  token?: string;
 }
 
 export interface Document {

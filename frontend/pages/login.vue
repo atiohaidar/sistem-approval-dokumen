@@ -1,39 +1,37 @@
 <template>
   <div class="min-h-screen flex">
     <!-- Left Side - Image/Branding -->
-    <div class="hidden lg:flex lg:w-1/2 bg-telkom-red relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-br from-telkom-red to-telkom-red-dark"></div>
+    <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-600/90 via-blue-700/90 to-indigo-800/90"></div>
       <div class="relative z-10 flex flex-col justify-center items-center text-white p-12">
         <div class="mb-8">
-          <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl">
-            <svg class="w-20 h-20 text-telkom-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+          <div class="w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl animate-float">
+            <img src="/logo.png" alt="Logo YPT" class="w-24 h-24 object-contain" />
           </div>
         </div>
         <h1 class="text-4xl font-bold mb-4 text-center">Sistem Approval Dokumen</h1>
-        <div class="w-24 h-1 bg-yellow-400 mb-6"></div>
+        <div class="w-24 h-1 bg-gradient-to-r from-orange-400 to-orange-500 mb-6"></div>
         <p class="text-xl text-center text-white/90 max-w-md">
           Solusi digital untuk manajemen approval dokumen dengan sistem multi-tingkat yang aman dan efisien
         </p>
         <div class="mt-12 grid grid-cols-3 gap-8 text-center">
-          <div>
-            <div class="text-3xl font-bold text-yellow-400">100+</div>
+          <div class="animate-fade-in-up">
+            <div class="text-3xl font-bold text-orange-400">100+</div>
             <div class="text-sm text-white/80">Pengguna</div>
           </div>
-          <div>
-            <div class="text-3xl font-bold text-yellow-400">1000+</div>
+          <div class="animate-fade-in-up delay-100">
+            <div class="text-3xl font-bold text-orange-400">1000+</div>
             <div class="text-sm text-white/80">Dokumen</div>
           </div>
-          <div>
-            <div class="text-3xl font-bold text-yellow-400">99%</div>
+          <div class="animate-fade-in-up delay-200">
+            <div class="text-3xl font-bold text-orange-400">99%</div>
             <div class="text-sm text-white/80">Uptime</div>
           </div>
         </div>
       </div>
       <!-- Decorative circles -->
-      <div class="absolute top-10 right-10 w-64 h-64 bg-white/5 rounded-full"></div>
-      <div class="absolute bottom-10 left-10 w-48 h-48 bg-white/5 rounded-full"></div>
+      <div class="absolute top-10 right-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-10 left-10 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
     </div>
 
     <!-- Right Side - Login Form -->
@@ -41,10 +39,8 @@
       <div class="w-full max-w-md">
         <!-- Logo for mobile -->
         <div class="lg:hidden text-center mb-8">
-          <div class="w-20 h-20 bg-telkom-red rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+          <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <img src="/logo.png" alt="Logo YPT" class="w-14 h-14 object-contain" />
           </div>
           <h2 class="text-2xl font-bold text-gray-900">Sistem Approval</h2>
         </div>
@@ -79,13 +75,13 @@
               />
             </div>
 
-            <div v-if="error" class="p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            <div v-if="error" class="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {{ error }}
             </div>
 
             <button
               type="submit"
-              class="w-full btn btn-primary"
+              class="w-full gradient-button"
               :disabled="loading"
             >
               {{ loading ? 'Loading...' : 'Login' }}
@@ -94,13 +90,13 @@
 
           <div class="mt-6 text-center text-sm text-gray-600">
             Belum punya akun?
-            <NuxtLink to="/register" class="text-telkom-red hover:text-telkom-red-dark font-medium">
+            <NuxtLink to="/register" class="text-blue-600 hover:text-blue-700 font-medium">
               Daftar di sini
             </NuxtLink>
           </div>
 
           <div class="mt-6 pt-6 border-t border-gray-200 text-center">
-            <NuxtLink to="/" class="text-sm text-gray-600 hover:text-telkom-red transition">
+            <NuxtLink to="/" class="text-sm text-gray-600 hover:text-blue-600 transition">
               ← Kembali ke Beranda
             </NuxtLink>
           </div>

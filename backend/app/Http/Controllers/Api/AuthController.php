@@ -28,10 +28,13 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
+        // Create httpOnly cookie with the access token to protect it from XSS.
+        $minutes = 60 * 24 * 7; // 7 days
+        $cookie = cookie('access_token', $token, $minutes, '/', null, config('app.env') === 'production', true, false, 'Lax');
+
         return response()->json([
             'user' => $user,
-            'token' => $token,
-        ]);
+        ])->withCookie($cookie);
     }
 
     public function register(Request $request)
@@ -51,17 +54,29 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
+        $minutes = 60 * 24 * 7; // 7 days
+        $cookie = cookie('access_token', $token, $minutes, '/', null, config('app.env') === 'production', true, false, 'Lax');
+
         return response()->json([
             'user' => $user,
-            'token' => $token,
-        ], 201);
+        ], 201)->withCookie($cookie);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Delete current access token if present
+        try {
+            if ($request->user() && $request->user()->currentAccessToken()) {
+                $request->user()->currentAccessToken()->delete();
+            }
+        } catch (\Exception $e) {
+            // ignore
+        }
 
-        return response()->json(['message' => 'Logged out successfully']);
+        // Remove access_token cookie
+        $forget = cookie()->forget('access_token');
+
+        return response()->json(['message' => 'Logged out successfully'])->withCookie($forget);
     }
 
     public function user(Request $request)

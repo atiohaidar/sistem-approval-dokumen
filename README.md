@@ -1,5 +1,243 @@
 # Sistem Approval Dokumen Multi Tingkat
 
+Platform internal Yayasan Pendidikan Telkom (YPT) untuk mengelola approval dokumen secara digital dengan alur multi-level. Repositori ini berisi dua aplikasi utama:
+
+- **backend/** – API Laravel + Sanctum untuk autentikasi, manajemen dokumen, workflow approval, dan generasi QR Code.
+- **frontend/** – Nuxt 3 + Tailwind yang menyediakan dashboard, manajemen dokumen, alur approval, serta halaman publik berbasis QR.
+
+> Logo dan tema warna telah disesuaikan dengan brand Telkom Indonesia (`frontend/public/logo.png`).
+
+## Daftar Isi
+
+1. [Ringkasan Fitur](#ringkasan-fitur)
+2. [Highlight Pembaruan](#highlight-pembaruan)
+3. [Struktur Proyek](#struktur-proyek)
+4. [Prasyarat](#prasyarat)
+5. [Langkah Setup](#langkah-setup)
+6. [Variabel Lingkungan](#variabel-lingkungan)
+7. [Menjalankan Aplikasi](#menjalankan-aplikasi)
+8. [Pengujian](#pengujian)
+9. [Operasional & Maintenance](#operasional--maintenance)
+10. [Permukaan API](#permukaan-api)
+11. [Troubleshooting](#troubleshooting)
+12. [Kontribusi](#kontribusi)
+
+## Ringkasan Fitur
+
+### Backend (Laravel 11)
+- Autentikasi berbasis Laravel Sanctum (cookie + bearer) lengkap dengan middleware role admin/user.
+- CRUD dokumen PDF dengan validasi ukuran/mime dan penyimpanan di `storage/app/public/documents`.
+- Workflow approval multi-level: level paralel (dalam satu array) berjalan bersamaan, level berbeda sequential.
+- Delegasi approval di level yang sama serta pencatatan aksi (approve/reject) pada tabel `document_approvals`.
+- Generasi QR Code yang menunjuk ke halaman publik frontend, lengkap dengan re-generasi saat status berubah.
+- Watermark otomatis “BELUM APPROVE” + penyematan QR ketika file belum selesai disetujui.
+- Endpoint publik `/api/documents/{id}/public-info` + `/public-preview` untuk kebutuhan QR scan.
+
+### Frontend (Nuxt 3)
+- UI bertema Telkom Indonesia dengan sidebar responsif dan dark-mode toggle.
+- Autentikasi (login, register, logout) menggunakan Pinia + Axios interceptors (withCredentials, CSRF fetch).
+- Dashboard statistik: pending approvals, dokumen milik pengguna, riwayat dokumen terbaru.
+- Manajemen dokumen dengan filter, pencarian, pagination, hapus draft, serta detail dokumen.
+- **Interactive QR Positioning**: drag & drop overlay pada preview PDF untuk menentukan koordinat QR (tersimpan sebagai `qr_x`, `qr_y`, `qr_page`).
+- Halaman approval untuk reviewer (approve/reject dengan catatan) dan halaman publik `public/[id]` dengan preview PDF inline.
+- Admin-only user management (list, buat, ubah role, hapus).
+
+## Highlight Pembaruan
+
+| Area | Pembaruan utama |
+|------|-----------------|
+| Frontend | Tema Telkom lengkap (logo, warna, typography), perbaikan hamburger sidebar, integrasi logo pada login/register. |
+| Frontend | Perbaikan CSRF + cookie parsing sehingga login stabil (Axios withCredentials, prefetch `/sanctum/csrf-cookie`). |
+| Frontend | Interactive QR positioning dengan preview PDF, public document preview iframe, robust download handling. |
+| Backend  | Endpoint public preview (`/public-preview`), command `documents:regenerate-qrs`, logging approval, sanitasi delegasi approval. |
+| Backend  | PDF watermark + QR embedding via `PDFWatermarkService`, perbaikan multi-level approval (progress tracking & delegation). |
+
+Seluruh perubahan terdokumentasi secara kronologis pada `docs/Prompt-Tracking.md`.
+
+## Struktur Proyek
+
+```
+.
+├── backend/                 # API Laravel + Sanctum
+│   ├── app/
+│   │   ├── Console/Commands/RegenerateQRCodes.php
+│   │   ├── Http/Controllers/Api/{Auth,Document,Approval,User}Controller.php
+│   │   ├── Models/{Document,DocumentApproval,DocumentTemplate,User}.php
+│   │   └── Services/{ApprovalService,QRCodeService,PDFWatermarkService}.php
+│   ├── database/
+│   │   ├── migrations/     # Struktur tabel users, documents, document_approvals, dll.
+│   │   └── seeders/
+│   └── routes/api.php
+├── frontend/                # Nuxt 3 dengan Tailwind + Pinia
+│   ├── app.vue, nuxt.config.ts, tailwind.config.js
+│   ├── assets/css/         # main.css + utilitas glassmorphism & animasi
+│   ├── components/         # GradientButton, GlassCard, dsb.
+│   ├── composables/        # useDocuments, useApprovals, useUsers
+│   ├── layouts/default.vue # Sidebar + header logo Telkom
+│   ├── middleware/auth.ts  # Proteksi route
+│   ├── pages/              # Dashboard, Documents, Approvals, Users, Public info
+│   └── stores/auth.ts
+└── docs/                   # Prompt tracking & dokumentasi tambahan
+```
+
+## Prasyarat
+
+- PHP 8.2+ & Composer 2
+- Node.js 20.19+ & npm 10+
+- SQLite (default) atau database lain yang kompatibel
+- Git, Gitbash/PowerShell (Windows)
+
+## Langkah Setup
+
+### 1. Clone repository
+
+```bash
+git clone https://github.com/atiohaidar/sistem-approval-dokumen.git
+cd sistem-approval-dokumen
+```
+
+### 2. Backend (Laravel)
+
+```bash
+cd backend
+cp .env.example .env
+composer install
+php artisan key:generate
+
+# Default menggunakan SQLite.
+touch database/database.sqlite
+
+# Jalankan migrasi & seeder dasar.
+php artisan migrate --seed
+
+# Buat symbolic link storage -> public
+php artisan storage:link
+```
+
+Setel variabel penting pada `.env` backend (lihat bagian [Variabel Lingkungan](#variabel-lingkungan)).
+
+Untuk menjalankan API:
+
+```bash
+php artisan serve
+```
+
+### 3. Frontend (Nuxt 3)
+
+```bash
+cd ../frontend
+npm install
+cp .env.example .env
+
+# Pastikan base URL API mengarah ke backend yang berjalan
+echo "NUXT_PUBLIC_API_BASE=http://localhost:8000/api" >> .env
+```
+
+Jalankan pengembangan:
+
+```bash
+npm run dev
+```
+
+## Variabel Lingkungan
+
+### Backend `.env`
+
+| Variabel | Deskripsi |
+|----------|-----------|
+| `APP_URL` | URL backend (contoh `http://localhost:8000`). |
+| `FRONTEND_URL` | Digunakan QR code (`http://localhost:3000`). |
+| `SANCTUM_STATEFUL_DOMAINS` | Daftar domain frontend yang dianggap stateful (contoh `localhost:3000,127.0.0.1:3000`). |
+| `SESSION_DOMAIN` | Domain cookie sesi (`localhost`). |
+| `SESSION_DRIVER` | Gunakan `database` (sudah default) agar CSRF kompatibel. |
+| `FILESYSTEM_DISK` | Pastikan `public` agar file tersimpan di `storage/app/public`. |
+
+### Frontend `.env`
+
+| Variabel | Deskripsi |
+|----------|-----------|
+| `NUXT_PUBLIC_API_BASE` | Base URL API backend, contoh `http://localhost:8000/api`. |
+
+## Menjalankan Aplikasi
+
+1. Pastikan backend dan frontend berjalan (perintah di atas) pada dua terminal terpisah.
+2. Akses frontend melalui `http://localhost:3000`.
+3. Login menggunakan akun seeded (`admin@example.com` / `password`) atau registrasi baru.
+
+### Alur Singkat
+
+1. **Upload dokumen** via halaman *Documents › Upload Dokumen Baru*.
+2. Pilih approver per level (array 2 dimensi) dan atur posisi QR melalui preview interaktif.
+3. Approver menerima dokumen pada halaman *Approvals* untuk approve/reject/delegate.
+4. QR Code mengarah ke halaman publik `public/:id` yang menampilkan status + preview PDF.
+
+## Pengujian
+
+Backend memiliki cakupan test fitur `php artisan test` (±70 test).
+
+```bash
+cd backend
+php artisan test
+```
+
+Pastikan Anda menjalankan ulang migrasi dengan database testing (`php artisan test --parallel` otomatis memakai database sementara SQLite).
+
+Frontend saat ini belum memiliki unit test. Gunakan manual testing atau tambahkan Playwright/Vitest sesuai kebutuhan.
+
+## Operasional & Maintenance
+
+| Task | Perintah / Keterangan |
+|------|-----------------------|
+| Regenerasi QR untuk semua dokumen | `php artisan documents:regenerate-qrs --force` |
+| Regenerasi QR tertentu | `php artisan documents:regenerate-qrs --ids=1,5,10` |
+| Membersihkan file sementara watermark | Hapus isi `storage/app/public/temp` secara berkala (cron atau manual). |
+| Backup dokumen | Backup direktori `storage/app/public/documents` & `qr-codes`. |
+| Log aplikasi | `storage/logs/laravel.log` (server), pastikan rotasi log. |
+| Update dependencies backend | `composer update` (lakukan setelah backup). |
+| Update dependencies frontend | `npm outdated`, `npm update`, rebuild dengan `npm run build`. |
+| Storage symlink check | Jalankan ulang `php artisan storage:link` setelah deploy baru. |
+
+Pastikan server production menjalankan scheduler & queue jika kelak menambahkan job asynchronous (`php artisan schedule:work`, `queue:work`). Saat ini job berat (watermark/QR) berjalan sinkron.
+
+### Monitoring
+
+- Aktifkan log level `info`/`notice` untuk audit approval (lihat `ApprovalController`).
+- Gunakan tools seperti Sentry/Logtail untuk menangkap error produksi.
+- Tambah pengecekan health endpoint (misal route `GET /api/health`) bila diperlukan.
+
+## Permukaan API
+
+Endpoint utama tersedia di `routes/api.php`. Ringkasan:
+
+- **Auth**: `POST /auth/login`, `POST /auth/register`, `POST /auth/logout`, `GET /auth/user`.
+- **Documents**: `GET /documents`, `POST /documents`, `GET /documents/{id}`, `DELETE /documents/{id}`, `GET /documents/{id}/download`.
+- **Approvals**: `GET /approvals/pending`, `POST /approvals/documents/{id}/process`, `POST /approvals/documents/{id}/delegate`.
+- **Public**: `GET /documents/{id}/public-info`, `GET /documents/{id}/public-preview`.
+- **Users (admin)**: resource `users` + `POST /users/{id}/change-role`.
+
+Setiap endpoint menggunakan middleware `auth:sanctum` kecuali public info/preview dan login/register.
+
+## Troubleshooting
+
+| Masalah | Solusi |
+|---------|--------|
+| `CSRF token mismatch` saat login | Pastikan frontend memanggil `/sanctum/csrf-cookie`, `.env` backend berisi `SANCTUM_STATEFUL_DOMAINS` & `SESSION_DOMAIN`, serta Axios `withCredentials=true`. |
+| Dokumen tidak bisa diunduh / `document.createElement` error | Sudah diperbaiki dengan penamaan variabel `doc` (bukan `document`). Pastikan frontend diperbarui. |
+| Sidebar tidak menutup di desktop | Diperbaiki melalui toggle state + class translation. Hard refresh jika masih cache lama. |
+| PDF preview tidak muncul | Pastikan `php artisan storage:link` telah dijalankan dan file tersedia pada disk `public`. Cek console log untuk CORS/404. |
+
+## Kontribusi
+
+1. Fork & buat branch fitur.
+2. Pastikan `php artisan test` dan pengecekan lint berjalan.
+3. Dokumentasikan perubahan pada bagian *Highlight Pembaruan* atau tambahkan catatan di `docs/Prompt-Tracking.md`.
+4. Ajukan Pull Request dengan deskripsi jelas.
+
+---
+
+**Status**: Pengembangan aktif (frontend & backend siap digunakan secara internal). Lihat `docs/Prompt-Tracking.md` untuk kronologi perubahan terbaru.
+# Sistem Approval Dokumen Multi Tingkat
+
 Aplikasi web untuk manajemen approval dokumen digital dengan tanda tangan digital dan tracking yang komprehensif, khusus untuk kebutuhan YPT (Yayasan Pendidikan Teknologi).
 
 ## 📋 Deskripsi Proyek

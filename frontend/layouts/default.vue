@@ -27,14 +27,16 @@
             </svg>
           </button>
 
-          <div class="relative group">
-            <div class="absolute inset-0 bg-telkom-red rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition"></div>
-            <div class="relative w-12 h-12 bg-gradient-to-br from-telkom-red to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span class="text-white font-bold text-xl">T</span>
-            </div>
-          </div>
+          <NuxtLink to="/dashboard" class="relative group" aria-label="Beranda YPT">
+            <div class="absolute inset-0 bg-telkom-red rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition"></div>
+            <img
+              src="/logo.png"
+              alt="Logo YPT"
+              class="relative w-12 h-12 rounded-xl shadow-lg bg-white p-1 object-contain"
+            />
+          </NuxtLink>
           <div>
-            <div class="text-lg font-bold" :class="isDark ? 'text-white' : 'text-gray-900'">Telkom Indonesia</div>
+            <div class="text-lg font-bold" :class="isDark ? 'text-white' : 'text-gray-900'">YPT</div>
             <div class="text-sm" :class="isDark ? 'text-gray-400' : 'text-gray-600'">Sistem Approval Dokumen</div>
           </div>
         </div>
@@ -231,18 +233,15 @@ import { useAuthStore } from '~/stores/auth'
 const authStore = useAuthStore()
 const { user, isAdmin } = storeToRefs(authStore)
 
-// Dark mode state
-const isDark = ref(false)
+// Use global theme composable instead of local state
+const { isDark, toggleDarkMode, initTheme } = useTheme()
 
 // Sidebar state
 const isSidebarOpen = ref(true)
 
-// Load dark mode preference from localStorage
+// Initialize theme on mount
 onMounted(() => {
-  const savedTheme = localStorage.getItem('darkMode')
-  if (savedTheme) {
-    isDark.value = savedTheme === 'true'
-  }
+  initTheme()
 
   // Set initial sidebar state based on viewport
   if (window.innerWidth < 1024) {
@@ -255,12 +254,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize)
 })
-
-// Toggle dark mode
-const toggleDarkMode = () => {
-  isDark.value = !isDark.value
-  localStorage.setItem('darkMode', isDark.value.toString())
-}
 
 // Toggle sidebar
 const toggleSidebar = () => {

@@ -5,14 +5,14 @@ Frontend application untuk Sistem Approval Dokumen Multi Tingkat dengan tema **Y
 ## 🚀 Tech Stack
 
 - **Framework**: Nuxt.js 3 (Vue.js)
-- **Styling**: Tailwind CSS v3 dengan color palette YPT/Telkom Indonesia
+- **Styling**: Tailwind CSS v3 dengan color palette YPT/YPT
 - **State Management**: Pinia
 - **HTTP Client**: Axios
 - **Type Safety**: TypeScript
 
 ## 🎨 Design System - YPT Theme
 
-### Color Palette Telkom Indonesia
+### Color Palette YPT
 - Primary Red: `#EE3124` (Merah Telkom)
 - Red Dark: `#C61E1E`
 - Red Light: `#F25C50`
@@ -184,9 +184,9 @@ Base API URL is configured in `.env` file.
 - Role-based access control
 - Protected routes with middleware
 
-## 🎨 Telkom Indonesia Branding
+## 🎨 YPT Branding
 
-The application uses Telkom Indonesia's official color scheme:
+The application uses YPT's official color scheme:
 - Primary brand color (Red #EE3124) for CTAs and important elements
 - Grey (#6D6E71) for secondary elements
 - Blue (#0071BC) for informational elements
@@ -205,4 +205,4 @@ This frontend is designed to work with the Laravel backend API. Ensure backend i
 
 ## 📄 License
 
-Property of Telkom Indonesia
+Property of YPT
