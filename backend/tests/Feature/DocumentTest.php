@@ -37,27 +37,32 @@ class DocumentTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
+                'success',
+                'message',
                 'data' => [
-                    '*' => [
-                        'id',
-                        'title',
-                        'description',
-                        'file_path',
-                        'file_name',
-                        'status',
-                        'created_by',
-                        'created_at',
-                        'creator' => [
+                    'data' => [
+                        '*' => [
                             'id',
-                            'name',
-                            'email'
+                            'title',
+                            'description',
+                            'file_path',
+                            'file_name',
+                            'status',
+                            'created_by',
+                            'created_at',
+                            'creator' => [
+                                'id',
+                                'name',
+                                'email'
+                            ]
                         ]
-                    ]
-                ],
-                'current_page',
-                'per_page',
-                'total'
-            ]);
+                    ],
+                    'current_page',
+                    'per_page',
+                    'total'
+                ]
+            ])
+            ->assertJson(['success' => true]);
     }
 
     #[Test]
@@ -86,26 +91,31 @@ class DocumentTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'title',
-                'description',
-                'file_path',
-                'file_name',
-                'file_size',
-                'mime_type',
-                'template_id',
-                'status',
-                'created_by',
-                'submitted_at',
-                'approvers',
-                'current_level',
-                'qr_x',
-                'qr_y',
-                'qr_page',
-                'qr_code_path',
-                'created_at',
-                'updated_at',
-            ]);
+                'success',
+                'message',
+                'data' => [
+                    'id',
+                    'title',
+                    'description',
+                    'file_path',
+                    'file_name',
+                    'file_size',
+                    'mime_type',
+                    'template_id',
+                    'status',
+                    'created_by',
+                    'submitted_at',
+                    'approvers',
+                    'current_level',
+                    'qr_x',
+                    'qr_y',
+                    'qr_page',
+                    'qr_code_path',
+                    'created_at',
+                    'updated_at',
+                ]
+            ])
+            ->assertJson(['success' => true]);
 
         $this->assertDatabaseHas('documents', [
             'title' => 'Test Document',
@@ -119,10 +129,10 @@ class DocumentTest extends TestCase
         ]);
 
         // Verify approvers are stored correctly
-        $document = Document::find($response->json('id'));
+        $document = Document::find($response->json('data.id'));
         $this->assertEquals([[$approver1->id, $approver2->id]], $document->approvers);
 
-        Storage::disk('public')->assertExists('documents/' . basename($response->json('file_path')));
+        Storage::disk('public')->assertExists('documents/' . basename($response->json('data.file_path')));
     }
 
     #[Test]
@@ -134,11 +144,19 @@ class DocumentTest extends TestCase
             ->getJson("/api/documents/{$document->id}");
 
         $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data' => ['id', 'title', 'description', 'status']
+            ])
             ->assertJson([
-                'id' => $document->id,
-                'title' => $document->title,
-                'description' => $document->description,
-                'status' => $document->status,
+                'success' => true,
+                'data' => [
+                    'id' => $document->id,
+                    'title' => $document->title,
+                    'description' => $document->description,
+                    'status' => $document->status,
+                ]
             ]);
     }
 
@@ -164,9 +182,17 @@ class DocumentTest extends TestCase
             ->putJson("/api/documents/{$document->id}", $updateData);
 
         $response->assertStatus(200)
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data' => ['title', 'description']
+            ])
             ->assertJson([
-                'title' => 'Updated Title',
-                'description' => 'Updated description',
+                'success' => true,
+                'data' => [
+                    'title' => 'Updated Title',
+                    'description' => 'Updated description',
+                ]
             ]);
 
         $this->assertDatabaseHas('documents', [
@@ -192,7 +218,9 @@ class DocumentTest extends TestCase
             ->putJson("/api/documents/{$document->id}", $updateData);
 
         $response->assertStatus(422)
+            ->assertJsonStructure(['success', 'message'])
             ->assertJson([
+                'success' => false,
                 'message' => 'Cannot update document that is not in draft status'
             ]);
     }
@@ -211,7 +239,9 @@ class DocumentTest extends TestCase
             ->deleteJson("/api/documents/{$document->id}");
 
         $response->assertStatus(200)
+            ->assertJsonStructure(['success', 'message'])
             ->assertJson([
+                'success' => true,
                 'message' => 'Document deleted successfully'
             ]);
 
@@ -232,7 +262,9 @@ class DocumentTest extends TestCase
             ->deleteJson("/api/documents/{$document->id}");
 
         $response->assertStatus(422)
+            ->assertJsonStructure(['success', 'message'])
             ->assertJson([
+                'success' => false,
                 'message' => 'Cannot delete document that is not in draft status'
             ]);
     }
@@ -254,8 +286,10 @@ class DocumentTest extends TestCase
             ->putJson("/api/documents/{$document->id}", $updateData);
 
         $response->assertStatus(403)
+            ->assertJsonStructure(['success', 'message'])
             ->assertJson([
-                'message' => 'Unauthorized'
+                'success' => false,
+                'message' => 'You are not authorized to update this document'
             ]);
     }
 
@@ -272,8 +306,10 @@ class DocumentTest extends TestCase
             ->deleteJson("/api/documents/{$document->id}");
 
         $response->assertStatus(403)
+            ->assertJsonStructure(['success', 'message'])
             ->assertJson([
-                'message' => 'Unauthorized'
+                'success' => false,
+                'message' => 'You are not authorized to delete this document'
             ]);
     }
 
@@ -515,19 +551,24 @@ startxref
 
         $response->assertStatus(201)
             ->assertJsonStructure([
-                'id',
-                'title',
-                'description',
-                'approvers',
-                'qr_x',
-                'qr_y',
-                'qr_page',
-                'status',
-                'created_by',
-                'created_at',
-            ]);
+                'success',
+                'message',
+                'data' => [
+                    'id',
+                    'title',
+                    'description',
+                    'approvers',
+                    'qr_x',
+                    'qr_y',
+                    'qr_page',
+                    'status',
+                    'created_by',
+                    'created_at',
+                ]
+            ])
+            ->assertJson(['success' => true]);
 
-        $document = Document::find($response->json('id'));
+        $document = Document::find($response->json('data.id'));
         $this->assertEquals([[$approver1->id, $approver2->id]], $document->approvers);
         $this->assertEquals('pending_approval', $document->status);
         $this->assertEquals(1, $document->current_level);
@@ -590,7 +631,10 @@ startxref
 
         $qrService = app(QRCodeService::class);
         $qrUrl = $qrService->getQRUrl($document);
-        $expectedUrl = url('/api/documents/' . $document->id . '/public-info');
+        
+        // QR code should point to frontend public page
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $expectedUrl = rtrim($frontendBase, '/') . '/public/' . $document->id;
 
         $this->assertEquals($expectedUrl, $qrUrl);
     }
@@ -653,9 +697,11 @@ startxref
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/documents', $data);
 
-        $response->assertStatus(201);
+        $response->assertStatus(201)
+            ->assertJsonStructure(['success', 'message', 'data'])
+            ->assertJson(['success' => true]);
 
-        $document = Document::find($response->json('id'));
+        $document = Document::find($response->json('data.id'));
         $this->assertEquals([
             [$level1Approver1->id, $level1Approver2->id],
             [$level2Approver->id],
@@ -721,9 +767,11 @@ startxref
         $response = $this->actingAs($this->user, 'sanctum')
             ->postJson('/api/documents', $data);
 
-        $response->assertStatus(201);
+        $response->assertStatus(201)
+            ->assertJsonStructure(['success', 'message', 'data'])
+            ->assertJson(['success' => true]);
 
-        $document = Document::find($response->json('id'));
+        $document = Document::find($response->json('data.id'));
         $this->assertEquals(10, $document->getTotalLevels());
     }
 

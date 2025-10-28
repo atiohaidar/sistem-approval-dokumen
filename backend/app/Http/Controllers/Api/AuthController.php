@@ -3,14 +3,29 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ApiResponse;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Authentication Controller
+ * 
+ * Handles user authentication using Laravel Sanctum
+ * Uses httpOnly cookies for secure token storage
+ */
 class AuthController extends Controller
 {
+    use ApiResponse;
+
+    /**
+     * Authenticate user and return token
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -28,15 +43,22 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        // Create httpOnly cookie with the access token to protect it from XSS.
+        // Create httpOnly cookie with the access token to protect it from XSS
         $minutes = 60 * 24 * 7; // 7 days
         $cookie = cookie('access_token', $token, $minutes, '/', null, config('app.env') === 'production', true, false, 'Lax');
 
-        return response()->json([
+        return $this->successResponse([
             'user' => $user,
-        ])->withCookie($cookie);
+            'token' => $token, // For testing and explicit token usage
+        ], 'Login successful')->withCookie($cookie);
     }
 
+    /**
+     * Register a new user
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function register(Request $request)
     {
         $request->validate([
@@ -57,11 +79,18 @@ class AuthController extends Controller
         $minutes = 60 * 24 * 7; // 7 days
         $cookie = cookie('access_token', $token, $minutes, '/', null, config('app.env') === 'production', true, false, 'Lax');
 
-        return response()->json([
+        return $this->createdResponse([
             'user' => $user,
-        ], 201)->withCookie($cookie);
+            'token' => $token, // For testing and explicit token usage
+        ], 'Registration successful')->withCookie($cookie);
     }
 
+    /**
+     * Logout user and revoke token
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function logout(Request $request)
     {
         // Delete current access token if present
@@ -70,17 +99,28 @@ class AuthController extends Controller
                 $request->user()->currentAccessToken()->delete();
             }
         } catch (\Exception $e) {
-            // ignore
+            // Log error but continue with logout
+            \Log::warning('Token deletion failed during logout', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         // Remove access_token cookie
         $forget = cookie()->forget('access_token');
 
-        return response()->json(['message' => 'Logged out successfully'])->withCookie($forget);
+        return $this->successResponse(null, 'Logged out successfully')->withCookie($forget);
     }
 
+    /**
+     * Get authenticated user information
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function user(Request $request)
     {
-        return response()->json($request->user());
+        return $this->successResponse($request->user(), 'User retrieved successfully');
     }
 }
+

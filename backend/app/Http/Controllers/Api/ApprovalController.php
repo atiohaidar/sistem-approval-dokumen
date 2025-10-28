@@ -3,14 +3,22 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ApiResponse;
 use App\Models\Document;
 use App\Services\ApprovalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Approval Controller
+ * 
+ * Handles document approval workflow operations
+ */
 class ApprovalController extends Controller
 {
+    use ApiResponse;
+
     protected ApprovalService $approvalService;
 
     // Constants for array indexing (since arrays are 0-based)
@@ -32,8 +40,11 @@ class ApprovalController extends Controller
     {
         return app(ApprovalService::class);
     }
+
     /**
      * Get pending approvals for current user
+     *
+     * @return JsonResponse
      */
     public function getPendingApprovals(): JsonResponse
     {
@@ -49,11 +60,15 @@ class ApprovalController extends Controller
             ->with(['creator'])
             ->get();
 
-        return response()->json($documents);
+        return $this->successResponse($documents, 'Pending approvals retrieved successfully');
     }
 
     /**
      * Process approval action (approve/reject)
+     *
+     * @param Request $request
+     * @param Document $document
+     * @return JsonResponse
      */
     public function processApproval(Request $request, Document $document): JsonResponse
     {
@@ -66,16 +81,16 @@ class ApprovalController extends Controller
 
         // Check if user is current approver
         if (!$document->canBeApprovedBy($user->id)) {
-            return response()->json([
-                'message' => 'You are not authorized to approve this document at this time.'
-            ], 403);
+            return $this->unauthorizedResponse('You are not authorized to approve this document at this time.');
         }
 
         try {
             if ($request->action === 'approve') {
                 $this->getApprovalService()->approveDocument($document, $user, $request->comments);
+                $message = 'Document approved successfully';
             } else {
                 $this->getApprovalService()->rejectDocument($document, $user, $request->comments);
+                $message = 'Document rejected successfully';
             }
 
             // Log successful approval action for audit trail
@@ -89,7 +104,7 @@ class ApprovalController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            return response()->json(['message' => 'Approval processed successfully']);
+            return $this->successResponse(null, $message);
         } catch (\Exception $e) {
             // Log failed approval attempt
             \Log::warning('Document approval failed', [
@@ -100,12 +115,16 @@ class ApprovalController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
-            return response()->json(['message' => 'Failed to process approval'], 500);
+            return $this->errorResponse('Failed to process approval: ' . $e->getMessage(), 500);
         }
     }
 
     /**
      * Delegate approval to another user
+     *
+     * @param Request $request
+     * @param Document $document
+     * @return JsonResponse
      */
     public function delegateApproval(Request $request, Document $document): JsonResponse
     {
@@ -130,7 +149,7 @@ class ApprovalController extends Controller
                 'user_agent' => $request->userAgent(),
             ]);
 
-            return response()->json(['message' => 'Approval delegated successfully']);
+            return $this->successResponse(null, 'Approval delegated successfully');
         } catch (\InvalidArgumentException $e) {
             // Log validation error
             \Log::warning('Document delegation validation failed', [
@@ -144,9 +163,9 @@ class ApprovalController extends Controller
             // Map validation errors to appropriate HTTP status codes
             $message = $e->getMessage();
             if (str_contains($message, 'delegate approval to yourself')) {
-                return response()->json(['message' => $message], 422);
+                return $this->validationErrorResponse(['delegate_to' => [$message]], $message);
             }
-            return response()->json(['message' => $message], 400);
+            return $this->errorResponse($message, 400);
         } catch (\Exception $e) {
             // Log system error
             \Log::error('Document delegation failed', [
@@ -157,7 +176,7 @@ class ApprovalController extends Controller
                 'ip_address' => $request->ip(),
             ]);
 
-            return response()->json(['message' => 'Failed to delegate approval'], 500);
+            return $this->errorResponse('Failed to delegate approval: ' . $e->getMessage(), 500);
         }
     }
 }

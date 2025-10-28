@@ -52,8 +52,13 @@ class ApprovalTest extends TestCase
             ->getJson('/api/approvals/pending');
 
         $response->assertStatus(200)
-            ->assertJsonCount(1)
-            ->assertJsonFragment(['id' => $document->id]);
+            ->assertJsonStructure([
+                'success',
+                'message',
+                'data'
+            ])
+            ->assertJson(['success' => true])
+            ->assertJsonPath('data.0.id', $document->id);
     }
 
     #[Test]
@@ -76,7 +81,11 @@ class ApprovalTest extends TestCase
             ]);
 
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Approval processed successfully']);
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson([
+                'success' => true,
+                'message' => 'Document approved successfully'
+            ]);
 
         $document->refresh();
         $this->assertEquals(1, $document->current_level); // Still level 1, needs second approval
@@ -162,7 +171,11 @@ class ApprovalTest extends TestCase
             ]);
 
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Approval processed successfully']);
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson([
+                'success' => true,
+                'message' => 'Document rejected successfully'
+            ]);
 
         $document->refresh();
         $this->assertEquals('rejected', $document->status);
@@ -189,7 +202,11 @@ class ApprovalTest extends TestCase
             ]);
 
         $response->assertStatus(403)
-            ->assertJson(['message' => 'You are not authorized to approve this document at this time.']);
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson([
+                'success' => false,
+                'message' => 'You are not authorized to approve this document at this time.'
+            ]);
     }
 
     #[Test]
@@ -210,7 +227,11 @@ class ApprovalTest extends TestCase
             ]);
 
         $response->assertStatus(403)
-            ->assertJson(['message' => 'You are not authorized to approve this document at this time.']);
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson([
+                'success' => false,
+                'message' => 'You are not authorized to approve this document at this time.'
+            ]);
     }
 
     #[Test]
@@ -231,7 +252,11 @@ class ApprovalTest extends TestCase
             ]);
 
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Approval delegated successfully']);
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson([
+                'success' => true,
+                'message' => 'Approval delegated successfully'
+            ]);
 
         $document->refresh();
         $progress = $document->getLevelProgress();
@@ -264,7 +289,11 @@ class ApprovalTest extends TestCase
             ]);
 
         $response->assertStatus(400)
-            ->assertJson(['message' => 'Delegate user must be in the same approval level.']);
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson([
+                'success' => false,
+                'message' => 'Delegate user must be in the same approval level.'
+            ]);
     }
 
     #[Test]
@@ -337,8 +366,9 @@ class ApprovalTest extends TestCase
             ->getJson('/api/approvals/pending');
 
         $response->assertStatus(200)
-            ->assertJsonCount(1) // Only document1 should appear
-            ->assertJsonFragment(['id' => $document1->id]);
+            ->assertJsonStructure(['success', 'message', 'data'])
+            ->assertJson(['success' => true])
+            ->assertJsonPath('data.0.id', $document1->id);
     }
 
     #[Test]
@@ -409,6 +439,10 @@ class ApprovalTest extends TestCase
             ]);
 
         $response2->assertStatus(403)
-            ->assertJson(['message' => 'You are not authorized to approve this document at this time.']);
+            ->assertJsonStructure(['success', 'message'])
+            ->assertJson([
+                'success' => false,
+                'message' => 'You are not authorized to approve this document at this time.'
+            ]);
     }
 }
