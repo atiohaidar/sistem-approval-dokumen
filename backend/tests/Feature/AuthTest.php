@@ -24,8 +24,15 @@ class AuthTest extends TestCase
 
         $response->assertStatus(201)
                 ->assertJsonStructure([
-                    'user' => ['id', 'name', 'email', 'role'],
-                    'token'
+                    'success',
+                    'message',
+                    'data' => [
+                        'user' => ['id', 'name', 'email', 'role'],
+                        'token'
+                    ]
+                ])
+                ->assertJson([
+                    'success' => true,
                 ]);
 
         $this->assertDatabaseHas('users', [
@@ -49,8 +56,15 @@ class AuthTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
-                    'user' => ['id', 'name', 'email', 'role'],
-                    'token'
+                    'success',
+                    'message',
+                    'data' => [
+                        'user' => ['id', 'name', 'email', 'role'],
+                        'token'
+                    ]
+                ])
+                ->assertJson([
+                    'success' => true,
                 ]);
     }
 
@@ -80,7 +94,14 @@ class AuthTest extends TestCase
         ])->postJson('/api/auth/logout');
 
         $response->assertStatus(200)
-                ->assertJson(['message' => 'Logged out successfully']);
+                ->assertJsonStructure([
+                    'success',
+                    'message',
+                ])
+                ->assertJson([
+                    'success' => true,
+                    'message' => 'Logged out successfully'
+                ]);
     }
 
     public function test_authenticated_user_can_get_own_data()
@@ -93,11 +114,19 @@ class AuthTest extends TestCase
         ])->getJson('/api/auth/user');
 
         $response->assertStatus(200)
+                ->assertJsonStructure([
+                    'success',
+                    'message',
+                    'data' => ['id', 'name', 'email', 'role']
+                ])
                 ->assertJson([
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
+                    'success' => true,
+                    'data' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                    ]
                 ]);
     }
 

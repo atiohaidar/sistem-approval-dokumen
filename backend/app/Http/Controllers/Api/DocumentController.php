@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\ApiResponse;
 use App\Models\Document;
 use App\Models\DocumentApproval;
 use App\Models\User;
@@ -14,10 +15,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Document Controller
+ * 
+ * Handles document management operations including CRUD,
+ * approval workflow, QR code generation, and file downloads
+ */
 class DocumentController extends Controller
 {
+    use ApiResponse;
+
     /**
      * Display a listing of the resource.
+     *
+     * @param Request $request
+     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -41,11 +53,14 @@ class DocumentController extends Controller
 
         $documents = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return response()->json($documents);
+        return $this->successResponse($documents, 'Documents retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
+     *
+     * @param Request $request
+     * @return JsonResponse
      */
     public function store(Request $request): JsonResponse
     {
@@ -119,30 +134,37 @@ class DocumentController extends Controller
             return $document;
         });
 
-        return response()->json($document->load(['creator', 'template']), 201);
+        return $this->createdResponse($document->load(['creator', 'template']), 'Document created successfully');
     }
 
     /**
      * Display the specified resource.
+     *
+     * @param Document $document
+     * @return JsonResponse
      */
     public function show(Document $document): JsonResponse
     {
-        return response()->json($document->load(['creator', 'template']));
+        return $this->successResponse($document->load(['creator', 'template']), 'Document retrieved successfully');
     }
 
     /**
      * Update the specified resource in storage.
+     *
+     * @param Request $request
+     * @param Document $document
+     * @return JsonResponse
      */
     public function update(Request $request, Document $document): JsonResponse
     {
         // Check if user can update this document
         if ($document->created_by !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return $this->unauthorizedResponse('You are not authorized to update this document');
         }
 
         // Only allow updates for draft documents
         if (!$document->isDraft()) {
-            return response()->json(['message' => 'Cannot update document that is not in draft status'], 422);
+            return $this->errorResponse('Cannot update document that is not in draft status', 422);
         }
 
         $request->validate([
@@ -178,22 +200,25 @@ class DocumentController extends Controller
 
         $document->update($updateData);
 
-        return response()->json($document->load(['creator', 'template']));
+        return $this->successResponse($document->load(['creator', 'template']), 'Document updated successfully');
     }
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @param Document $document
+     * @return JsonResponse
      */
     public function destroy(Document $document): JsonResponse
     {
         // Check if user can delete this document
         if ($document->created_by !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+            return $this->unauthorizedResponse('You are not authorized to delete this document');
         }
 
         // Only allow deletion for draft documents
         if (!$document->isDraft()) {
-            return response()->json(['message' => 'Cannot delete document that is not in draft status'], 422);
+            return $this->errorResponse('Cannot delete document that is not in draft status', 422);
         }
 
         // Delete file from storage
@@ -208,7 +233,7 @@ class DocumentController extends Controller
 
         $document->delete();
 
-        return response()->json(['message' => 'Document deleted successfully']);
+        return $this->successResponse(null, 'Document deleted successfully');
     }
 
     /**
