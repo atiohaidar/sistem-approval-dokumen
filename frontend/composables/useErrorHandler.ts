@@ -1,3 +1,5 @@
+import { ref } from 'vue';
+
 /**
  * Error handling composable for consistent error management
  */

@@ -61,7 +61,7 @@ export const useHttpClient = () => {
   };
 
   /**
-   * POST request with retry
+   * POST request (no retry for mutations to avoid duplicate operations)
    */
   const post = async <T = any>(
     url: string,

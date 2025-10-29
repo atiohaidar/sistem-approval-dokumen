@@ -69,6 +69,7 @@ class CacheResponseMiddleware
         $url = $request->fullUrl();
         $accept = $request->header('Accept', '');
         
-        return 'api:response:' . md5($url . $accept);
+        // Using SHA256 for secure cache key generation
+        return 'api:response:' . hash('sha256', $url . $accept);
     }
 }
