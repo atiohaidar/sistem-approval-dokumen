@@ -28,8 +28,8 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register']);
 });
 
-// Public document info (accessible via QR code) - moderate rate limiting
-Route::middleware('throttle:60,1')->group(function () {
+// Public document info (accessible via QR code) - moderate rate limiting with caching
+Route::middleware(['throttle:60,1', 'cache.response:10'])->group(function () {
     Route::get('/documents/{document}/public-info', [DocumentController::class, 'publicInfo']);
     Route::get('/documents/{document}/public-preview', [DocumentController::class, 'publicPreview']);
 });
