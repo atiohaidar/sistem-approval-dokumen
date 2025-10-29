@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: approval-backend
+    restart: unless-stopped
+    working_dir: /var/www/backend
+    volumes:
+      - ./backend:/var/www/backend
+      - ./backend/storage:/var/www/backend/storage
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=sqlite
+      - CACHE_DRIVER=file
+      - QUEUE_CONNECTION=database
+      - SESSION_DRIVER=database
+    networks:
+      - approval-network
+    depends_on:
+      - nginx
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: approval-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+      - "8443:443"
+    volumes:
+      - ./backend:/var/www/backend
+      - ./docker/nginx:/etc/nginx/conf.d
+    networks:
+      - approval-network
+
+  # Frontend Application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: approval-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NUXT_PUBLIC_API_BASE=http://nginx:80/api
+    networks:
+      - approval-network
+    depends_on:
+      - backend
+
+  # Queue Worker (optional)
+  queue-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: approval-queue
+    restart: unless-stopped
+    working_dir: /var/www/backend
+    volumes:
+      - ./backend:/var/www/backend
+    command: php artisan queue:work --tries=3 --timeout=90
+    environment:
+      - APP_ENV=production
+      - DB_CONNECTION=sqlite
+      - QUEUE_CONNECTION=database
+    networks:
+      - approval-network
+    depends_on:
+      - backend
+
+networks:
+  approval-network:
+    driver: bridge
+
+volumes:
+  backend-storage:
+    driver: local

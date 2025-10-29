@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DocumentController;
 use App\Http\Controllers\Api\ApprovalController;
+use App\Http\Controllers\Api\HealthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,13 +19,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Public routes
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/register', [AuthController::class, 'register']);
+// Health check endpoint (no rate limiting for monitoring)
+Route::get('/health', [HealthController::class, 'index']);
 
-// Public document info (accessible via QR code)
-Route::get('/documents/{document}/public-info', [DocumentController::class, 'publicInfo']);
-Route::get('/documents/{document}/public-preview', [DocumentController::class, 'publicPreview']);
+// Public routes with stricter rate limiting
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/register', [AuthController::class, 'register']);
+});
+
+// Public document info (accessible via QR code) - moderate rate limiting
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/documents/{document}/public-info', [DocumentController::class, 'publicInfo']);
+    Route::get('/documents/{document}/public-preview', [DocumentController::class, 'publicPreview']);
+});
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -46,5 +54,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('admin')->group(function () {
         Route::apiResource('users', UserController::class);
         Route::post('/users/{user}/change-role', [UserController::class, 'changeRole']);
+        Route::get('/health/detailed', [HealthController::class, 'detailed']);
     });
 });

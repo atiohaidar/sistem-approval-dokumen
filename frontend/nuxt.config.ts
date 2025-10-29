@@ -16,7 +16,8 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:8000/api',
+      domain: process.env.NUXT_PUBLIC_DOMAIN || 'http://localhost:3000',
     }
   },
 
@@ -26,7 +27,10 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'Sistem Approval Dokumen Multi Tingkat dengan Digital Signature' }
+        { name: 'description', content: 'Sistem Approval Dokumen Multi Tingkat dengan Digital Signature' },
+        // Security headers
+        { 'http-equiv': 'X-UA-Compatible', content: 'IE=edge' },
+        { name: 'format-detection', content: 'telephone=no' },
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/logo.png' },
@@ -35,5 +39,30 @@ export default defineNuxtConfig({
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap' }
       ]
     }
-  }
+  },
+
+  // Production optimizations
+  nitro: {
+    compressPublicAssets: true,
+  },
+
+  // Security configurations
+  security: {
+    headers: {
+      crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
+    }
+  },
+
+  // Build optimizations
+  vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['vue', 'vue-router', 'pinia', 'axios'],
+          },
+        },
+      },
+    },
+  },
 })

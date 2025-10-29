@@ -8,6 +8,8 @@ use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\AttachAccessTokenFromCookie;
+use App\Http\Middleware\SecurityHeadersMiddleware;
+use App\Http\Middleware\SanitizeInputMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             EnsureFrontendRequestsAreStateful::class,
             AttachAccessTokenFromCookie::class,
+        ]);
+
+        // Apply security headers and input sanitization globally
+        $middleware->append([
+            SecurityHeadersMiddleware::class,
+            SanitizeInputMiddleware::class,
         ]);
 
         $middleware->alias([
