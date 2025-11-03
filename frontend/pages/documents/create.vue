@@ -276,7 +276,7 @@
                 <input
                   v-model.number="form.qr_x"
                   type="number"
-                  step="0.0001"
+                  step="0.00000000000000001"
                   min="0"
                   max="1"
                   class="glass-input w-full"
@@ -295,7 +295,7 @@
                 <input
                   v-model.number="form.qr_y"
                   type="number"
-                  step="0.0001"
+                  step="0.00000000000000001"
                   min="0"
                   max="1"
                   class="glass-input w-full"
@@ -329,13 +329,13 @@
                 <label class="block text-sm font-semibold mb-2" :class="isDark ? 'text-gray-300' : 'text-gray-600'">
                   Ukuran QR (0.05 - 0.5)
                 </label>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center flex-col gap-3">
                   <input
                     v-model.number="form.qr_size"
                     type="range"
                     min="0.05"
                     max="0.5"
-                    step="0.01"
+                    step="0.00000000000000001"
                     class="flex-1 accent-telkom-red"
                   />
                   <input
@@ -343,7 +343,7 @@
                     type="number"
                     min="0.05"
                     max="0.5"
-                    step="0.01"
+                    step="0.00000000000000001"
                     class="glass-input w-24"
                     :class="isDark ? 'bg-gray-950/60 border border-gray-700 text-gray-100' : ''"
                   />

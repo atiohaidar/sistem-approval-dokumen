@@ -32,26 +32,41 @@ export default defineNuxtPlugin(() => {
     (response) => response,
     (error) => {
       if (error.response?.status === 401) {
-        // Avoid infinite loop: if the failing request was the logout endpoint,
-        // don't call auth.logout() which itself calls the logout endpoint.
+        // Handle unauthorized safely without calling composables that require Nuxt app context
         const reqUrl = error.config?.url || ''
-        if (typeof reqUrl === 'string' && reqUrl.includes('/auth/logout')) {
-          try {
-            const auth = useAuthStore()
-            auth.user = null
-            // redirect to login
-            router.push('/login')
-          } catch (_) {
-            router.push('/login')
+        try {
+          const auth = useAuthStore()
+
+          // If a logout flow is already in progress, just replace route to login
+          if (auth.isLoggingOut) {
+            router.replace('/login')
+            return Promise.reject(error)
           }
-        } else {
-          try {
-            // Call auth store logout to ensure server-side cookie is cleared
-            const auth = useAuthStore()
-            auth.logout()
-          } catch (_) {
-            router.push('/login')
+
+          // If the failing request was the logout endpoint, just clear local state and redirect
+          if (typeof reqUrl === 'string' && reqUrl.includes('/auth/logout')) {
+            auth.$patch({ user: null, token: null })
+            router.replace('/login')
+            return Promise.reject(error)
           }
+
+          // If the failing request was the session check (/auth/user), do NOT redirect to login.
+          // This request is used to probe whether a visitor has a session; a 401 here should
+          // not force a navigation away from public pages — just clear local user state.
+          if (typeof reqUrl === 'string' && reqUrl.includes('/auth/user')) {
+            auth.$patch({ user: null, token: null })
+            return Promise.reject(error)
+          }
+
+          // Default: clear auth state and redirect to login. Avoid calling store.logout() here
+          // because it may call useNuxtApp() when invoked outside plugin/setup and cause errors.
+          auth.$patch({ user: null, token: null, isLoggingOut: true })
+          router.replace('/login')
+          // Reset flag after short delay to allow other flows to settle
+          setTimeout(() => { try { auth.isLoggingOut = false } catch (_) {} }, 3000)
+        } catch (e) {
+          // If anything goes wrong, fallback to a simple redirect
+          try { router.replace('/login') } catch (_) {}
         }
       }
       return Promise.reject(error)

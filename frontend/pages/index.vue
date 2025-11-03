@@ -263,7 +263,7 @@
           </p>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-8">
+        <div class="grid md:grid-cols-2 gap-8">
           <!-- Feature 1 - Multi-Level Approval -->
           <div class="bg-white border border-gray-200 rounded-lg p-8 hover:shadow-md hover:border-telkom-red transition-all">
             <!-- Icon -->
@@ -278,6 +278,7 @@
                 NEW
               </span>
             </div>
+         
 
             <!-- Content -->
             <h3 class="text-2xl font-bold text-gray-900 mb-4">
@@ -301,12 +302,7 @@
                 </svg>
                 Flexible Configuration
               </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600">
-                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Real-time Updates
-              </li>
+            
             </ul>
           </div>
 
@@ -327,7 +323,7 @@
               Digital Signature
             </h3>
             <p class="text-gray-600 leading-relaxed mb-6">
-              QR Code dan watermark otomatis dengan enkripsi tingkat tinggi. Blockchain-ready untuk audit trail yang tidak dapat diubah.
+              QR Code dan watermark otomatis.
             </p>
 
             <ul class="space-y-2">
@@ -343,57 +339,13 @@
                 </svg>
                 Auto Watermark
               </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600">
-                <svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Blockchain Ready
-              </li>
+            
             </ul>
+
+          </div>
           </div>
 
-          <!-- Feature 3 - Real-time Tracking -->
-          <div class="bg-white border border-gray-200 rounded-lg p-8 hover:shadow-md hover:border-purple-600 transition-all">
-            <div class="mb-6">
-              <div class="w-16 h-16 bg-purple-600 rounded-lg flex items-center justify-center">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <span class="inline-block mt-4 bg-pink-400 text-gray-900 text-xs font-bold px-3 py-1 rounded-md">
-                FAST
-              </span>
-            </div>
-
-            <h3 class="text-2xl font-bold text-gray-900 mb-4">
-              Real-time Tracking
-            </h3>
-            <p class="text-gray-600 leading-relaxed mb-6">
-              Pantau status approval dokumen secara real-time dengan dashboard analytics. Push notification untuk setiap update.
-            </p>
-
-            <ul class="space-y-2">
-              <li class="flex items-center gap-2 text-sm text-gray-600">
-                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Live Dashboard
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600">
-                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Push Notifications
-              </li>
-              <li class="flex items-center gap-2 text-sm text-gray-600">
-                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                Analytics Reports
-              </li>
-            </ul>
-          </div>
-        </div>
+        
 
         <!-- CTA Section -->
         <div class="text-center mt-20">

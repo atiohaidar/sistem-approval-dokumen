@@ -6,6 +6,8 @@ export const useAuthStore = defineStore('auth', {
     user: null as User | null,
     // token is not stored in JS; access token is stored httpOnly cookie by backend
     token: null as string | null,
+    // flag to prevent concurrent or repeated logout flows
+    isLoggingOut: false,
     loading: false,
     error: null as string | null,
   }),
@@ -64,21 +66,40 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
-      const { $api } = useNuxtApp()
+      // Make logout idempotent — ignore if already in progress
+      if (this.isLoggingOut) return
+      this.isLoggingOut = true
 
       try {
-        await $api.post('/auth/logout')
+        // try to call server logout if Nuxt app is available; otherwise just clear local state
+        let api = null
+        try {
+          const nuxtApp = useNuxtApp()
+          api = nuxtApp.$api
+        } catch (_err) {
+          api = null
+        }
+
+        if (api) {
+          try {
+            await api.post('/auth/logout')
+          } catch (err) {
+            console.error('Server logout failed:', err)
+          }
+        }
       } catch (error) {
         console.error('Logout error:', error)
       } finally {
         // Clear state and cookies
         this.user = null
         this.token = null
-        // backend will clear httpOnly cookie; clear any JS-stored user cookie if present
+
         try { useCookie('user').value = null } catch (_) { }
 
-        // Redirect to login
-        navigateTo('/login')
+        // Redirect to login if router available; use try/catch to be safe when called outside Nuxt setup
+        try { navigateTo('/login') } catch (_) { }
+
+        this.isLoggingOut = false
       }
     },
 
@@ -89,8 +110,13 @@ export const useAuthStore = defineStore('auth', {
         const response = await $api.get<User>('/auth/user')
         this.user = response.data
       } catch (error) {
-        console.error('Fetch user error:', error)
-        this.logout()
+        // don't force a full logout/redirect when fetchUser fails (e.g. guest access)
+        // Many pages (public/home) call fetchUser on load; failing to fetch the session
+        // should not automatically redirect the visitor. Clear local user state and
+        // let calling code decide whether to redirect.
+        console.debug('Fetch user error:', error)
+        this.user = null
+        this.token = null
       }
     },
 
