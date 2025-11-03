@@ -1,139 +1,81 @@
 /* ============================================
-   GRADIENT UTILITIES
-   Modern gradient combinations
+   FLAT COLORS
+   Solid colors for flat design
    ============================================ */
 
-/* Background Gradients */
+/* Background Colors */
 .gradient-telkom {
-  background: linear-gradient(135deg, #EF3124 0%, #DC2316 100%);
+  background: #EE3124;
 }
 
 .gradient-telkom-reverse {
-  background: linear-gradient(135deg, #DC2316 0%, #EF3124 100%);
+  background: #EE3124;
 }
 
 .gradient-telkom-radial {
-  background: radial-gradient(circle at top left, #EF3124, #DC2316);
+  background: #EE3124;
 }
 
 .gradient-telkom-orange {
-  background: linear-gradient(to right, #EF3124, #F17641);
+  background: #EE3124;
 }
 
 .gradient-telkom-dark {
-  background: linear-gradient(to bottom, #EF3124, #8B1A12);
+  background: #C61E1E;
 }
 
-/* Multi-color Gradients */
+/* Solid Colors */
 .gradient-rainbow {
-  background: linear-gradient(
-    to right,
-    #EF3124,
-    #9333ea,
-    #0071BC
-  );
+  background: #EE3124;
 }
 
 .gradient-sunset {
-  background: linear-gradient(
-    135deg,
-    #EF3124 0%,
-    #F17641 50%,
-    #fbbf24 100%
-  );
+  background: #EE3124;
 }
 
 .gradient-ocean {
-  background: linear-gradient(
-    135deg,
-    #0071BC 0%,
-    #06b6d4 50%,
-    #14b8a6 100%
-  );
+  background: #0071BC;
 }
 
 .gradient-purple-pink {
-  background: linear-gradient(
-    135deg,
-    #9333ea 0%,
-    #ec4899 100%
-  );
+  background: #9333ea;
 }
 
 .gradient-dark {
-  background: linear-gradient(
-    to bottom,
-    #111827,
-    #1f2937,
-    #111827
-  );
+  background: #1f2937;
 }
 
-/* Text Gradients */
+/* Solid Text Colors */
 .text-gradient-telkom {
-  background: linear-gradient(to right, #EF3124, #F17641);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #EE3124;
 }
 
 .text-gradient-rainbow {
-  background: linear-gradient(
-    to right,
-    #EF3124,
-    #9333ea,
-    #0071BC,
-    #10b981
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #EE3124;
 }
 
 .text-gradient-gold {
-  background: linear-gradient(
-    to right,
-    #fbbf24,
-    #f59e0b,
-    #fbbf24
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #f59e0b;
 }
 
 .text-gradient-blue {
-  background: linear-gradient(to right, #3b82f6, #06b6d4);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #3b82f6;
 }
 
 .text-gradient-white {
-  background: linear-gradient(to right, #ffffff, #d1d5db);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
 }
 
-/* Border Gradients */
+/* Solid Borders */
 .border-gradient-telkom {
-  border: 2px solid transparent;
-  background-image: linear-gradient(white, white),
-                    linear-gradient(to right, #EF3124, #F17641);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border: 2px solid #EE3124;
 }
 
 .border-gradient-rainbow {
-  border: 2px solid transparent;
-  background-image: linear-gradient(white, white),
-                    linear-gradient(to right, #EF3124, #9333ea, #0071BC);
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
+  border: 2px solid #EE3124;
 }
 
-/* Overlay Gradients */
+/* Simple Overlays */
 .gradient-overlay-dark {
   position: relative;
 }
@@ -142,11 +84,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.5),
-    rgba(0, 0, 0, 0.8)
-  );
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1;
 }
 
@@ -158,139 +96,97 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(239, 49, 36, 0.8),
-    rgba(147, 51, 234, 0.6),
-    rgba(0, 113, 188, 0.8)
-  );
+  background: rgba(238, 49, 36, 0.8);
   z-index: 1;
 }
 
-/* Gradient Shadows */
+/* Simple Shadows */
 .shadow-telkom {
-  box-shadow: 0 10px 40px rgba(239, 49, 36, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .shadow-telkom-lg {
-  box-shadow: 0 20px 60px rgba(239, 49, 36, 0.5);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .shadow-blue {
-  box-shadow: 0 10px 40px rgba(0, 113, 188, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .shadow-purple {
-  box-shadow: 0 10px 40px rgba(147, 51, 234, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .shadow-gold {
-  box-shadow: 0 10px 40px rgba(251, 191, 36, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Gradient Hover Effects */
+/* Simple Hover Effects */
 .hover-gradient-shift {
-  background-size: 200% 200%;
-  transition: background-position 0.5s ease;
+  transition: background-color 0.2s ease;
 }
 
 .hover-gradient-shift:hover {
-  background-position: 100% 0;
+  filter: brightness(0.95);
 }
 
-/* Button Gradients */
+/* Flat Buttons */
 .btn-gradient-telkom {
-  background: linear-gradient(to right, #EF3124, #F17641);
+  background: #EE3124;
   color: white;
   border: none;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .btn-gradient-telkom:hover {
-  background: linear-gradient(to right, #F17641, #DC2316);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(239, 49, 36, 0.4);
+  background: #C61E1E;
 }
 
 .btn-gradient-blue {
-  background: linear-gradient(to right, #0071BC, #06b6d4);
+  background: #0071BC;
   color: white;
   border: none;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease;
 }
 
 .btn-gradient-blue:hover {
-  background: linear-gradient(to right, #06b6d4, #0071BC);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 113, 188, 0.4);
+  background: #005a96;
 }
 
-/* Card Gradients */
+/* Flat Cards */
 .card-gradient-subtle {
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.02) 100%
-  );
+  background: #ffffff;
 }
 
 .card-gradient-telkom {
-  background: linear-gradient(
-    135deg,
-    rgba(239, 49, 36, 0.1) 0%,
-    rgba(241, 118, 65, 0.05) 100%
-  );
+  background: #fef2f2;
 }
 
-/* Divider Gradients */
+/* Simple Dividers */
 .divider-gradient {
   height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent
-  );
+  background: #e5e7eb;
 }
 
 .divider-gradient-telkom {
   height: 2px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    #EF3124,
-    #F17641,
-    transparent
-  );
+  background: #EE3124;
 }
 
-/* Progress Bar Gradients */
+/* Flat Progress Bars */
 .progress-gradient-telkom {
-  background: linear-gradient(to right, #EF3124, #F17641);
-  box-shadow: 0 0 20px rgba(239, 49, 36, 0.5);
+  background: #EE3124;
 }
 
 .progress-gradient-success {
-  background: linear-gradient(to right, #10b981, #059669);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+  background: #10b981;
 }
 
-/* Mesh Gradients */
+/* Simple Backgrounds */
 .mesh-gradient-1 {
-  background: 
-    radial-gradient(at 40% 20%, rgba(239, 49, 36, 0.3) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(147, 51, 234, 0.3) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(0, 113, 188, 0.3) 0px, transparent 50%),
-    radial-gradient(at 80% 50%, rgba(241, 118, 65, 0.3) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.3) 0px, transparent 50%),
-    radial-gradient(at 80% 100%, rgba(16, 185, 129, 0.3) 0px, transparent 50%);
+  background: #f9fafb;
 }
 
 .mesh-gradient-2 {
-  background: 
-    radial-gradient(at 27% 37%, rgba(239, 49, 36, 0.2) 0px, transparent 50%),
-    radial-gradient(at 97% 21%, rgba(147, 51, 234, 0.2) 0px, transparent 50%),
-    radial-gradient(at 52% 99%, rgba(0, 113, 188, 0.2) 0px, transparent 50%),
-    radial-gradient(at 10% 29%, rgba(251, 191, 36, 0.2) 0px, transparent 50%),
-    radial-gradient(at 97% 96%, rgba(16, 185, 129, 0.2) 0px, transparent 50%);
+  background: #f9fafb;
 }

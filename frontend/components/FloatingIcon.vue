@@ -1,22 +1,14 @@
 <template>
   <div 
-    class="relative animate-float"
+    class="relative"
     :class="[
       sizeClass,
-      delayClass,
       className
     ]"
   >
-    <!-- Glow Background -->
-    <div 
-      v-if="glow"
-      class="absolute inset-0 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition"
-      :class="glowColorClass"
-    ></div>
-
     <!-- Icon Container -->
     <div 
-      class="relative backdrop-blur-md rounded-2xl border flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110"
+      class="relative rounded-xl border flex items-center justify-center transition-colors duration-150"
       :class="[
         containerClass,
         iconColorClass
@@ -67,7 +59,7 @@
     <!-- Badge (optional) -->
     <div 
       v-if="badge"
-      class="absolute -top-2 -right-2 text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse"
+      class="absolute -top-2 -right-2 text-xs font-bold px-3 py-1 rounded-full border"
       :class="badgeColorClass"
     >
       {{ badge }}
@@ -123,47 +115,28 @@ const containerClass = computed(() => {
 const iconColorClass = computed(() => {
   switch (props.color) {
     case 'blue':
-      return 'bg-blue-500/20 border-blue-500/30 text-blue-400'
+      return 'bg-blue-50 border-blue-200 text-blue-600'
     case 'purple':
-      return 'bg-purple-500/20 border-purple-500/30 text-purple-400'
+      return 'bg-purple-50 border-purple-200 text-purple-600'
     case 'gold':
-      return 'bg-yellow-400/20 border-yellow-400/30 text-yellow-400'
+      return 'bg-yellow-50 border-yellow-200 text-yellow-600'
     case 'green':
-      return 'bg-green-500/20 border-green-500/30 text-green-400'
+      return 'bg-green-50 border-green-200 text-green-600'
     default:
-      return 'bg-telkom-red/20 border-telkom-red/30 text-telkom-red'
-  }
-})
-
-const glowColorClass = computed(() => {
-  switch (props.color) {
-    case 'blue':
-      return 'bg-blue-500/30'
-    case 'purple':
-      return 'bg-purple-500/30'
-    case 'gold':
-      return 'bg-yellow-400/30'
-    case 'green':
-      return 'bg-green-500/30'
-    default:
-      return 'bg-telkom-red/30'
+      return 'bg-red-50 border-red-200 text-telkom-red'
   }
 })
 
 const badgeColorClass = computed(() => {
   switch (props.badgeColor) {
     case 'red':
-      return 'bg-red-500 text-white'
+      return 'bg-red-500 text-white border-red-600'
     case 'blue':
-      return 'bg-blue-500 text-white'
+      return 'bg-blue-500 text-white border-blue-600'
     case 'green':
-      return 'bg-green-500 text-white'
+      return 'bg-green-500 text-white border-green-600'
     default:
-      return 'bg-yellow-400 text-gray-900'
+      return 'bg-yellow-400 text-gray-900 border-yellow-500'
   }
-})
-
-const delayClass = computed(() => {
-  return props.delay === '500' ? 'delay-500' : props.delay === '1000' ? 'delay-1000' : ''
 })
 </script>
