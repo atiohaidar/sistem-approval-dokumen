@@ -64,33 +64,58 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async logout() {
-      const { $api } = useNuxtApp()
-
       try {
+        const { $api } = useNuxtApp()
         await $api.post('/auth/logout')
       } catch (error) {
         console.error('Logout error:', error)
       } finally {
-        // Clear state and cookies
+        // Clear state
         this.user = null
         this.token = null
-        // backend will clear httpOnly cookie; clear any JS-stored user cookie if present
-        try { useCookie('user').value = null } catch (_) { }
+        
+        // Clear cookie if we're in a Nuxt context
+        if (process.client) {
+          try { 
+            const cookie = useCookie('user')
+            cookie.value = null 
+          } catch (_) { }
+        }
 
         // Redirect to login
-        navigateTo('/login')
+        try {
+          navigateTo('/login')
+        } catch (_) {
+          // If navigateTo fails (outside Nuxt context), use window.location
+          if (process.client) {
+            window.location.href = '/login'
+          }
+        }
+      }
+    },
+
+    // Method to clear auth without making API call (for use in interceptors)
+    clearAuth() {
+      this.user = null
+      this.token = null
+      
+      // Redirect to login using window.location (safe to call from anywhere)
+      if (process.client) {
+        window.location.href = '/login'
       }
     },
 
     async fetchUser() {
-      const { $api } = useNuxtApp()
-
       try {
+        const { $api } = useNuxtApp()
         const response = await $api.get<User>('/auth/user')
         this.user = response.data
       } catch (error) {
         console.error('Fetch user error:', error)
-        this.logout()
+        // Don't call logout here as it may be called outside proper context
+        // Just clear the user state
+        this.user = null
+        this.token = null
       }
     },
 

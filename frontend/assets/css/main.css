@@ -1,11 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Import Custom CSS */
+/* Import Custom CSS - Must come before @tailwind directives */
 @import './glassmorphism.css';
 @import './gradients.css';
 @import './animations.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   body {

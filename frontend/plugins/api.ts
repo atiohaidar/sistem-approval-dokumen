@@ -32,25 +32,14 @@ export default defineNuxtPlugin(() => {
     (response) => response,
     (error) => {
       if (error.response?.status === 401) {
-        // Avoid infinite loop: if the failing request was the logout endpoint,
-        // don't call auth.logout() which itself calls the logout endpoint.
-        const reqUrl = error.config?.url || ''
-        if (typeof reqUrl === 'string' && reqUrl.includes('/auth/logout')) {
-          try {
-            const auth = useAuthStore()
-            auth.user = null
-            // redirect to login
-            router.push('/login')
-          } catch (_) {
-            router.push('/login')
-          }
-        } else {
-          try {
-            // Call auth store logout to ensure server-side cookie is cleared
-            const auth = useAuthStore()
-            auth.logout()
-          } catch (_) {
-            router.push('/login')
+        // Use clearAuth instead of logout to avoid calling useNuxtApp outside of proper context
+        try {
+          const auth = useAuthStore()
+          auth.clearAuth()
+        } catch (_) {
+          // If even getting the store fails, redirect directly
+          if (process.client) {
+            window.location.href = '/login'
           }
         }
       }
