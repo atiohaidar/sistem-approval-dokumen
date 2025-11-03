@@ -2,7 +2,7 @@
   <component
     :is="resolvedTag"
     :type="tag === 'button' ? type : undefined"
-    class="relative overflow-hidden font-bold transition-all duration-300 group"
+    class="font-semibold transition-colors duration-150"
     :class="[
       sizeClass,
       variantClass,
@@ -11,15 +11,8 @@
     ]"
     @click="handleClick"
   >
-    <!-- Background Gradient Animation -->
-    <div 
-      v-if="animatedGradient"
-      class="absolute inset-0 bg-gradient-to-r translate-x-full group-hover:translate-x-0 transition-transform duration-300 pointer-events-none"
-      :class="hoverGradientClass"
-    ></div>
-
     <!-- Content -->
-    <span class="relative z-10 flex items-center justify-center gap-2">
+    <span class="flex items-center justify-center gap-2">
       <!-- Icon Left -->
       <slot name="icon-left" />
       
@@ -44,13 +37,6 @@
         </svg>
       </slot>
     </span>
-
-    <!-- Glow Effect on Hover -->
-    <div 
-      v-if="glow"
-      class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-      :class="glowClass"
-    ></div>
   </component>
 </template>
 
@@ -109,41 +95,17 @@ const sizeClass = computed(() => {
 const variantClass = computed(() => {
   switch (props.variant) {
     case 'blue':
-      return 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-2xl shadow-blue-600/50 hover:shadow-blue-600 hover:scale-105'
+      return 'bg-blue-600 text-white hover:bg-blue-700'
     case 'purple':
-      return 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-2xl shadow-purple-600/50 hover:shadow-purple-600 hover:scale-105'
+      return 'bg-purple-600 text-white hover:bg-purple-700'
     case 'outline':
       return 'bg-transparent border-2 border-white text-white hover:bg-white hover:text-telkom-red'
     case 'glass':
-      return 'glass text-white hover:glass-light'
+      return 'bg-white border border-gray-300 text-gray-900 hover:bg-gray-50'
     case 'white':
-      return 'bg-white text-telkom-red hover:bg-yellow-400 hover:text-white shadow-lg hover:shadow-yellow-400/50'
+      return 'bg-white text-telkom-red hover:bg-gray-50'
     default:
-      return 'bg-gradient-to-r from-telkom-red to-orange-600 text-white shadow-2xl shadow-telkom-red/50 hover:shadow-telkom-red hover:scale-105'
-  }
-})
-
-const hoverGradientClass = computed(() => {
-  switch (props.variant) {
-    case 'blue':
-      return 'from-cyan-600 to-blue-700'
-    case 'purple':
-      return 'from-pink-600 to-purple-700'
-    case 'white':
-      return 'from-yellow-400 to-yellow-500'
-    default:
-      return 'from-orange-600 to-red-700'
-  }
-})
-
-const glowClass = computed(() => {
-  switch (props.variant) {
-    case 'blue':
-      return 'shadow-[0_0_40px_rgba(59,130,246,0.6)]'
-    case 'purple':
-      return 'shadow-[0_0_40px_rgba(147,51,234,0.6)]'
-    default:
-      return 'shadow-[0_0_40px_rgba(239,49,36,0.6)]'
+      return 'bg-telkom-red text-white hover:bg-telkom-red-dark'
   }
 })
 </script>
