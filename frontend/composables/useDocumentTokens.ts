@@ -272,13 +272,14 @@ export const useDocumentTokens = () => {
       textArea.style.left = '-999999px'
       document.body.appendChild(textArea)
       textArea.select()
+      
       try {
-        document.execCommand('copy')
-        document.body.removeChild(textArea)
-        return true
-      } catch (err) {
-        document.body.removeChild(textArea)
+        const success = document.execCommand('copy')
+        return success
+      } catch (execError) {
         return false
+      } finally {
+        document.body.removeChild(textArea)
       }
     }
   }

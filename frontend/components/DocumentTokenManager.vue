@@ -305,15 +305,11 @@ const handleGenerate = async () => {
 }
 
 const handleCopyUrl = async (tokenId: number) => {
-  const token = tokens.value.find(t => t.id === tokenId)
-  if (!token) return
-
-  const config = useRuntimeConfig()
-  const frontendUrl = config.public.frontendUrl || window.location.origin
-  const url = `${frontendUrl}/secure/[token-placeholder]` // Token is not exposed in list
-  
-  successMessage.value = 'Link berhasil disalin!'
-  setTimeout(() => { successMessage.value = null }, 3000)
+  // Note: For security, the actual token string is not exposed in the token list API
+  // Users need to copy the URL when token is first generated
+  // This provides information that the feature is not available for existing tokens
+  successMessage.value = 'Token URL hanya dapat disalin saat pertama kali dibuat. Gunakan rotasi untuk mendapatkan URL baru.'
+  setTimeout(() => { successMessage.value = null }, 5000)
 }
 
 const handleRotate = async (tokenId: number) => {

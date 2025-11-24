@@ -233,23 +233,29 @@ const canApprove = computed(() => {
     doc.value.level_progress?.pending?.includes(authStore.user.id)
 })
 
+// Helper function to check if user is an approver
+const isUserApprover = (approvers: any[][], userId: number): boolean => {
+  return approvers.some(level => 
+    Array.isArray(level) && level.includes(userId)
+  )
+}
+
 // Check if user can manage tokens (creator, approver, or admin)
 const canManageTokens = computed(() => {
   if (!doc.value || !authStore.user) return false
   
+  const userId = authStore.user.id
+  const userRole = authStore.user.role
+  
   // Creator can manage tokens
-  if (doc.value.created_by === authStore.user.id) return true
+  if (doc.value.created_by === userId) return true
   
   // Admin can manage tokens
-  if (authStore.user.role === 'admin') return true
+  if (userRole === 'admin') return true
   
   // Approvers can manage tokens
-  if (doc.value.approvers) {
-    for (const level of doc.value.approvers) {
-      if (Array.isArray(level) && level.includes(authStore.user.id)) {
-        return true
-      }
-    }
+  if (doc.value.approvers && Array.isArray(doc.value.approvers)) {
+    return isUserApprover(doc.value.approvers, userId)
   }
   
   return false

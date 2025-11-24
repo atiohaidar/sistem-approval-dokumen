@@ -62,6 +62,7 @@
                   :src="previewUrl" 
                   class="w-full h-full border-0"
                   title="Document Preview"
+                  sandbox="allow-same-origin allow-scripts"
                 ></iframe>
               </div>
               <div class="mt-4 flex gap-3">
