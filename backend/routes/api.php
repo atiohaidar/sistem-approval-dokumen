@@ -22,9 +22,14 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 
-// Public document info (accessible via QR code)
+// Public document info (accessible via QR code) - DEPRECATED: Use secure token-based access instead
 Route::get('/documents/{document}/public-info', [DocumentController::class, 'publicInfo']);
 Route::get('/documents/{document}/public-preview', [DocumentController::class, 'publicPreview']);
+
+// Secure token-based document access (public but requires valid token)
+Route::get('/secure/documents/{token}', [DocumentController::class, 'secureAccess']);
+Route::get('/secure/documents/{token}/preview', [DocumentController::class, 'securePreview']);
+Route::get('/secure/documents/{token}/download', [DocumentController::class, 'secureDownload']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -34,6 +39,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Document management
     Route::apiResource('documents', DocumentController::class);
     Route::get('documents/{document}/download', [DocumentController::class, 'download']);
+    
+    // Document access token management
+    Route::post('documents/{document}/access-tokens', [DocumentController::class, 'generateAccessToken']);
+    Route::get('documents/{document}/access-tokens', [DocumentController::class, 'getAccessTokens']);
+    Route::post('documents/{document}/access-tokens/{tokenId}/revoke', [DocumentController::class, 'revokeAccessToken']);
+    Route::post('documents/{document}/access-tokens/{tokenId}/rotate', [DocumentController::class, 'rotateAccessToken']);
+    Route::get('documents/{document}/access-logs', [DocumentController::class, 'getAccessLogs']);
 
     // Approval system
     Route::prefix('approvals')->group(function () {

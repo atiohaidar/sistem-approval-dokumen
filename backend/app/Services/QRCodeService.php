@@ -11,13 +11,24 @@ class QRCodeService
 {
     /**
      * Generate QR code for document with approval status
+     * 
+     * @param Document $document
+     * @param array $position
+     * @param string|null $accessToken If provided, generates secure URL with token
      */
-    public function generateForDocument(Document $document, $position): string
+    public function generateForDocument(Document $document, $position, ?string $accessToken = null): string
     {
-        // Generate URL to frontend public document page (so QR opens the frontend)
+        // Generate URL to frontend document page
         $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
         $frontendBase = rtrim($frontendBase, '/');
-        $url = $frontendBase . '/public/' . $document->id;
+        
+        // Use secure token URL if provided, otherwise use legacy public URL
+        if ($accessToken) {
+            $url = $frontendBase . '/secure/' . $accessToken;
+        } else {
+            // Fallback to legacy public URL for backward compatibility
+            $url = $frontendBase . '/public/' . $document->id;
+        }
 
         $builder = new Builder(
             writer: new PngWriter(),
@@ -40,11 +51,20 @@ class QRCodeService
 
     /**
      * Get QR code URL for document
+     * 
+     * @param Document $document
+     * @param string|null $accessToken If provided, generates secure URL with token
      */
-    public function getQRUrl(Document $document): string
+    public function getQRUrl(Document $document, ?string $accessToken = null): string
     {
         $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
         $frontendBase = rtrim($frontendBase, '/');
+        
+        if ($accessToken) {
+            return $frontendBase . '/secure/' . $accessToken;
+        }
+        
+        // Fallback to legacy public URL
         return $frontendBase . '/public/' . $document->id;
     }
 

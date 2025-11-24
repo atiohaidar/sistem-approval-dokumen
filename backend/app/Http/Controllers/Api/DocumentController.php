@@ -104,7 +104,16 @@ class DocumentController extends Controller
             // Initialize level progress for the first level
             $document->getLevelProgress();
 
-            // Generate QR Code
+            // Generate secure access token for the document (expires in 1 year for QR codes)
+            $accessService = app(\App\Services\DocumentAccessService::class);
+            $accessToken = $accessService->generateToken(
+                $document,
+                Auth::user(),
+                8760, // 1 year expiration for QR code tokens
+                ['purpose' => 'QR Code access', 'auto_generated' => true]
+            );
+
+            // Generate QR Code with secure token
             $qrPosition = [
                 'x' => $request->qr_x,
                 'y' => $request->qr_y,
@@ -113,7 +122,7 @@ class DocumentController extends Controller
             ];
 
             try {
-                $qrCodePath = app(QRCodeService::class)->generateForDocument($document, $qrPosition);
+                $qrCodePath = app(QRCodeService::class)->generateForDocument($document, $qrPosition, $accessToken->token);
                 // Update document with QR code path
                 $document->update(['qr_code_path' => $qrCodePath]);
             } catch (\Exception $e) {
@@ -531,5 +540,404 @@ class DocumentController extends Controller
         }
 
         return max($minSize, min($maxSize, $numericSize));
+    }
+
+    /**
+     * Generate a secure access token for a document
+     */
+    public function generateAccessToken(Request $request, Document $document): JsonResponse
+    {
+        $user = Auth::user();
+        $accessService = app(\App\Services\DocumentAccessService::class);
+
+        // Check authorization
+        if (!$accessService->canGenerateToken($document, $user)) {
+            return response()->json([
+                'message' => 'Unauthorized to generate access token for this document'
+            ], 403);
+        }
+
+        $request->validate([
+            'expires_in_hours' => 'nullable|integer|min:1|max:8760', // Max 1 year
+            'purpose' => 'nullable|string|max:255',
+        ]);
+
+        $expiresInHours = $request->input('expires_in_hours', 24);
+        $metadata = [
+            'purpose' => $request->input('purpose', 'Document access'),
+            'generated_for' => $request->input('generated_for'),
+        ];
+
+        $token = $accessService->generateToken($document, $user, $expiresInHours, $metadata);
+
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendBase = rtrim($frontendBase, '/');
+        $accessUrl = $frontendBase . '/secure/' . $token->token;
+
+        return response()->json([
+            'token_id' => $token->id,
+            'access_url' => $accessUrl,
+            'expires_at' => $token->expires_at,
+            'expires_in_hours' => $expiresInHours,
+        ], 201);
+    }
+
+    /**
+     * Revoke a specific access token
+     */
+    public function revokeAccessToken(Request $request, Document $document, int $tokenId): JsonResponse
+    {
+        $user = Auth::user();
+        $accessService = app(\App\Services\DocumentAccessService::class);
+
+        // Find the token
+        $token = \App\Models\DocumentAccessToken::where('id', $tokenId)
+            ->where('document_id', $document->id)
+            ->first();
+
+        if (!$token) {
+            return response()->json(['message' => 'Token not found'], 404);
+        }
+
+        // Check authorization - only token creator, document creator, or admin can revoke
+        if ($token->generated_by !== $user->id && 
+            $document->created_by !== $user->id && 
+            !$user->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized to revoke this token'
+            ], 403);
+        }
+
+        $request->validate([
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        $accessService->revokeToken($token, $request->input('reason'));
+
+        return response()->json([
+            'message' => 'Token revoked successfully',
+            'token_id' => $tokenId,
+        ]);
+    }
+
+    /**
+     * Rotate an access token (generate new, revoke old)
+     */
+    public function rotateAccessToken(Request $request, Document $document, int $tokenId): JsonResponse
+    {
+        $user = Auth::user();
+        $accessService = app(\App\Services\DocumentAccessService::class);
+
+        // Find the token
+        $oldToken = \App\Models\DocumentAccessToken::where('id', $tokenId)
+            ->where('document_id', $document->id)
+            ->first();
+
+        if (!$oldToken) {
+            return response()->json(['message' => 'Token not found'], 404);
+        }
+
+        // Check authorization
+        if ($oldToken->generated_by !== $user->id && 
+            $document->created_by !== $user->id && 
+            !$user->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized to rotate this token'
+            ], 403);
+        }
+
+        $request->validate([
+            'expires_in_hours' => 'nullable|integer|min:1|max:8760',
+        ]);
+
+        $expiresInHours = $request->input('expires_in_hours', 24);
+        $newToken = $accessService->rotateToken($oldToken, $expiresInHours);
+
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendBase = rtrim($frontendBase, '/');
+        $accessUrl = $frontendBase . '/secure/' . $newToken->token;
+
+        return response()->json([
+            'token_id' => $newToken->id,
+            'access_url' => $accessUrl,
+            'expires_at' => $newToken->expires_at,
+            'old_token_id' => $tokenId,
+            'message' => 'Token rotated successfully',
+        ]);
+    }
+
+    /**
+     * Get active tokens for a document
+     */
+    public function getAccessTokens(Document $document): JsonResponse
+    {
+        $user = Auth::user();
+        $accessService = app(\App\Services\DocumentAccessService::class);
+
+        // Check authorization
+        if (!$accessService->canGenerateToken($document, $user)) {
+            return response()->json([
+                'message' => 'Unauthorized to view access tokens for this document'
+            ], 403);
+        }
+
+        $tokens = $accessService->getActiveTokens($document);
+
+        return response()->json([
+            'tokens' => $tokens->map(function ($token) {
+                return [
+                    'id' => $token->id,
+                    'generated_by' => $token->generatedBy,
+                    'expires_at' => $token->expires_at,
+                    'access_count' => $token->access_count,
+                    'last_accessed_at' => $token->last_accessed_at,
+                    'metadata' => $token->metadata,
+                    'created_at' => $token->created_at,
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Secure document access using token
+     */
+    public function secureAccess(Request $request, string $token): JsonResponse
+    {
+        $accessService = app(\App\Services\DocumentAccessService::class);
+        
+        // Validate token
+        $accessToken = $accessService->validateToken($token);
+        
+        if (!$accessToken) {
+            // Log failed access attempt
+            \App\Models\AccessAuditLog::create([
+                'document_id' => null,
+                'access_token_id' => null,
+                'user_id' => Auth::id(),
+                'action' => 'access_attempt',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'success' => false,
+                'failure_reason' => 'Invalid or expired token',
+            ]);
+
+            return response()->json([
+                'message' => 'Invalid or expired access token'
+            ], 403);
+        }
+
+        $document = $accessToken->document;
+
+        // Log successful access
+        $accessService->logAccess(
+            $document,
+            'view',
+            $accessToken,
+            Auth::user()
+        );
+
+        // Load document data with related info
+        $document->load([
+            'creator:id,name,email,role',
+            'approvals.approver:id,name,email,role'
+        ]);
+
+        $approvalProgress = $document->getApprovalProgress();
+
+        return response()->json([
+            'document' => $document,
+            'approval_progress' => $approvalProgress,
+            'token_expires_at' => $accessToken->expires_at,
+        ]);
+    }
+
+    /**
+     * Secure document preview using token
+     */
+    public function securePreview(Request $request, string $token)
+    {
+        $accessService = app(\App\Services\DocumentAccessService::class);
+        
+        // Validate token
+        $accessToken = $accessService->validateToken($token);
+        
+        if (!$accessToken) {
+            // Log failed access attempt
+            \App\Models\AccessAuditLog::create([
+                'document_id' => null,
+                'access_token_id' => null,
+                'user_id' => Auth::id(),
+                'action' => 'preview_attempt',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'success' => false,
+                'failure_reason' => 'Invalid or expired token',
+            ]);
+
+            abort(403, 'Invalid or expired access token');
+        }
+
+        $document = $accessToken->document;
+
+        // Log successful preview access
+        $accessService->logAccess(
+            $document,
+            'preview',
+            $accessToken,
+            Auth::user()
+        );
+
+        if (!$document->file_path || !Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'Document file not found');
+        }
+
+        $fileName = $document->file_name ?? 'document.pdf';
+        $qrPosition = [
+            'x' => $document->qr_x,
+            'y' => $document->qr_y,
+            'page' => $document->qr_page ?? 1,
+            'size' => $document->qr_size,
+        ];
+
+        try {
+            $watermarkService = app(PDFWatermarkService::class);
+            $watermarkText = $document->isApproved() ? '' : 'BELUM APPROVE';
+            $tempPath = $watermarkService->addWatermark(
+                $document->file_path,
+                $watermarkText,
+                $document->qr_code_path,
+                $qrPosition
+            );
+
+            $fullTempPath = Storage::disk('public')->path($tempPath);
+
+            return response()->file($fullTempPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+            ])->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            \Log::error('Secure preview failed for document ' . $document->id . ': ' . $e->getMessage());
+        }
+
+        $fullPath = Storage::disk('public')->path($document->file_path);
+
+        return response()->file($fullPath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $fileName . '"',
+        ]);
+    }
+
+    /**
+     * Secure document download using token
+     */
+    public function secureDownload(Request $request, string $token)
+    {
+        $accessService = app(\App\Services\DocumentAccessService::class);
+        
+        // Validate token
+        $accessToken = $accessService->validateToken($token);
+        
+        if (!$accessToken) {
+            // Log failed access attempt
+            \App\Models\AccessAuditLog::create([
+                'document_id' => null,
+                'access_token_id' => null,
+                'user_id' => Auth::id(),
+                'action' => 'download_attempt',
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'success' => false,
+                'failure_reason' => 'Invalid or expired token',
+            ]);
+
+            abort(403, 'Invalid or expired access token');
+        }
+
+        $document = $accessToken->document;
+
+        // Log successful download access
+        $accessService->logAccess(
+            $document,
+            'download',
+            $accessToken,
+            Auth::user()
+        );
+
+        $filePath = $document->file_path;
+        $fileName = $document->file_name;
+
+        // If not approved, add watermark and QR code
+        if (!$document->isApproved()) {
+            try {
+                $watermarkService = app(PDFWatermarkService::class);
+                $qrPosition = [
+                    'x' => $document->qr_x,
+                    'y' => $document->qr_y,
+                    'page' => $document->qr_page ?? 1,
+                    'size' => $document->qr_size,
+                ];
+                $tempPath = $watermarkService->addWatermark($filePath, 'BELUM APPROVE', $document->qr_code_path, $qrPosition);
+
+                $fullTempPath = Storage::disk('public')->path($tempPath);
+
+                return response()->download($fullTempPath, $fileName)->deleteFileAfterSend();
+            } catch (\Exception $e) {
+                \Log::error('PDF Watermarking failed: ' . $e->getMessage());
+            }
+        }
+
+        // If approved, add QR code only
+        if ($document->isApproved() && $document->qr_code_path) {
+            try {
+                $watermarkService = app(PDFWatermarkService::class);
+                $qrPosition = [
+                    'x' => $document->qr_x,
+                    'y' => $document->qr_y,
+                    'page' => $document->qr_page ?? 1,
+                    'size' => $document->qr_size,
+                ];
+                $tempPath = $watermarkService->addWatermark($filePath, '', $document->qr_code_path, $qrPosition);
+
+                $fullTempPath = Storage::disk('public')->path($tempPath);
+
+                return response()->download($fullTempPath, $fileName)->deleteFileAfterSend();
+            } catch (\Exception $e) {
+                \Log::error('QR Code addition failed: ' . $e->getMessage());
+            }
+        }
+
+        // Return original file
+        $fullPath = Storage::disk('public')->path($filePath);
+        return response()->download($fullPath, $fileName);
+    }
+
+    /**
+     * Get access audit logs for a document
+     */
+    public function getAccessLogs(Request $request, Document $document): JsonResponse
+    {
+        $user = Auth::user();
+        $accessService = app(\App\Services\DocumentAccessService::class);
+
+        // Check authorization - only document creator or admin
+        if ($document->created_by !== $user->id && !$user->isAdmin()) {
+            return response()->json([
+                'message' => 'Unauthorized to view access logs for this document'
+            ], 403);
+        }
+
+        $hours = $request->input('hours', 24);
+        $stats = $accessService->getAccessStats($document, $hours);
+
+        $logs = \App\Models\AccessAuditLog::where('document_id', $document->id)
+            ->recent($hours)
+            ->with(['user:id,name,email', 'accessToken:id,expires_at'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(50);
+
+        return response()->json([
+            'stats' => $stats,
+            'logs' => $logs,
+        ]);
     }
 }
