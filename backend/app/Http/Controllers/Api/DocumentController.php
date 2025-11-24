@@ -411,20 +411,43 @@ class DocumentController extends Controller
 
             $fullTempPath = Storage::disk('public')->path($tempPath);
 
-            return response()->file($fullTempPath, [
+            $response = response()->file($fullTempPath, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . $fileName . '"',
             ])->deleteFileAfterSend(true);
+
+            // Allow embedding this preview only into trusted frontend origin(s).
+            // By default Laravel's FrameGuard middleware sets X-Frame-Options: SAMEORIGIN
+            // which prevents framing from a different origin (e.g. frontend at localhost:3000).
+            // Remove the X-Frame-Options header for this response and set a restrictive
+            // Content-Security-Policy frame-ancestors directive allowing the configured
+            // frontend URL plus self. This is safer than allowing all origins.
+            $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+            $frontendBase = rtrim($frontendBase, '/');
+
+            // Remove header that would block cross-origin framing
+            $response->headers->remove('X-Frame-Options');
+            // Set frame-ancestors to allow self and the configured frontend origin
+            $response->headers->set('Content-Security-Policy', "frame-ancestors 'self' {$frontendBase};");
+
+            return $response;
         } catch (\Exception $e) {
             \Log::error('Public preview failed for document ' . $document->id . ': ' . $e->getMessage());
         }
 
         $fullPath = Storage::disk('public')->path($document->file_path);
 
-        return response()->file($fullPath, [
+        $response = response()->file($fullPath, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $fileName . '"',
         ]);
+
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendBase = rtrim($frontendBase, '/');
+        $response->headers->remove('X-Frame-Options');
+        $response->headers->set('Content-Security-Policy', "frame-ancestors 'self' {$frontendBase};");
+
+        return $response;
     }
 
     /**
@@ -727,19 +750,16 @@ class DocumentController extends Controller
             Auth::user()
         );
 
-        // Load document data with related info
-        $document->load([
-            'creator:id,name,email,role',
-            'approvals.approver:id,name,email,role'
-        ]);
+        // Reuse publicInfo response structure so secure access returns
+        // the same payload as publicInfo() plus token metadata.
+        // We intentionally call the controller method to keep logic centralized.
+        $publicResponse = $this->publicInfo($document);
 
-        $approvalProgress = $document->getApprovalProgress();
+        // publicInfo returns a JsonResponse; convert to array and attach token info
+        $data = $publicResponse->getData(true);
+        $data['token_expires_at'] = $accessToken->expires_at;
 
-        return response()->json([
-            'document' => $document,
-            'approval_progress' => $approvalProgress,
-            'token_expires_at' => $accessToken->expires_at,
-        ]);
+        return response()->json($data);
     }
 
     /**

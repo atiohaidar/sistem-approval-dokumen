@@ -59,8 +59,7 @@ interface AccessLogsResponse {
 }
 
 export const useDocumentTokens = () => {
-  const config = useRuntimeConfig()
-  const apiBase = config.public.apiBase
+  const { $api } = useNuxtApp()
   const authStore = useAuthStore()
 
   const tokens: Ref<AccessToken[]> = ref([])
@@ -80,24 +79,8 @@ export const useDocumentTokens = () => {
     error.value = null
 
     try {
-      const response = await fetch(`${apiBase}/documents/${documentId}/access-tokens`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authStore.token}`,
-          'Accept': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(params),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Gagal membuat token akses')
-      }
-
-      const data = await response.json()
-      return data
+      const response = await $api.post(`/documents/${documentId}/access-tokens`, params)
+      return response.data
     } catch (err: any) {
       error.value = err.message
       return null
@@ -114,21 +97,8 @@ export const useDocumentTokens = () => {
     error.value = null
 
     try {
-      const response = await fetch(`${apiBase}/documents/${documentId}/access-tokens`, {
-        headers: {
-          'Authorization': `Bearer ${authStore.token}`,
-          'Accept': 'application/json',
-        },
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Gagal mengambil daftar token')
-      }
-
-      const data = await response.json()
-      tokens.value = data.tokens
+      const response = await $api.get(`/documents/${documentId}/access-tokens`)
+      tokens.value = response.data.tokens || []
     } catch (err: any) {
       error.value = err.message
       tokens.value = []
@@ -149,24 +119,10 @@ export const useDocumentTokens = () => {
     error.value = null
 
     try {
-      const response = await fetch(
-        `${apiBase}/documents/${documentId}/access-tokens/${tokenId}/revoke`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authStore.token}`,
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ reason }),
-        }
+      await $api.post(
+        `/documents/${documentId}/access-tokens/${tokenId}/revoke`,
+        { reason }
       )
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Gagal mencabut token')
-      }
 
       return true
     } catch (err: any) {
@@ -189,27 +145,12 @@ export const useDocumentTokens = () => {
     error.value = null
 
     try {
-      const response = await fetch(
-        `${apiBase}/documents/${documentId}/access-tokens/${tokenId}/rotate`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authStore.token}`,
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ expires_in_hours: expiresInHours }),
-        }
+      const response = await $api.post(
+        `/documents/${documentId}/access-tokens/${tokenId}/rotate`,
+        { expires_in_hours: expiresInHours }
       )
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Gagal merotasi token')
-      }
-
-      const data = await response.json()
-      return data
+      return response.data
     } catch (err: any) {
       error.value = err.message
       return null
@@ -229,23 +170,11 @@ export const useDocumentTokens = () => {
     error.value = null
 
     try {
-      const response = await fetch(
-        `${apiBase}/documents/${documentId}/access-logs?hours=${hours}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${authStore.token}`,
-            'Accept': 'application/json',
-          },
-          credentials: 'include',
-        }
-      )
+      const response = await $api.get(`/documents/${documentId}/access-logs`, {
+        params: { hours },
+      })
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Gagal mengambil log akses')
-      }
-
-      const data: AccessLogsResponse = await response.json()
+      const data: AccessLogsResponse = response.data
       accessStats.value = data.stats
       accessLogs.value = data.logs.data
     } catch (err: any) {

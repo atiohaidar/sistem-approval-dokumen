@@ -1,305 +1,282 @@
-<template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center min-h-screen">
-      <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-telkom-red border-t-transparent"></div>
-        <p class="text-gray-600 mt-4">Memverifikasi akses...</p>
-      </div>
-    </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="flex items-center justify-center min-h-screen">
-      <div class="max-w-md w-full mx-auto px-4">
-        <div class="card text-center">
-          <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">Akses Ditolak</h2>
-          <p class="text-gray-600 mb-6">{{ error }}</p>
-          <NuxtLink to="/" class="btn btn-primary inline-block">
-            Kembali ke Beranda
-          </NuxtLink>
-        </div>
-      </div>
-    </div>
+          <template>
+            <div class="min-h-screen bg-gray-50 py-12 px-4">
+              <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-8">
+                  <h1 class="text-3xl font-bold text-telkom-red mb-2">YPT</h1>
+                  <p class="text-gray-600">Informasi Dokumen</p>
+                </div>
 
-    <!-- Success State -->
-    <div v-else-if="document" class="py-8">
-      <div class="max-w-6xl mx-auto px-4">
-        <!-- Header -->
-        <div class="mb-8">
-          <div class="flex items-center justify-between mb-4">
-            <h1 class="text-3xl font-bold text-gray-800">{{ document.title }}</h1>
-            <span :class="getStatusClass(document.status)">
-              {{ formatStatus(document.status) }}
-            </span>
-          </div>
-          <p class="text-gray-600">{{ document.description || 'Tidak ada deskripsi' }}</p>
+                <div v-if="loading" class="text-center py-12">
+                  <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-telkom-red border-t-transparent"></div>
+                  <p class="text-gray-600 mt-4">Loading...</p>
+                </div>
+
+                <div v-else-if="document" class="space-y-6">
+                  <!-- Document Info Card -->
+                  <div class="card">
+                    <div class="flex items-start justify-between mb-6">
+                      <div>
+                        <h2 class="text-2xl font-bold text-gray-800">{{ document.title }}</h2>
+                        <p class="text-gray-600 mt-2">{{ document.description || 'Tidak ada deskripsi' }}</p>
+                      </div>
+                      <span :class="getStatusClass(document.status)">
+                        {{ formatStatus(document.status) }}
+                      </span>
+                    </div>
+
+                    <dl class="grid grid-cols-2 gap-4">
+                      <div>
+                        <dt class="text-sm font-medium text-gray-500">Creator</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ document.creator?.name || '-' }}</dd>
+                      </div>
+                      <div>
+                        <dt class="text-sm font-medium text-gray-500">File Name</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ document.file_name }}</dd>
+                      </div>
+                      <div>
+                        <dt class="text-sm font-medium text-gray-500">Created At</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ formatDate(document.created_at) }}</dd>
+                      </div>
+                      <div>
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ formatStatus(document.status) }}</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <!-- Document Preview -->
+                  <div v-if="previewUrl" class="card">
+                    <div class="flex items-center justify-between mb-4">
+                      <h3 class="text-xl font-bold text-gray-800">Preview Dokumen</h3>
+                      <a
+                        :href="previewUrl"
+                        target="_blank"
+                        rel="noopener"
+                        class="text-telkom-red hover:text-orange-500 font-semibold text-sm"
+                      >
+                        Buka di tab baru
+                      </a>
+                    </div>
+                    <div class="aspect-[3/4] w-full bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                      <iframe
+                        v-if="previewSrc"
+                        :src="previewSrc"
+                        class="w-full h-full"
+                        title="Preview dokumen"
+                        frameborder="0"
+                      ></iframe>
+                      <div v-else class="flex items-center justify-center h-full text-sm text-gray-500">
+                        Preview tidak tersedia
+                      </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">
+                      Catatan: Jika preview tidak muncul, Anda dapat membuka dokumen di tab baru atau mengunduhnya dari tombol di atas.
+                    </p>
+                  </div>
+
+                  <!-- Timeline Approval Progress -->
+                  <div class="card">
+                    <div class="flex items-center gap-3 mb-6">
+                      <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <h3 class="text-xl font-bold text-gray-800">Timeline Persetujuan</h3>
+                    </div>
           
-          <!-- Token Expiration Warning -->
-          <div v-if="tokenExpiresAt" class="mt-4 flex items-center gap-2 text-sm">
-            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span class="text-gray-600">
-              Link akses ini akan kedaluwarsa pada 
-              <strong class="text-gray-900">{{ formatDate(tokenExpiresAt) }}</strong>
-            </span>
-          </div>
-        </div>
+                    <div v-if="approvalTimelineData && approvalTimelineData.length > 0">
+                      <ApprovalTimeline :approval-levels="approvalTimelineData" />
+                    </div>
+                    <div v-else class="text-center py-8">
+                      <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-gray-100 text-gray-400">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p class="font-medium text-gray-600">Belum ada proses persetujuan</p>
+                    </div>
+                  </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Main Content -->
-          <div class="lg:col-span-2 space-y-6">
-            <!-- Document Preview -->
-            <div class="card">
-              <h2 class="text-xl font-bold text-gray-800 mb-4">Preview Dokumen</h2>
-              <div class="bg-gray-100 rounded-lg overflow-hidden" style="height: 600px;">
-                <iframe 
-                  :src="previewUrl" 
-                  class="w-full h-full border-0"
-                  title="Document Preview"
-                  sandbox="allow-same-origin allow-scripts"
-                ></iframe>
-              </div>
-              <div class="mt-4 flex gap-3">
-                <button @click="handleDownload" class="btn btn-primary flex-1">
-                  <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <!-- Verification Info -->
+                  <div class="card bg-green-50 border-2 border-green-500">
+                    <div class="flex items-start space-x-3">
+                      <svg class="w-6 h-6 text-green-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      <div>
+                        <h4 class="font-bold text-green-800 mb-1">Dokumen Terverifikasi</h4>
+                        <p class="text-sm text-green-700">
+                          Dokumen ini telah diverifikasi dan terdaftar dalam sistem approval YPT.
+                          Informasi di atas menunjukkan status terkini dari proses approval dokumen.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="card text-center py-12">
+                  <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
-                  Download Dokumen
-                </button>
-              </div>
-            </div>
-
-            <!-- Document Info -->
-            <div class="card">
-              <h2 class="text-xl font-bold text-gray-800 mb-4">Informasi Dokumen</h2>
-              <dl class="grid grid-cols-2 gap-4">
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Creator</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ document.creator?.name || '-' }}</dd>
-                </div>
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">File Name</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ document.file_name }}</dd>
-                </div>
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Created At</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ formatDate(document.created_at) }}</dd>
-                </div>
-                <div>
-                  <dt class="text-sm font-medium text-gray-500">Status</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ formatStatus(document.status) }}</dd>
-                </div>
-              </dl>
-            </div>
-          </div>
-
-          <!-- Sidebar -->
-          <div class="space-y-6">
-            <!-- Approval Progress -->
-            <div class="card">
-              <h2 class="text-xl font-bold text-gray-800 mb-4">Progress Persetujuan</h2>
-              <div v-if="approvalProgress && Object.keys(approvalProgress).length > 0" class="space-y-4">
-                <div 
-                  v-for="(levelData, level) in approvalProgress" 
-                  :key="level"
-                  class="border-l-4 pl-4"
-                  :class="getLevelBorderClass(levelData.status)"
-                >
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="font-medium text-gray-900">Level {{ level }}</span>
-                    <span 
-                      class="text-xs px-2 py-1 rounded-full"
-                      :class="getProgressStatusClass(levelData.status)"
-                    >
-                      {{ formatProgressStatus(levelData.status) }}
-                    </span>
-                  </div>
-                  <div class="text-sm text-gray-600">
-                    <div v-if="levelData.approved && levelData.approved.length > 0">
-                      ✓ {{ levelData.approved.length }} disetujui
-                    </div>
-                    <div v-if="levelData.pending && levelData.pending.length > 0">
-                      ⏳ {{ levelData.pending.length }} menunggu
-                    </div>
-                    <div v-if="levelData.rejected && levelData.rejected.length > 0">
-                      ✗ {{ levelData.rejected.length }} ditolak
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-else class="text-center py-8 text-gray-500">
-                Belum ada proses persetujuan
-              </div>
-            </div>
-
-            <!-- Security Info -->
-            <div class="card bg-blue-50 border border-blue-200">
-              <div class="flex items-start gap-3">
-                <svg class="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <div>
-                  <h3 class="font-semibold text-blue-900 mb-1">Akses Aman</h3>
-                  <p class="text-sm text-blue-800">
-                    Dokumen ini diakses menggunakan token akses aman dengan batas waktu. 
-                    Jangan bagikan link ini kepada pihak yang tidak berwenang.
-                  </p>
+                  <p class="text-gray-600 text-lg">Dokumen tidak ditemukan</p>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
+          </template>
 
-<script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+          <script setup lang="ts">
+          import { ref, computed, onMounted } from 'vue'
+          import { useRoute } from 'vue-router'
+          import type { Document, PublicDocumentInfo, ApprovalLevel } from '~/types/api'
 
-const route = useRoute()
-const token = route.params.token
+          definePageMeta({
+            layout: false,
+          })
 
-const loading = ref(true)
-const error = ref(null)
-const document = ref(null)
-const approvalProgress = ref(null)
-const tokenExpiresAt = ref(null)
+          const route = useRoute()
+          const token = route.params.token
 
-const config = useRuntimeConfig()
-const apiBase = config.public.apiBase
+          const document = ref<Document | null>(null)
+          const approvalLevels = ref<Record<number, ApprovalLevel>>({})
+          const approvalRecords = ref<any[]>([])
+          const loading = ref(true)
+          const previewUrl = ref<string | null>(null)
 
-const previewUrl = computed(() => {
-  if (!token) return ''
-  return `${apiBase}/secure/documents/${token}/preview`
-})
+          const config = useRuntimeConfig()
+          const apiBase = config.public.apiBase
 
-onMounted(async () => {
-  try {
-    const response = await fetch(`${apiBase}/secure/documents/${token}`)
+          const previewSrc = computed(() => {
+            if (!previewUrl.value) return null
+            return `${previewUrl.value}#view=FitH`
+          })
+
+          // Transform approval data into timeline format
+          const approvalTimelineData = computed(() => {
+            if (!document.value || !approvalLevels.value) return []
+  
+            const levels = []
+            const levelNumbers = Object.keys(approvalLevels.value).map(Number).sort()
+  
+            for (const levelNumber of levelNumbers) {
+              const level = approvalLevels.value[levelNumber]
+              if (!level) continue
     
-    if (!response.ok) {
-      const data = await response.json()
-      throw new Error(data.message || 'Token akses tidak valid atau telah kedaluwarsa')
-    }
+              // Determine level status and timestamp
+              let levelStatus = 'pending'
+              let levelTimestamp: any = null
+    
+              if (level.status === 'completed') {
+                levelStatus = 'completed'
+              } else if (level.status === 'in_progress') {
+                levelStatus = 'in_progress'
+              } else if (level.status === 'rejected') {
+                levelStatus = 'rejected'
+              }
+    
+              // Build approvers list with approval records data
+              const approvers = level.approvers.map(approver => {
+                let approverStatus = approver.status === 'approved' ? 'approved' : 
+                                    approver.status === 'rejected' ? 'rejected' : 'pending'
+                let approverTimestamp: any = null
+                let approverNotes: any = null
+      
+                // Find approval record for this approver at this level
+                const approvalRecord = approvalRecords.value.find(record => 
+                  record.approver_id === approver.id && record.level === levelNumber
+                )
+      
+                if (approvalRecord) {
+                  approverTimestamp = approvalRecord.processed_at
+                  approverNotes = approvalRecord.notes
+                }
+      
+                return {
+                  id: approver.id,
+                  name: approver.user?.name || 'Unknown User',
+                  status: approverStatus,
+                  timestamp: approverTimestamp,
+                  notes: approverNotes
+                }
+              })
+    
+              levels.push({
+                status: levelStatus,
+                approvers,
+                timestamp: levelTimestamp
+              })
+            }
+  
+            return levels
+          })
 
-    const data = await response.json()
-    document.value = data.document
-    approvalProgress.value = data.approval_progress
-    tokenExpiresAt.value = data.token_expires_at
-  } catch (err) {
-    error.value = err.message
-  } finally {
-    loading.value = false
-  }
-})
+          const loadDocumentInfo = async () => {
+            loading.value = true
+            try {
+              if (!token) throw new Error('Token tidak tersedia')
+              const response = await fetch(`${apiBase}/secure/documents/${token}`)
+              if (!response.ok) {
+                const data = await response.json().catch(() => ({}))
+                throw new Error(data.message || 'Token akses tidak valid atau telah kedaluwarsa')
+              }
 
-const handleDownload = () => {
-  window.open(`${apiBase}/secure/documents/${token}/download`, '_blank')
-}
+              const info = await response.json()
+              // Expecting: { document, approval_levels, approval_records, preview_url }
+              document.value = info.document
+              approvalLevels.value = info.approval_levels || {}
+              approvalRecords.value = info.approval_records || []
+              previewUrl.value = info.preview_url ?? null
+            } catch (error) {
+              console.error('Error loading document info:', error)
+              previewUrl.value = null
+              document.value = null
+              approvalRecords.value = []
+            } finally {
+              loading.value = false
+            }
+          }
 
-const getStatusClass = (status) => {
-  const classes = {
-    'draft': 'badge badge-gray',
-    'pending_approval': 'badge badge-yellow',
-    'completed': 'badge badge-green',
-    'rejected': 'badge badge-red',
-    'cancelled': 'badge badge-gray'
-  }
-  return classes[status] || 'badge badge-gray'
-}
+          const getStatusClass = (status: string) => {
+            const classes: Record<string, string> = {
+              draft: 'badge badge-pending',
+              pending_approval: 'badge badge-pending',
+              completed: 'badge badge-approved',
+              rejected: 'badge badge-rejected',
+            }
+            return classes[status] || 'badge'
+          }
 
-const formatStatus = (status) => {
-  const statuses = {
-    'draft': 'Draft',
-    'pending_approval': 'Menunggu Persetujuan',
-    'completed': 'Selesai',
-    'rejected': 'Ditolak',
-    'cancelled': 'Dibatalkan'
-  }
-  return statuses[status] || status
-}
+          const formatStatus = (status: string) => {
+            const labels: Record<string, string> = {
+              draft: 'Draft',
+              pending_approval: 'Pending Approval',
+              completed: 'Completed',
+              rejected: 'Rejected',
+            }
+            return labels[status] || status
+          }
 
-const formatDate = (dateString) => {
-  if (!dateString) return '-'
-  const date = new Date(dateString)
-  return date.toLocaleString('id-ID', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
+          const formatDate = (date: string | null) => {
+            if (!date) return '-'
+            return new Date(date).toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          }
 
-const getLevelBorderClass = (status) => {
-  const classes = {
-    'completed': 'border-green-500',
-    'in_progress': 'border-blue-500',
-    'pending': 'border-gray-300',
-    'rejected': 'border-red-500'
-  }
-  return classes[status] || 'border-gray-300'
-}
+          onMounted(() => {
+            loadDocumentInfo()
+          })
+          </script>
 
-const getProgressStatusClass = (status) => {
-  const classes = {
-    'completed': 'bg-green-100 text-green-800',
-    'in_progress': 'bg-blue-100 text-blue-800',
-    'pending': 'bg-gray-100 text-gray-800',
-    'rejected': 'bg-red-100 text-red-800'
-  }
-  return classes[status] || 'bg-gray-100 text-gray-800'
-}
-
-const formatProgressStatus = (status) => {
-  const statuses = {
-    'completed': 'Selesai',
-    'in_progress': 'Berlangsung',
-    'pending': 'Menunggu',
-    'rejected': 'Ditolak'
-  }
-  return statuses[status] || status
-}
-</script>
-
-<style scoped>
-.badge {
-  @apply px-3 py-1 rounded-full text-sm font-medium;
-}
-
-.badge-gray {
-  @apply bg-gray-100 text-gray-800;
-}
-
-.badge-yellow {
-  @apply bg-yellow-100 text-yellow-800;
-}
-
-.badge-green {
-  @apply bg-green-100 text-green-800;
-}
-
-.badge-red {
-  @apply bg-red-100 text-red-800;
-}
-
-.card {
-  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
-}
-
-.btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
-}
-
-.btn-primary {
-  @apply bg-telkom-red text-white hover:bg-telkom-red-dark;
-}
-</style>
+          <style scoped>
+          .badge-pending { @apply bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium }
+          .badge-approved { @apply bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium }
+          .badge-rejected { @apply bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium }
+          .card { @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 }
+          .text-telkom-red { color: #E2001A }
+          </style>
