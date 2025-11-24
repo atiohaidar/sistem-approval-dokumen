@@ -32,6 +32,7 @@ class Document extends Model
         'qr_page',
         'qr_size',
         'qr_code_path',
+        'public_access',
     ];
 
     protected $casts = [
@@ -45,6 +46,7 @@ class Document extends Model
         'qr_y' => 'float',
         'qr_page' => 'integer',
         'qr_size' => 'float',
+        'public_access' => 'boolean',
     ];
 
     // Relationships

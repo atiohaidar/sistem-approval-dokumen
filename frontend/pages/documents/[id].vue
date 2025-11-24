@@ -134,6 +134,23 @@
               </button>
             </div>
           </div>
+          
+          <!-- Public Access Toggle (creator or admin) -->
+          <div class="card" v-if="canTogglePublicAccess">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">Public Access</h2>
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Izinkan dokumen ini diakses publik melalui QR / public link</p>
+              </div>
+              <div>
+                <label class="switch">
+                  <input type="checkbox" :checked="doc.public_access" @change="togglePublicAccess($event)" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Status: <strong>{{ doc.public_access ? 'Publik' : 'Pribadi' }}</strong></p>
+          </div>
         </div>
       </div>
     </div>
@@ -260,6 +277,27 @@ const canManageTokens = computed(() => {
   
   return false
 })
+
+const canTogglePublicAccess = computed(() => {
+  if (!doc.value || !authStore.user) return false
+  const userId = authStore.user.id
+  const userRole = authStore.user.role
+  return doc.value.created_by === userId || userRole === 'admin'
+})
+
+// Set public access mutation
+const { useSetPublicAccessMutation } = useDocuments()
+const setPublicAccessMutation = useSetPublicAccessMutation()
+
+const togglePublicAccess = async (e: Event) => {
+  if (!doc.value) return
+  const checked = (e.target as HTMLInputElement).checked
+  try {
+    await setPublicAccessMutation.mutateAsync({ id: doc.value.id, publicAccess: checked })
+  } catch (err: any) {
+    alert(err.response?.data?.message || 'Gagal mengubah public access')
+  }
+}
 
 // Transform document data into timeline format with approval records
 const approvalTimelineData = computed(() => {
@@ -438,3 +476,35 @@ const formatFileSize = (bytes: number) => {
   return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
 }
 </script>
+
+<style scoped>
+/* Simple switch styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+}
+.switch input { display:none; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .2s;
+  border-radius: 999px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+.switch input:checked + .slider { background-color: #16a34a; }
+.switch input:checked + .slider:before { transform: translateX(20px); }
+</style>

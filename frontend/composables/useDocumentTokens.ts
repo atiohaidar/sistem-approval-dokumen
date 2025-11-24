@@ -201,7 +201,7 @@ export const useDocumentTokens = () => {
       textArea.style.left = '-999999px'
       document.body.appendChild(textArea)
       textArea.select()
-      
+
       try {
         const success = document.execCommand('copy')
         return success

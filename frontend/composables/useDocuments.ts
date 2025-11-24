@@ -86,6 +86,11 @@ export const useDocuments = () => {
     return response.data
   }
 
+  const setPublicAccess = async (id: number, publicAccess: boolean) => {
+    const response = await $api.post(`/documents/${id}/public-access`, { public_access: publicAccess })
+    return response.data
+  }
+
   // Query Hooks
   const useDocumentsQuery = (params?: MaybeRef<{
     status?: string
@@ -153,6 +158,16 @@ export const useDocuments = () => {
     })
   }
 
+  const useSetPublicAccessMutation = () => {
+    return useMutation({
+      mutationFn: ({ id, publicAccess }: { id: number; publicAccess: boolean }) => setPublicAccess(id, publicAccess),
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({ queryKey: documentsKeys.detail(variables.id) })
+        queryClient.invalidateQueries({ queryKey: documentsKeys.lists() })
+      }
+    })
+  }
+
   return {
     // Raw API functions (for backward compatibility or special cases)
     getDocuments,
@@ -167,6 +182,8 @@ export const useDocuments = () => {
     useDocumentsQuery,
     useDocumentQuery,
     usePublicInfoQuery,
+    setPublicAccess,
+    useSetPublicAccessMutation,
     useCreateDocumentMutation,
     useUpdateDocumentMutation,
     useDeleteDocumentMutation,

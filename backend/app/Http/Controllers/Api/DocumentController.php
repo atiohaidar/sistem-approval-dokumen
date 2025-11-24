@@ -181,9 +181,14 @@ class DocumentController extends Controller
             'description' => 'nullable|string',
             'file' => 'sometimes|file|mimes:pdf|max:10240',
             'template_id' => 'nullable|exists:document_templates,id',
+            'public_access' => 'nullable|boolean',
         ]);
 
         $updateData = $request->only(['title', 'description', 'template_id']);
+
+        if ($request->has('public_access')) {
+            $updateData['public_access'] = (bool) $request->input('public_access');
+        }
 
         // Handle file upload if new file is provided
         if ($request->hasFile('file')) {
@@ -309,6 +314,21 @@ class DocumentController extends Controller
      */
     public function publicInfo(Document $document): JsonResponse
     {
+        // Only documents explicitly allowed for public access are served.
+        if (empty($document->public_access)) {
+            // Return 404 to avoid revealing existence/details for non-public documents
+            abort(404, 'Document not available for public access');
+        }
+
+        $payload = $this->buildPublicPayload($document);
+        return response()->json($payload);
+    }
+
+    /**
+     * Build the public payload for a document (shared between publicInfo and secureAccess)
+     */
+    private function buildPublicPayload(Document $document): array
+    {
         // Load related data efficiently
         $document->load(['creator']);
         $approvalProgress = $document->getApprovalProgress();
@@ -369,7 +389,7 @@ class DocumentController extends Controller
         $frontendBase = rtrim($frontendBase, '/');
         $frontendPublicUrl = $frontendBase . '/public/' . $document->id;
 
-        return response()->json([
+        return [
             'document' => $document,
             // backend API public url (existing)
             'public_url' => url("/api/documents/{$document->id}/public-info"),
@@ -379,7 +399,7 @@ class DocumentController extends Controller
             'approval_progress' => $approvalProgress,
             'approval_levels' => $approvalLevels,
             'approval_records' => $approvalRecords,
-        ]);
+        ];
     }
 
     /**
@@ -387,6 +407,11 @@ class DocumentController extends Controller
      */
     public function publicPreview(Document $document)
     {
+        // Only serve public preview for documents explicitly allowed
+        if (empty($document->public_access)) {
+            abort(404, 'Document not available for public access');
+        }
+
         if (!$document->file_path || !Storage::disk('public')->exists($document->file_path)) {
             abort(404, 'Document file not found');
         }
@@ -623,9 +648,11 @@ class DocumentController extends Controller
         }
 
         // Check authorization - only token creator, document creator, or admin can revoke
-        if ($token->generated_by !== $user->id && 
-            $document->created_by !== $user->id && 
-            !$user->isAdmin()) {
+        if (
+            $token->generated_by !== $user->id &&
+            $document->created_by !== $user->id &&
+            !$user->isAdmin()
+        ) {
             return response()->json([
                 'message' => 'Unauthorized to revoke this token'
             ], 403);
@@ -661,9 +688,11 @@ class DocumentController extends Controller
         }
 
         // Check authorization
-        if ($oldToken->generated_by !== $user->id && 
-            $document->created_by !== $user->id && 
-            !$user->isAdmin()) {
+        if (
+            $oldToken->generated_by !== $user->id &&
+            $document->created_by !== $user->id &&
+            !$user->isAdmin()
+        ) {
             return response()->json([
                 'message' => 'Unauthorized to rotate this token'
             ], 403);
@@ -686,6 +715,32 @@ class DocumentController extends Controller
             'expires_at' => $newToken->expires_at,
             'old_token_id' => $tokenId,
             'message' => 'Token rotated successfully',
+        ]);
+    }
+
+    /**
+     * Set or unset public access for a document. Only creator or admin can perform this.
+     */
+    public function setPublicAccess(Request $request, Document $document): JsonResponse
+    {
+        $user = Auth::user();
+
+        // Authorization: only creator or admin
+        if ($document->created_by !== $user->id && !$user->isAdmin()) {
+            return response()->json(['message' => 'Unauthorized to change public access'], 403);
+        }
+
+        $request->validate([
+            'public_access' => 'required|boolean',
+        ]);
+
+        $document->public_access = (bool) $request->input('public_access');
+        $document->save();
+
+        return response()->json([
+            'message' => 'Public access updated',
+            'public_access' => $document->public_access,
+            'document' => $document,
         ]);
     }
 
@@ -727,14 +782,14 @@ class DocumentController extends Controller
     public function secureAccess(Request $request, string $token): JsonResponse
     {
         $accessService = app(\App\Services\DocumentAccessService::class);
-        
+
         // Validate token
         $accessToken = $accessService->validateToken($token);
-        
+
         if (!$accessToken) {
             // Log failed access attempt without document
             $this->logFailedAccess('access_attempt', 'Invalid or expired token');
-            
+
             return response()->json([
                 'message' => 'Invalid or expired access token'
             ], 403);
@@ -750,16 +805,12 @@ class DocumentController extends Controller
             Auth::user()
         );
 
-        // Reuse publicInfo response structure so secure access returns
-        // the same payload as publicInfo() plus token metadata.
-        // We intentionally call the controller method to keep logic centralized.
-        $publicResponse = $this->publicInfo($document);
+        // Build the same payload as the public info endpoint but bypass the
+        // public_access restriction because this is an authenticated token access.
+        $payload = $this->buildPublicPayload($document);
+        $payload['token_expires_at'] = $accessToken->expires_at;
 
-        // publicInfo returns a JsonResponse; convert to array and attach token info
-        $data = $publicResponse->getData(true);
-        $data['token_expires_at'] = $accessToken->expires_at;
-
-        return response()->json($data);
+        return response()->json($payload);
     }
 
     /**
@@ -768,10 +819,10 @@ class DocumentController extends Controller
     public function securePreview(Request $request, string $token)
     {
         $accessService = app(\App\Services\DocumentAccessService::class);
-        
+
         // Validate token
         $accessToken = $accessService->validateToken($token);
-        
+
         if (!$accessToken) {
             // Log failed access attempt
             $this->logFailedAccess('preview_attempt', 'Invalid or expired token');
@@ -834,10 +885,10 @@ class DocumentController extends Controller
     public function secureDownload(Request $request, string $token)
     {
         $accessService = app(\App\Services\DocumentAccessService::class);
-        
+
         // Validate token
         $accessToken = $accessService->validateToken($token);
-        
+
         if (!$accessToken) {
             // Log failed access attempt
             $this->logFailedAccess('download_attempt', 'Invalid or expired token');
