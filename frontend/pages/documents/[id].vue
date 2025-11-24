@@ -95,6 +95,11 @@
               </div>
             </GlassCard>
           </div>
+
+          <!-- Token Management Section -->
+          <div v-if="canManageTokens" class="card">
+            <DocumentTokenManager :document-id="doc.id" />
+          </div>
         </div>
 
         <!-- Sidebar -->
@@ -226,6 +231,28 @@ const canApprove = computed(() => {
   if (!doc.value || !authStore.user) return false
   return doc.value.status === 'pending_approval' &&
     doc.value.level_progress?.pending?.includes(authStore.user.id)
+})
+
+// Check if user can manage tokens (creator, approver, or admin)
+const canManageTokens = computed(() => {
+  if (!doc.value || !authStore.user) return false
+  
+  // Creator can manage tokens
+  if (doc.value.created_by === authStore.user.id) return true
+  
+  // Admin can manage tokens
+  if (authStore.user.role === 'admin') return true
+  
+  // Approvers can manage tokens
+  if (doc.value.approvers) {
+    for (const level of doc.value.approvers) {
+      if (Array.isArray(level) && level.includes(authStore.user.id)) {
+        return true
+      }
+    }
+  }
+  
+  return false
 })
 
 // Transform document data into timeline format with approval records
