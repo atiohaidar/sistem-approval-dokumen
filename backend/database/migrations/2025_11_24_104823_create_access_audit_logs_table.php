@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('access_audit_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('document_id')->constrained()->onDelete('cascade');
+            $table->unsignedBigInteger('document_id')->nullable()->index(); // NULL for failed attempts without valid document
             $table->foreignId('access_token_id')->nullable()->constrained('document_access_tokens')->onDelete('set null');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null'); // NULL for anonymous access
-            $table->string('action', 50)->index(); // 'view', 'download', 'preview'
+            $table->string('action', 50)->index(); // 'view', 'download', 'preview', 'access_attempt'
             $table->string('ip_address', 45)->nullable(); // IPv6 compatible
             $table->text('user_agent')->nullable();
             $table->string('referer')->nullable();
@@ -29,6 +29,9 @@ return new class extends Migration
             $table->index(['document_id', 'created_at']);
             $table->index(['user_id', 'created_at']);
             $table->index(['access_token_id', 'created_at']);
+            
+            // Foreign key constraint for document_id when not null
+            $table->foreign('document_id')->references('id')->on('documents')->onDelete('cascade');
         });
     }
 

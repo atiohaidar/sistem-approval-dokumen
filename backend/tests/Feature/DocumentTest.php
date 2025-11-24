@@ -134,11 +134,17 @@ class DocumentTest extends TestCase
             ->getJson("/api/documents/{$document->id}");
 
         $response->assertStatus(200)
+            ->assertJsonStructure([
+                'document' => ['id', 'title', 'description', 'status'],
+                'approval_records',
+            ])
             ->assertJson([
-                'id' => $document->id,
-                'title' => $document->title,
-                'description' => $document->description,
-                'status' => $document->status,
+                'document' => [
+                    'id' => $document->id,
+                    'title' => $document->title,
+                    'description' => $document->description,
+                    'status' => $document->status,
+                ],
             ]);
     }
 
@@ -578,7 +584,7 @@ startxref
    
 
     #[Test]
-    public function qr_code_contains_url_to_public_info()
+    public function qr_code_contains_url_to_frontend_public_page()
     {
         $document = Document::factory()->create([
             'created_by' => $this->user->id,
@@ -589,8 +595,11 @@ startxref
         ]);
 
         $qrService = app(QRCodeService::class);
+        // Without a token, falls back to legacy public URL
         $qrUrl = $qrService->getQRUrl($document);
-        $expectedUrl = url('/api/documents/' . $document->id . '/public-info');
+        $frontendBase = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendBase = rtrim($frontendBase, '/');
+        $expectedUrl = $frontendBase . '/public/' . $document->id;
 
         $this->assertEquals($expectedUrl, $qrUrl);
     }
