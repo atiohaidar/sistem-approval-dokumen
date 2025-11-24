@@ -709,18 +709,9 @@ class DocumentController extends Controller
         $accessToken = $accessService->validateToken($token);
         
         if (!$accessToken) {
-            // Log failed access attempt
-            \App\Models\AccessAuditLog::create([
-                'document_id' => null,
-                'access_token_id' => null,
-                'user_id' => Auth::id(),
-                'action' => 'access_attempt',
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'success' => false,
-                'failure_reason' => 'Invalid or expired token',
-            ]);
-
+            // Log failed access attempt without document
+            $this->logFailedAccess('access_attempt', 'Invalid or expired token');
+            
             return response()->json([
                 'message' => 'Invalid or expired access token'
             ], 403);
@@ -763,17 +754,7 @@ class DocumentController extends Controller
         
         if (!$accessToken) {
             // Log failed access attempt
-            \App\Models\AccessAuditLog::create([
-                'document_id' => null,
-                'access_token_id' => null,
-                'user_id' => Auth::id(),
-                'action' => 'preview_attempt',
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'success' => false,
-                'failure_reason' => 'Invalid or expired token',
-            ]);
-
+            $this->logFailedAccess('preview_attempt', 'Invalid or expired token');
             abort(403, 'Invalid or expired access token');
         }
 
@@ -839,17 +820,7 @@ class DocumentController extends Controller
         
         if (!$accessToken) {
             // Log failed access attempt
-            \App\Models\AccessAuditLog::create([
-                'document_id' => null,
-                'access_token_id' => null,
-                'user_id' => Auth::id(),
-                'action' => 'download_attempt',
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'success' => false,
-                'failure_reason' => 'Invalid or expired token',
-            ]);
-
+            $this->logFailedAccess('download_attempt', 'Invalid or expired token');
             abort(403, 'Invalid or expired access token');
         }
 
@@ -938,6 +909,23 @@ class DocumentController extends Controller
         return response()->json([
             'stats' => $stats,
             'logs' => $logs,
+        ]);
+    }
+
+    /**
+     * Helper method to log failed access attempts
+     */
+    private function logFailedAccess(string $action, string $reason): void
+    {
+        \App\Models\AccessAuditLog::create([
+            'document_id' => null,
+            'access_token_id' => null,
+            'user_id' => Auth::id(),
+            'action' => $action,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'success' => false,
+            'failure_reason' => $reason,
         ]);
     }
 }

@@ -45,12 +45,13 @@ class DocumentAccessToken extends Model
 
     /**
      * Generate a secure random token
+     * Uses cryptographically secure random bytes and SHA-256 hashing
      */
     public static function generateSecureToken(): string
     {
-        // Generate a cryptographically secure random token
-        // Using 32 bytes (256 bits) of randomness
-        return hash('sha256', Str::random(64) . microtime(true) . random_bytes(32));
+        // Generate 32 bytes (256 bits) of cryptographically secure randomness
+        // Then hash with SHA-256 to produce a 64-character hex string
+        return hash('sha256', random_bytes(32));
     }
 
     /**

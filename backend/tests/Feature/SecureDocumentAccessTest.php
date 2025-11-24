@@ -97,7 +97,9 @@ class SecureDocumentAccessTest extends TestCase
     {
         $document = Document::factory()->create([
             'created_by' => $this->user->id,
-            'approvers' => [[$this->approver->id]],
+            // Approvers structure: array of levels, each level is an array of user IDs
+            // Example: [[$user1, $user2], [$user3]] means Level 1 has user1 & user2, Level 2 has user3
+            'approvers' => [[$this->approver->id]], // Level 1 with single approver
             'status' => 'pending_approval',
         ]);
 

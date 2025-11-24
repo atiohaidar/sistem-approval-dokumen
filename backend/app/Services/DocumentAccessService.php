@@ -176,12 +176,27 @@ class DocumentAccessService
             return true;
         }
 
-        // Approvers can generate tokens for documents they're assigned to
-        if ($document->approvers && is_array($document->approvers)) {
-            foreach ($document->approvers as $levelApprovers) {
-                if (is_array($levelApprovers) && in_array($user->id, $levelApprovers)) {
-                    return true;
-                }
+        // Approvers can generate tokens
+        return $this->isUserApprover($document, $user);
+    }
+
+    /**
+     * Check if user is an approver for the document
+     *
+     * @param Document $document
+     * @param User $user
+     * @return bool
+     */
+    private function isUserApprover(Document $document, User $user): bool
+    {
+        if (!$document->approvers || !is_array($document->approvers)) {
+            return false;
+        }
+
+        // Check all approval levels for the user
+        foreach ($document->approvers as $levelApprovers) {
+            if (is_array($levelApprovers) && in_array($user->id, $levelApprovers)) {
+                return true;
             }
         }
 
