@@ -99,7 +99,7 @@ export const useDocuments = () => {
     page?: number
   }>, options?: Omit<UseQueryOptions<PaginatedResponse<Document>>, 'queryKey' | 'queryFn'>) => {
     const paramsRef = computed(() => unref(params))
-    
+
     return useQuery({
       queryKey: computed(() => documentsKeys.list(paramsRef.value)),
       queryFn: () => getDocuments(paramsRef.value),
@@ -109,7 +109,7 @@ export const useDocuments = () => {
 
   const useDocumentQuery = (id: MaybeRef<number>, options?: Omit<UseQueryOptions<Document>, 'queryKey' | 'queryFn'>) => {
     const idRef = computed(() => unref(id))
-    
+
     return useQuery({
       queryKey: computed(() => documentsKeys.detail(idRef.value)),
       queryFn: () => getDocument(idRef.value),
@@ -120,7 +120,7 @@ export const useDocuments = () => {
 
   const usePublicInfoQuery = (id: MaybeRef<number>, options?: Omit<UseQueryOptions<PublicDocumentInfo>, 'queryKey' | 'queryFn'>) => {
     const idRef = computed(() => unref(id))
-    
+
     return useQuery({
       queryKey: computed(() => documentsKeys.publicInfo(idRef.value)),
       queryFn: () => getPublicInfo(idRef.value),
@@ -177,7 +177,7 @@ export const useDocuments = () => {
     deleteDocument,
     downloadDocument,
     getPublicInfo,
-    
+
     // TanStack Query hooks
     useDocumentsQuery,
     useDocumentQuery,
@@ -187,7 +187,7 @@ export const useDocuments = () => {
     useCreateDocumentMutation,
     useUpdateDocumentMutation,
     useDeleteDocumentMutation,
-    
+
     // Query keys (for manual invalidation if needed)
     documentsKeys,
   }

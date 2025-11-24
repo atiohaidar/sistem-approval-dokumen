@@ -226,7 +226,21 @@
               document.value = info.document
               approvalLevels.value = info.approval_levels || {}
               approvalRecords.value = info.approval_records || []
-              previewUrl.value = info.preview_url ?? null
+
+              // Prefer secure preview endpoint (token-based). Check availability
+              // If preview endpoint returns 200 (HEAD), enable preview; otherwise hide it.
+              const previewCandidate = `${apiBase}/secure/documents/${token}/preview`
+              try {
+                const headResp = await fetch(previewCandidate, { method: 'HEAD' })
+                if (headResp && headResp.ok) {
+                  previewUrl.value = previewCandidate
+                } else {
+                  previewUrl.value = null
+                }
+              } catch (err) {
+                // Network/CORS or other error - hide preview to avoid broken iframe.
+                previewUrl.value = null
+              }
             } catch (error) {
               console.error('Error loading document info:', error)
               previewUrl.value = null

@@ -41,7 +41,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('documents/{document}/download', [DocumentController::class, 'download']);
     // Toggle public access for a document (creator or admin only)
     Route::post('documents/{document}/public-access', [DocumentController::class, 'setPublicAccess']);
-    
+
     // Document access token management
     Route::post('documents/{document}/access-tokens', [DocumentController::class, 'generateAccessToken']);
     Route::get('documents/{document}/access-tokens', [DocumentController::class, 'getAccessTokens']);
