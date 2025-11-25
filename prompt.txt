@@ -1,0 +1,42 @@
+Saya memiliki dua folder proyek di workspace:
+
+- `asli/` — folder berisi proyek sumber (versi "asli") yang saat ini berfungsi dengan baik.
+- `ypt-framework/` — folder yang berisi kerangka kerja (framework) yang akan saya pakai untuk pengembangan selanjutnya.
+
+Tujuan yang diinginkan:
+
+- Memigrasikan perilaku dan logika (backend + frontend) dari proyek di `asli/` ke dalam `ypt-framework/` sehingga fungsionalitas akhir di `ypt-framework/` sama dengan proyek `asli/`.
+- Perubahan hanya boleh dilakukan di dalam `ypt-framework/`. Jangan mengubah isi folder `asli/`.
+- Ketentuan: adaptasi harus mengikuti struktur, konvensi, dan pola kode yang sudah ada di `ypt-framework/` (mis. struktur folder, service layer, konfigurasi build), bukan menyalin file secara mentah tanpa penyesuaian.
+
+Lingkup & batasan yang disarankan:
+
+- Sinkronisasi fungsional: semua endpoint API, alur approval, tampilan utama, dan fitur token/preview harus berperilaku sama seperti di `asli/`.
+- Implementasi: tulis ulang atau adaptasi kode ke gaya `ypt-framework/` ketika perlu (mis. penyesuaian namespace, import, konfigurasi build, atau integrasi service).
+- Jangan mengubah konfigurasi lingkungan global yang memengaruhi repo lain kecuali perlu (mis. file .env global).
+- Jaga riwayat git di `ypt-framework/` — jika perlu lakukan perubahan di branch terpisah dan commit terpisah.
+
+Langkah kerja yang disarankan (contoh):
+
+1. Bandingkan API dan contract antara `asli/` dan `ypt-framework/` (daftar endpoint, bentuk respons JSON, dan tipe data penting).
+2. Identifikasi perbedaan utama (migrations, model fields, konfigurasi storage, env vars, route names, composables/frontend API calls).
+3. Terapkan perubahan di `ypt-framework/` satu per satu: model/migration → controller/service → API routes → frontend composables/pages → styling & build.
+4. Jalankan migrasi/database sependapat dan tes end-to-end lokal untuk memastikan parity fitur.
+5. Buat commit terpisah dan dokumentasikan perubahan serta langkah rollback bila perlu.
+
+Contoh acceptance criteria (untuk memverifikasi berhasil):
+
+- Fitur QR + token preview bekerja di `ypt-framework/` sama seperti di `asli/` (scan QR atau buka `/secure/{token}` menampilkan dokumen yang benar).
+- Public preview (iframe) dapat di-embed pada origin frontend yang dikonfigurasi dan tidak terblokir karena header X-Frame-Options.
+- Pembuatan dan manajemen access token (generate, revoke, rotate) berfungsi sama pada UI dokument dan endpoint API.
+- Semua test penting (unit/integration) yang relevan dengan fitur inti lulus di lingkungan `ypt-framework/`.
+
+Lalu untuk design nya itu menyesuaikan dari ypt-framework saja
+
+Jika setuju, saya bisa:
+
+- Membuat daftar perbedaan awal antara `asli/` dan `ypt-framework/` (diff high-level), atau
+- Mulai mengadaptasi satu fitur yang Anda tunjuk (mis. migration `public_access` ke `ypt-framework/`, atau sinkronisasi `DocumentController`), atau
+- Menjalankan serangkaian perintah lokal yang Anda minta (git checkout branch baru, jalankan migrasi, jalankan vite/laravel dev server).
+
+Tolong konfirmasi langkah mana yang mau saya mulai, atau tunjukkan prioritas fitur yang ingin dimigrasikan terlebih dahulu.
