@@ -1,0 +1,16 @@
+//Override variables
+@import 'colors';
+@import 'bootstrap/scss/bootstrap';
+
+//Override components
+@import 'button';
+
+body {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+}
+
+*a {
+  letter-spacing: 1px;
+  text-decoration: none;
+}
