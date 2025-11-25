@@ -62,11 +62,13 @@ export default defineNuxtPlugin(() => {
           // because it may call useNuxtApp() when invoked outside plugin/setup and cause errors.
           auth.$patch({ user: null, token: null, isLoggingOut: true })
           router.replace('/login')
-          // Reset flag after short delay to allow other flows to settle
-          setTimeout(() => { try { auth.isLoggingOut = false } catch (_) {} }, 3000)
+          // Reset flag after delay to allow other flows to settle
+          const LOGOUT_RESET_DELAY_MS = 3000
+          setTimeout(() => { try { auth.isLoggingOut = false } catch (resetError) { console.debug('Reset logout flag skipped:', resetError) } }, LOGOUT_RESET_DELAY_MS)
         } catch (e) {
-          // If anything goes wrong, fallback to a simple redirect
-          try { router.replace('/login') } catch (_) {}
+          // If anything goes wrong with auth store, fallback to a simple redirect
+          console.debug('Auth store error during 401 handling:', e)
+          try { router.replace('/login') } catch (routerError) { console.debug('Router redirect failed:', routerError) }
         }
       }
       return Promise.reject(error)

@@ -92,10 +92,11 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.token = null
 
-        try { useCookie('user').value = null } catch (_) { }
+        // Clear user cookie - may fail if called outside Nuxt setup context
+        try { useCookie('user').value = null } catch (cookieError) { console.debug('Cookie clear skipped (expected outside Nuxt context):', cookieError) }
 
         // Redirect to login if router available; use try/catch to be safe when called outside Nuxt setup
-        try { navigateTo('/login') } catch (_) { }
+        try { navigateTo('/login') } catch (navError) { console.debug('Navigation skipped (expected outside Nuxt context):', navError) }
 
         this.isLoggingOut = false
       }
