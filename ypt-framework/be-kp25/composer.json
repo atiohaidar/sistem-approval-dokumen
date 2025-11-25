@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^7.0||^8.1",
+        "endroid/qr-code": "^6.0",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
         "laravel/passport": "^11.8",
@@ -17,6 +18,9 @@
         "league/flysystem-ftp": "3.0",
         "maatwebsite/excel": "^3.1",
         "predis/predis": "^2.2",
+        "setasign/fpdf": "^1.8",
+        "setasign/fpdi": "^2.6",
+        "setasign/fpdi-fpdf": "^2.3",
         "tymon/jwt-auth": "^2.1"
     },
     "require-dev": {
